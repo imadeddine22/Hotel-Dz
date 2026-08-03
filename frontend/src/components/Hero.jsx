@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, Calendar, MapPin } from 'lucide-react';
+import { Search, MapPin } from 'lucide-react';
 import { QUICK_AREAS, TRANSLATIONS } from '@/lib/data';
 import { useLangStore } from '@/store/authStore';
 
@@ -12,15 +12,11 @@ export default function Hero() {
   const t = TRANSLATIONS[lang] || TRANSLATIONS.fr;
 
   const [wilaya, setWilaya] = useState('');
-  const [checkIn, setCheckIn] = useState('');
-  const [checkOut, setCheckOut] = useState('');
 
   const handleSearch = (e) => {
     e.preventDefault();
     const params = new URLSearchParams();
     if (wilaya.trim()) params.set('wilaya', wilaya.trim());
-    if (checkIn) params.set('checkIn', checkIn);
-    if (checkOut) params.set('checkOut', checkOut);
 
     router.push(`/hotels?${params.toString()}`);
   };
@@ -43,9 +39,9 @@ export default function Hero() {
           onSubmit={handleSearch}
           className="mx-auto mt-8 max-w-4xl rounded-3xl bg-white p-4 shadow-xl ring-1 ring-gray-100 sm:p-6"
         >
-          <div className="grid gap-4 sm:grid-cols-12">
+          <div className="flex gap-4">
             {/* Wilaya / City */}
-            <div className="sm:col-span-5">
+            <div className="flex-1">
               <label className="mb-1 block text-xs font-bold text-gray-500">
                 {t.searchDestination}
               </label>
@@ -61,40 +57,12 @@ export default function Hero() {
               </div>
             </div>
 
-            {/* Check-in */}
-            <div className="sm:col-span-3">
-              <label className="mb-1 block text-xs font-bold text-gray-500">{t.checkIn}</label>
-              <div className="relative">
-                <Calendar className="pointer-events-none absolute left-3 top-3.2 h-5 w-5 text-gray-400" />
-                <input
-                  type="date"
-                  value={checkIn}
-                  onChange={(e) => setCheckIn(e.target.value)}
-                  className="w-full rounded-xl border border-gray-200 py-3 text-xs font-semibold outline-none focus:border-brand-500 rtl:pr-10 ltr:pl-10"
-                />
-              </div>
-            </div>
-
-            {/* Check-out */}
-            <div className="sm:col-span-3">
-              <label className="mb-1 block text-xs font-bold text-gray-500">{t.checkOut}</label>
-              <div className="relative">
-                <Calendar className="pointer-events-none absolute left-3 top-3.2 h-5 w-5 text-gray-400" />
-                <input
-                  type="date"
-                  value={checkOut}
-                  onChange={(e) => setCheckOut(e.target.value)}
-                  className="w-full rounded-xl border border-gray-200 py-3 text-xs font-semibold outline-none focus:border-brand-500 rtl:pr-10 ltr:pl-10"
-                />
-              </div>
-            </div>
-
             {/* Submit */}
-            <div className="sm:col-span-1 flex items-end">
+            <div className="flex items-end">
               <button
                 type="submit"
                 aria-label={t.searchBtn}
-                className="grid h-12 w-full place-items-center rounded-xl bg-brand-500 text-white shadow-md transition hover:bg-brand-600"
+                className="grid h-12 w-12 place-items-center rounded-xl bg-brand-500 text-white shadow-md transition hover:bg-brand-600"
               >
                 <Search className="h-5 w-5" />
               </button>
@@ -119,3 +87,4 @@ export default function Hero() {
     </section>
   );
 }
+
