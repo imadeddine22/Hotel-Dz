@@ -1,26 +1,48 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { LayoutGrid, List, SlidersHorizontal, Check } from 'lucide-react';
 import { CATEGORIES, HOTELS } from '@/lib/data';
 import HotelCard from './HotelCard';
 
-export default function HotelsList() {
+function HotelsListContent({ selectedCity, onSelectCity }) {
+  const searchParams = useSearchParams();
+  const urlWilaya = searchParams.get('wilaya') || '';
+  const wilaya = selectedCity !== undefined ? selectedCity : urlWilaya;
+
   const [active, setActive] = useState('Tous');
   const [view, setView] = useState('grid');
 
   const hotels = useMemo(() => {
-    if (active === 'Tous') return HOTELS;
-    return HOTELS.filter((h) => h.type === active);
-  }, [active]);
+    let list = HOTELS;
+    if (active !== 'Tous') {
+      list = list.filter((h) => h.type === active);
+    }
+    if (wilaya) {
+      list = list.filter((h) => h.city.toLowerCase().includes(wilaya.toLowerCase()));
+    }
+    return list;
+  }, [active, wilaya]);
 
   return (
-    <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
+    <section id="hotels-list" className="mx-auto max-w-7xl px-4 py-12 sm:px-6 scroll-mt-24">
       {/* Header row */}
       <div className="mb-6 flex items-center justify-between">
-        <h2 className="text-2xl font-extrabold text-ink">
-          Hôtels <span className="text-gray-400">({hotels.length})</span>
-        </h2>
+        <div>
+          <h2 className="text-2xl font-extrabold text-ink">
+            {wilaya ? `Hôtels à ${wilaya}` : 'Tous les hôtels'}{' '}
+            <span className="text-gray-400">({hotels.length})</span>
+          </h2>
+          {wilaya && (
+            <button
+              onClick={() => onSelectCity && onSelectCity('')}
+              className="mt-1 text-xs font-semibold text-brand-600 hover:underline"
+            >
+              Effacer le filtre de la ville
+            </button>
+          )}
+        </div>
         <div className="flex items-center gap-3">
           <button className="flex items-center gap-1.5 text-sm text-gray-600 hover:text-ink">
             <SlidersHorizontal className="h-4 w-4" /> Filtres
@@ -105,3 +127,12 @@ export default function HotelsList() {
     </section>
   );
 }
+
+export default function HotelsList({ selectedCity, onSelectCity }) {
+  return (
+    <Suspense fallback={<div className="py-20 text-center">Chargement des hôtels...</div>}>
+      <HotelsListContent selectedCity={selectedCity} onSelectCity={onSelectCity} />
+    </Suspense>
+  );
+}
+

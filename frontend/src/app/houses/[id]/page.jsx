@@ -9,6 +9,13 @@ import FavoriteButton from '@/components/FavoriteButton';
 import LocationMap from '@/components/LocationMap';
 import api from '@/lib/api';
 
+const SERVER = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:5000';
+function resolveImg(url) {
+  if (!url) return null;
+  if (url.startsWith('http')) return url;
+  return `${SERVER}${url}`;
+}
+
 const MOCK = {
   name: 'Villa Yasmine', city: 'Alger', wilaya: 'Alger', type: 'Villa',
   rooms: 4, bathrooms: 2, capacity: 8, pricePerNight: 15000,
@@ -63,7 +70,7 @@ export default function HouseDetailPage() {
       {/* Image gallery */}
       <div style={{ position: 'relative', height: 420, overflow: 'hidden', background: '#1e293b' }}>
         <img
-          src={images[activeImg]?.url}
+          src={resolveImg(images[activeImg]?.url)}
           alt={house.name}
           style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.9 }}
         />
@@ -102,7 +109,7 @@ export default function HouseDetailPage() {
                   cursor: 'pointer', padding: 0
                 }}
               >
-                <img src={img.url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <img src={resolveImg(img.url)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               </button>
             ))}
           </div>
@@ -238,7 +245,7 @@ export default function HouseDetailPage() {
 
               {/* Contact button */}
               <button
-                onClick={() => alert('Contactez le propriétaire pour réserver cette maison.')}
+                onClick={() => window.location.href = `/booking/house/${house._id || id}`}
                 style={{
                   width: '100%', padding: '14px', borderRadius: 14, border: 'none',
                   background: 'linear-gradient(135deg, #7c3aed, #a855f7)',

@@ -3,13 +3,51 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Heart, Hotel, Home } from 'lucide-react';
+import { Heart, Hotel, Home, Trash2 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import HouseCard from '@/components/HouseCard';
 import api from '@/lib/api';
 import { formatDZD } from '@/lib/data';
 import { useAuthStore } from '@/store/authStore';
+import { HOTELS as MOCK_HOTELS, FEATURED } from '@/lib/data';
+
+const SERVER = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:5000';
+function resolveImg(url) {
+  if (!url) return null;
+  if (url.startsWith('http')) return url;
+  return `${SERVER}${url}`;
+}
+
+// ── localStorage helpers (shared with FavoriteButton) ──────────────
+const ANON_KEY = 'anon_favorites';
+
+function getAnonFavs() {
+  if (typeof window === 'undefined') return { hotels: [], houses: [] };
+  try {
+    return JSON.parse(localStorage.getItem(ANON_KEY)) || { hotels: [], houses: [] };
+  } catch {
+    return { hotels: [], houses: [] };
+  }
+}
+
+function setAnonFavs(favs) {
+  localStorage.setItem(ANON_KEY, JSON.stringify(favs));
+}
+
+// Mock houses for anonymous favorites
+const MOCK_HOUSES = [
+  { _id: 'hm1', name: 'Villa Yasmine', city: 'Alger', wilaya: 'Alger', type: 'Villa', rooms: 4, bathrooms: 2, capacity: 8, pricePerNight: 15000, images: [{ url: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&q=80' }] },
+  { _id: 'hm2', name: 'Chalet Tikjda', city: 'Bouira', wilaya: 'Bouira', type: 'Chalet', rooms: 3, bathrooms: 1, capacity: 6, pricePerNight: 9000, images: [{ url: 'https://images.unsplash.com/photo-1518780664697-55e3ad937233?w=800&q=80' }] },
+  { _id: 'hm3', name: 'Appartement Vue Mer', city: 'Béjaïa', wilaya: 'Béjaïa', type: 'Appartement', rooms: 2, bathrooms: 1, capacity: 4, pricePerNight: 6000, images: [{ url: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&q=80' }] },
+  { _id: 'hm4', name: 'Riad Tlemcen', city: 'Tlemcen', wilaya: 'Tlemcen', type: 'Riad', rooms: 3, bathrooms: 2, capacity: 6, pricePerNight: 11000, images: [{ url: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800&q=80' }] },
+];
+
+// Combine all known mock hotels
+const ALL_MOCK_HOTELS = [...MOCK_HOTELS, ...FEATURED].reduce((acc, h) => {
+  if (!acc.find((x) => (x._id || x.id) === (h._id || h.id))) acc.push(h);
+  return acc;
+}, []);
 
 export default function FavoritesPage() {
   const router = useRouter();
@@ -19,26 +57,70 @@ export default function FavoritesPage() {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState('hotels');
 
-  useEffect(() => {
-    if (authLoading) return;
-    if (!user) {
-      router.replace('/login?redirect=/favorites');
-      return;
-    }
-    (async () => {
+  const loadFavorites = async () => {
+    setLoading(true);
+
+    if (user) {
+      // ── Logged-in: fetch from API ──
       try {
         const { data } = await api.get('/favorites');
         setHotels(data.favorites?.hotels || []);
         setHouses(data.favorites?.houses || []);
       } catch {
         /* offline */
-      } finally {
-        setLoading(false);
       }
-    })();
-  }, [user, authLoading, router]);
+    } else {
+      // ── Anonymous: read from localStorage ──
+      const favs = getAnonFavs();
 
-  if (authLoading || !user) {
+      // Try to resolve favorite hotels from API, fallback to mocks
+      let resolvedHotels = [];
+      for (const hid of favs.hotels) {
+        try {
+          const { data } = await api.get(`/hotels/${hid}`);
+          resolvedHotels.push(data.hotel || data);
+        } catch {
+          const mock = ALL_MOCK_HOTELS.find((m) => (m._id || m.id) === hid);
+          if (mock) resolvedHotels.push({ _id: mock._id || mock.id, name: mock.name, city: mock.city, wilaya: mock.wilaya || '', images: mock.images || (mock.img ? [{ url: mock.img }] : []), starRating: mock.stars || mock.starRating || 0, price: mock.price || 0 });
+        }
+      }
+
+      let resolvedHouses = [];
+      for (const hid of favs.houses) {
+        try {
+          const { data } = await api.get(`/houses/${hid}`);
+          resolvedHouses.push(data.house || data);
+        } catch {
+          const mock = MOCK_HOUSES.find((m) => m._id === hid);
+          if (mock) resolvedHouses.push(mock);
+        }
+      }
+
+      setHotels(resolvedHotels);
+      setHouses(resolvedHouses);
+    }
+
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    if (authLoading) return;
+    loadFavorites();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, authLoading]);
+
+  // Remove anonymous favorite
+  const removeAnonFav = (type, id) => {
+    const favs = getAnonFavs();
+    const key = type === 'house' ? 'houses' : 'hotels';
+    favs[key] = favs[key].filter((x) => x !== id);
+    setAnonFavs(favs);
+    // Refresh state
+    if (type === 'hotel') setHotels((prev) => prev.filter((h) => (h._id || h.id) !== id));
+    else setHouses((prev) => prev.filter((h) => (h._id || h.id) !== id));
+  };
+
+  if (authLoading) {
     return (
       <main className="min-h-screen">
         <Navbar />
@@ -61,8 +143,13 @@ export default function FavoritesPage() {
           </span>
           <h1 className="text-3xl font-extrabold">Mes favoris</h1>
           <p className="mt-2 text-rose-50">
-            {total > 0 ? `${total} hébergement(s) sauvegardé(s)` : 'Vous n’avez pas encore de favoris'}
+            {total > 0 ? `${total} hébergement(s) sauvegardé(s)` : 'Vous n\'avez pas encore de favoris'}
           </p>
+          {!user && (
+            <p className="mt-3 text-sm text-rose-100 bg-white/10 rounded-full px-4 py-1.5">
+              💡 <Link href="/login" className="underline font-semibold">Connectez-vous</Link> pour synchroniser vos favoris sur tous vos appareils
+            </p>
+          )}
         </div>
       </section>
 
@@ -80,7 +167,7 @@ export default function FavoritesPage() {
           <button
             onClick={() => setTab('houses')}
             className={`flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition ${
-              tab === 'houses' ? 'bg-purple-600 text-white' : 'bg-white text-gray-600 shadow-sm'
+              tab === 'houses' ? 'bg-brand-500 text-white' : 'bg-white text-gray-600 shadow-sm'
             }`}
           >
             <Home className="h-4 w-4" /> Maisons ({houses.length})
@@ -100,28 +187,44 @@ export default function FavoritesPage() {
           ) : (
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {hotels.map((h) => (
-                <Link
-                  key={h._id}
-                  href={`/hotels/${h._id}`}
-                  className="group overflow-hidden rounded-2xl bg-white shadow-card transition hover:-translate-y-1"
-                >
-                  <div className="relative h-48">
-                    <img
-                      src={h.images?.[0]?.url || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80'}
-                      alt={h.name}
-                      className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                    />
-                    {h.starRating > 0 && (
-                      <span className="absolute right-3 top-3 rounded-full bg-white/95 px-2.5 py-1 text-xs font-bold text-amber-600 shadow">
-                        {h.starRating} ★
+                <div key={h._id || h.id} className="relative group">
+                  <Link
+                    href={`/hotels/${h._id || h.id}`}
+                    className="group overflow-hidden rounded-2xl bg-white shadow-card transition hover:-translate-y-1 block"
+                  >
+                    <div className="relative h-48">
+                      <img
+                        src={resolveImg(h.images?.[0]?.url) || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80'}
+                        alt={h.name}
+                        className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                      />
+                      <span className="absolute left-3 top-3 rounded-full bg-red-500 px-2.5 py-1 text-xs font-bold text-white shadow flex items-center gap-1">
+                        <Heart className="h-3 w-3 fill-white" /> Favori
                       </span>
-                    )}
-                  </div>
-                  <div className="p-4">
-                    <h3 className="font-bold text-ink">{h.name}</h3>
-                    <p className="mt-1 text-sm text-gray-500">{h.city}, {h.wilaya}</p>
-                  </div>
-                </Link>
+                      {h.starRating > 0 && (
+                        <span className="absolute right-3 top-3 rounded-full bg-white/95 px-2.5 py-1 text-xs font-bold text-amber-600 shadow">
+                          {h.starRating} ★
+                        </span>
+                      )}
+                    </div>
+                    <div className="p-4">
+                      <h3 className="font-bold text-ink">{h.name}</h3>
+                      <p className="mt-1 text-sm text-gray-500">{h.city}{h.wilaya ? `, ${h.wilaya}` : ''}</p>
+                      {h.price > 0 && (
+                        <p className="mt-2 text-lg font-extrabold text-brand-600">{formatDZD(h.price)}</p>
+                      )}
+                    </div>
+                  </Link>
+                  {!user && (
+                    <button
+                      onClick={() => removeAnonFav('hotel', h._id || h.id)}
+                      className="absolute right-3 bottom-3 grid h-8 w-8 place-items-center rounded-full bg-red-50 text-red-400 hover:bg-red-100 hover:text-red-600 transition opacity-0 group-hover:opacity-100"
+                      title="Retirer des favoris"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
               ))}
             </div>
           )
@@ -135,7 +238,18 @@ export default function FavoritesPage() {
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {houses.map((h) => (
-              <HouseCard key={h._id} house={h} />
+              <div key={h._id || h.id} className="relative group">
+                <HouseCard house={h} />
+                {!user && (
+                  <button
+                    onClick={() => removeAnonFav('house', h._id || h.id)}
+                    className="absolute right-3 bottom-3 grid h-8 w-8 place-items-center rounded-full bg-red-50 text-red-400 hover:bg-red-100 hover:text-red-600 transition opacity-0 group-hover:opacity-100"
+                    title="Retirer des favoris"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
             ))}
           </div>
         )}

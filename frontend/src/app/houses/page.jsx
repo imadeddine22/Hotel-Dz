@@ -6,19 +6,10 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import HouseCard from '@/components/HouseCard';
 import api from '@/lib/api';
+import { useWilayas } from '@/hooks/useWilayas';
 
 const TYPES = ['Villa', 'Appartement', 'Maison', 'Chalet', 'Studio', 'Duplex', 'Riad', 'Ferme'];
-const WILAYAS = [
-  'Adrar','Chlef','Laghouat','Oum El Bouaghi','Batna','Béjaïa','Biskra','Béchar',
-  'Blida','Bouira','Tamanrasset','Tébessa','Tlemcen','Tiaret','Tizi Ouzou','Alger',
-  'Djelfa','Jijel','Sétif','Saïda','Skikda','Sidi Bel Abbès','Annaba','Guelma',
-  'Constantine','Médéa','Mostaganem',"M'Sila",'Mascara','Ouargla','Oran','El Bayadh',
-  'Illizi','Bordj Bou Arréridj','Boumerdès','El Tarf','Tindouf','Tissemsilt',
-  'El Oued','Khenchela','Souk Ahras','Tipaza','Mila','Aïn Defla','Naâma',
-  'Aïn Témouchent','Ghardaïa','Relizane','Timimoun','Bordj Badji Mokhtar',
-  'Ouled Djellal','Béni Abbès','In Salah','In Guezzam','Touggourt','Djanet',
-  "El M'Ghair",'El Meniaa'
-];
+// Static WILAYAS list removed, loaded dynamically via useWilayas hook.
 
 const MOCK = [
   { id: 'hm1', name: 'Villa Yasmine', city: 'Alger', wilaya: 'Alger', type: 'Villa', rooms: 4, bathrooms: 2, capacity: 8, pricePerNight: 15000, img: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&q=80' },
@@ -32,6 +23,7 @@ const MOCK = [
 ];
 
 export default function HousesPage() {
+  const { wilayas } = useWilayas();
   const [filters, setFilters] = useState({ wilaya: '', type: '', q: '', sort: '' });
   const [houses, setHouses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -113,7 +105,7 @@ export default function HousesPage() {
               style={{ borderRadius: 10, border: '1px solid #e2e8f0', padding: '8px 12px', fontSize: 13, color: '#374151', background: '#f8fafc' }}
             >
               <option value="">Toutes les wilayas</option>
-              {WILAYAS.map((w) => <option key={w} value={w}>{w}</option>)}
+              {wilayas.map((w) => <option key={w} value={w}>{w}</option>)}
             </select>
             <button
               onClick={fetchHouses}

@@ -1,10 +1,20 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Plus, MapPin, Trash2, BedDouble, Bath, Users, X, Home, Pencil } from 'lucide-react';
 import DashboardShell from '@/components/DashboardShell';
 import MapPicker from '@/components/MapPicker';
+import ImageUploader from '@/components/ImageUploader';
+import { useWilayas } from '@/hooks/useWilayas';
 import api from '@/lib/api';
+
+const SERVER = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:5000';
+function resolveImg(url) {
+  if (!url) return null;
+  if (url.startsWith('http')) return url;
+  return `${SERVER}${url}`;
+}
 
 const STATUS = {
   pending: 'bg-amber-50 text-amber-700',
@@ -12,43 +22,50 @@ const STATUS = {
   rejected: 'bg-red-50 text-red-600',
 };
 
-const HOUSE_TYPES = ['Villa', 'Appartement', 'Maison', 'Chalet', 'Studio', 'Duplex', 'Riad', 'Ferme'];
-const WILAYAS = [
-  'Adrar','Chlef','Laghouat','Oum El Bouaghi','Batna','Béjaïa','Biskra','Béchar',
-  'Blida','Bouira','Tamanrasset','Tébessa','Tlemcen','Tiaret','Tizi Ouzou','Alger',
-  'Djelfa','Jijel','Sétif','Saïda','Skikda','Sidi Bel Abbès','Annaba','Guelma',
-  'Constantine','Médéa','Mostaganem',"M'Sila",'Mascara','Ouargla','Oran','El Bayadh',
-  'Illizi','Bordj Bou Arréridj','Boumerdès','El Tarf','Tindouf','Tissemsilt',
-  'El Oued','Khenchela','Souk Ahras','Tipaza','Mila','Aïn Defla','Naâma',
-  'Aïn Témouchent','Ghardaïa','Relizane','Timimoun','Bordj Badji Mokhtar',
-  'Ouled Djellal','Béni Abbès','In Salah','In Guezzam','Touggourt','Djanet',
-  "El M'Ghair",'El Meniaa'
-];
+const HOUSE_TYPES = ['Villa', 'Appartement', 'Maison', 'Chalet', 'Studio', 'Duplex', 'Riad', 'Ferme', 'Luxe', 'Affaires', 'Balnéaire', 'Boutique', 'Montagne', 'Désert', 'Appart-hôtel', 'Économique'];
 
 const emptyForm = {
   name: '', description: '', wilaya: '', city: '', address: '',
-  type: 'Maison', rooms: 1, bathrooms: 1, capacity: 2,
-  pricePerNight: '', amenities: '', lat: '', lng: '',
+  type: 'Maison', starRating: 3, rooms: 1, bathrooms: 1, capacity: 2,
+  pricePerNight: '', amenities: '', lat: '', lng: '', suitableFor: [],
 };
 
-export default function MyHousesPage() {
+const labelStyle = { display: 'block', fontSize: 12, fontWeight: 700, color: '#64748b', marginBottom: 6, textTransform: 'uppercase' };
+const inputStyle = { width: '100%', padding: '10px 14px', borderRadius: 12, border: '1px solid #e2e8f0', fontSize: 14, color: '#1e293b', outline: 'none' };
+
+function MyHousesContent() {
+  const { wilayas, addWilaya } = useWilayas();
   const [houses, setHouses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [typeFilter, setTypeFilter] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [files, setFiles] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
   const [editingId, setEditingId] = useState(null);
+  const [showWilayaModal, setShowWilayaModal] = useState(false);
+  const [tempWilaya, setTempWilaya] = useState('');
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get('new') === '1') {
+      setEditingId(null);
+      setForm(emptyForm);
+      setShowModal(true);
+    }
+  }, [searchParams]);
 
   const openEdit = (house) => {
     setForm({
       name: house.name, description: house.description || '', wilaya: house.wilaya,
-      city: house.city, address: house.address || '', type: house.type,
+      city: house.city, address: house.address || '', type: house.type, starRating: house.starRating || 3,
       rooms: house.rooms, bathrooms: house.bathrooms, capacity: house.capacity,
       pricePerNight: house.pricePerNight, amenities: house.amenities?.join(', ') || '',
-      lat: house.coordinates?.lat ?? '', lng: house.coordinates?.lng ?? ''
+      suitableFor: house.suitableFor || [],
+      lat: house.coordinates?.lat ?? '', lng: house.coordinates?.lng ?? '',
+      existingImages: house.images || []
     });
     setEditingId(house._id);
     setShowModal(true);
@@ -57,7 +74,8 @@ export default function MyHousesPage() {
   const load = async () => {
     setLoading(true);
     try {
-      const { data } = await api.get('/houses/my/list');
+      const params = typeFilter ? { type: typeFilter } : {};
+      const { data } = await api.get('/houses/my/list', { params });
       setHouses(data.houses);
     } catch (e) {
       setError(e.message);
@@ -65,7 +83,7 @@ export default function MyHousesPage() {
       setLoading(false);
     }
   };
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [typeFilter]);
 
   const remove = async (id) => {
     if (!confirm('Supprimer cette maison ?')) return;
@@ -78,7 +96,10 @@ export default function MyHousesPage() {
     setFormError('');
     try {
       const payload = new FormData();
-      Object.entries(form).forEach(([k, v]) => payload.append(k, v));
+      Object.entries(form).forEach(([k, v]) => {
+        if (k === 'suitableFor') payload.append(k, v.join(','));
+        else payload.append(k, v);
+      });
       if (files) {
         Array.from(files).forEach((f) => payload.append('images', f));
       }
@@ -107,63 +128,80 @@ export default function MyHousesPage() {
 
   return (
     <DashboardShell role="owner" title="Mes maisons">
-      <div className="mb-6 flex justify-end">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="no-scrollbar flex items-center gap-2 overflow-x-auto pb-1" style={{ maxWidth: '100%' }}>
+          <button
+            onClick={() => setTypeFilter('')}
+            className={`shrink-0 rounded-full px-4 py-1.5 text-sm ${!typeFilter ? 'bg-brand-500 text-white' : 'border border-gray-200 text-gray-600 bg-white'}`}
+          >
+            Tous les types
+          </button>
+          {HOUSE_TYPES.map((t) => (
+            <button
+              key={t}
+              onClick={() => setTypeFilter(t)}
+              className={`shrink-0 rounded-full px-4 py-1.5 text-sm ${typeFilter === t ? 'bg-brand-500 text-white' : 'border border-gray-200 text-gray-600 bg-white'}`}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
         <button
           onClick={() => { setEditingId(null); setForm(emptyForm); setShowModal(true); }}
-          className="flex items-center gap-2 rounded-lg bg-purple-600 px-4 py-2 text-sm font-semibold text-white hover:bg-purple-700"
+          className="shrink-0 flex items-center gap-2 rounded-lg bg-brand-500 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-600"
         >
           <Plus className="h-4 w-4" /> Ajouter une maison
         </button>
       </div>
 
       {loading ? (
-        <p className="text-gray-400">Chargement...</p>
+        <p className="text-gray-500">Chargement...</p>
       ) : error ? (
-        <p className="rounded-lg bg-red-50 px-4 py-3 text-red-600">{error}</p>
+        <p className="rounded-lg bg-red-50 px-4 py-3 text-red-600 border border-red-100">{error}</p>
       ) : houses.length === 0 ? (
-        <div className="rounded-2xl bg-white p-12 text-center shadow-card">
+        <div className="rounded-2xl bg-white border border-gray-100 p-12 text-center shadow-sm">
           <Home className="mx-auto mb-4 h-12 w-12 text-gray-300" />
-          <p className="text-gray-400">Aucune maison. Ajoutez votre première maison.</p>
+          <p className="text-gray-500 font-medium">Aucune maison. Ajoutez votre première maison.</p>
         </div>
       ) : (
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {houses.map((h) => (
-            <div key={h._id} className="overflow-hidden rounded-2xl bg-white shadow-card">
+            <div key={h._id} className="overflow-hidden rounded-2xl bg-white border border-gray-100 shadow-sm transition hover:shadow-md">
               <div className="relative h-40">
                 {h.images?.[0]?.url ? (
-                  <img src={h.images[0].url} alt={h.name} className="h-full w-full object-cover" />
+                  <img src={resolveImg(h.images[0].url)} alt={h.name} className="h-full w-full object-cover" />
                 ) : (
-                  <div className="flex h-full w-full items-center justify-center bg-purple-50">
+                  <div className="flex h-full w-full items-center justify-center bg-brand-5">
                     <Home className="h-12 w-12 text-purple-200" />
                   </div>
                 )}
                 <span className={`absolute right-3 top-3 rounded-full px-3 py-1 text-xs font-semibold capitalize ${STATUS[h.status]}`}>
                   {h.status}
                 </span>
-                <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-xs font-bold text-purple-600">
+                <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-xs font-bold text-brand-500">
                   {h.type}
                 </span>
               </div>
               <div className="p-4">
                 <h3 className="font-bold text-gray-900">{h.name}</h3>
                 <p className="flex items-center gap-1 text-sm text-gray-500">
-                  <MapPin className="h-4 w-4" /> {h.city}, {h.wilaya}
+                  <MapPin className="h-4 w-4 text-brand-500" /> {h.city}, {h.wilaya}
                 </p>
-                <div className="mt-2 flex gap-3 text-xs text-gray-500">
+                <div className="mt-2 flex gap-3 text-xs text-gray-500 font-medium">
                   <span className="flex items-center gap-1"><BedDouble className="h-3.5 w-3.5" /> {h.rooms} ch.</span>
                   <span className="flex items-center gap-1"><Bath className="h-3.5 w-3.5" /> {h.bathrooms} SDB</span>
                   <span className="flex items-center gap-1"><Users className="h-3.5 w-3.5" /> {h.capacity} pers.</span>
                 </div>
                 {h.pricePerNight > 0 && (
-                  <p className="mt-2 font-bold text-purple-600">
+                  <p className="mt-2 font-bold text-brand-500">
                     {h.pricePerNight.toLocaleString('fr-DZ')} DZD<span className="text-xs font-normal text-gray-400">/nuit</span>
                   </p>
                 )}
                 <div className="mt-3 flex gap-2">
-                  <button onClick={() => openEdit(h)} className="grid w-10 place-items-center rounded-lg bg-gray-50 py-2 text-gray-500 hover:bg-gray-100">
+                  <button onClick={() => openEdit(h)} className="grid w-10 place-items-center rounded-lg bg-gray-50 py-2 text-gray-500 hover:bg-gray-100 transition">
                     <Pencil className="h-4 w-4" />
                   </button>
-                  <button onClick={() => remove(h._id)} className="grid w-10 place-items-center rounded-lg bg-red-50 py-2 text-red-500 hover:bg-red-100">
+                  <button onClick={() => remove(h._id)} className="grid w-10 place-items-center rounded-lg bg-red-50 py-2 text-red-500 hover:bg-red-100 transition">
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
@@ -173,20 +211,19 @@ export default function MyHousesPage() {
         </div>
       )}
 
-      {/* Add House Modal */}
       {showModal && (
         <div style={{
-          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)',
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
           zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20
         }}>
           <div style={{
-            background: '#fff', borderRadius: 20, width: '100%', maxWidth: 600,
-            maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 25px 60px rgba(0,0,0,0.2)'
+            background: '#fff', borderRadius: 24, width: '100%', maxWidth: 600,
+            maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 25px 60px rgba(0,0,0,0.1)'
           }}>
             <div style={{
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               padding: '22px 26px', borderBottom: '1px solid #f1f5f9',
-              position: 'sticky', top: 0, background: '#fff', borderRadius: '20px 20px 0 0', zIndex: 10
+              position: 'sticky', top: 0, background: '#fff', borderRadius: '24px 24px 0 0', zIndex: 10
             }}>
               <div>
                 <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: '#1e293b' }}>
@@ -221,11 +258,27 @@ export default function MyHousesPage() {
                   </select>
                 </div>
                 <div>
-                  <label style={labelStyle}>Wilaya *</label>
+                  <label style={labelStyle}>Étoiles *</label>
+                  <select required style={inputStyle} value={form.starRating}
+                    onChange={(e) => setForm({ ...form, starRating: e.target.value })}>
+                    {[1, 2, 3, 4, 5].map(s => <option key={s} value={s}>{s} ★</option>)}
+                  </select>
+                </div>
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <label style={labelStyle}>Wilaya *</label>
+                    <button
+                      type="button"
+                      onClick={() => setShowWilayaModal(true)}
+                      style={{ fontSize: 11, color: '#7c3aed', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700 }}
+                    >
+                      + Ajouter une wilaya
+                    </button>
+                  </div>
                   <select required style={inputStyle} value={form.wilaya}
                     onChange={(e) => setForm({ ...form, wilaya: e.target.value })}>
-                    <option value="">Choisir</option>
-                    {WILAYAS.map(w => <option key={w} value={w}>{w}</option>)}
+                    <option value="">Choisir une wilaya</option>
+                    {wilayas.map(w => <option key={w} value={w}>{w}</option>)}
                   </select>
                 </div>
                 <div>
@@ -270,6 +323,21 @@ export default function MyHousesPage() {
                     onChange={(e) => setForm({ ...form, amenities: e.target.value })} />
                 </div>
                 <div style={{ gridColumn: '1/-1' }}>
+                  <label style={labelStyle}>Idéal pour (Cochez les options applicables)</label>
+                  <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', padding: '8px 14px', background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0' }}>
+                    {['Familles', 'Amis', 'Couples', 'Solo', 'Affaires'].map(opt => (
+                      <label key={opt} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, color: '#475569', cursor: 'pointer' }}>
+                        <input type="checkbox" checked={form.suitableFor.includes(opt)}
+                          onChange={(e) => {
+                            if (e.target.checked) setForm({ ...form, suitableFor: [...form.suitableFor, opt] });
+                            else setForm({ ...form, suitableFor: form.suitableFor.filter(x => x !== opt) });
+                          }}
+                        /> {opt}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                <div style={{ gridColumn: '1/-1' }}>
                   <label style={labelStyle}>Localisation sur la carte</label>
                   <MapPicker
                     value={{ lat: form.lat, lng: form.lng }}
@@ -278,9 +346,12 @@ export default function MyHousesPage() {
                   />
                 </div>
                 <div style={{ gridColumn: '1/-1' }}>
-                  <label style={labelStyle}>Photos</label>
-                  <input type="file" multiple accept="image/*" style={inputStyle}
-                    onChange={(e) => setFiles(e.target.files)} />
+                  <label style={labelStyle}>Photos (la première sera la photo principale)</label>
+                  <ImageUploader 
+                    onChange={(selectedFiles) => setFiles(selectedFiles)} 
+                    maxFiles={6} 
+                    existingImages={form.existingImages || []} 
+                  />
                 </div>
               </div>
 
@@ -303,12 +374,79 @@ export default function MyHousesPage() {
           </div>
         </div>
       )}
+
+      {/* Add Wilaya Modal */}
+      {showWilayaModal && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
+          zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20
+        }}>
+          <div style={{
+            background: '#fff', borderRadius: 20, width: '100%', maxWidth: 400,
+            boxShadow: '0 25px 60px rgba(124,58,237,0.2)', padding: '28px 26px'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: '#1e293b' }}>Ajouter une wilaya</h3>
+                <p style={{ margin: '3px 0 0', fontSize: 12, color: '#94a3b8' }}>Entrez le nom de la nouvelle wilaya</p>
+              </div>
+              <button type="button" onClick={() => { setShowWilayaModal(false); setTempWilaya(''); }}
+                style={{ background: '#f1f5f9', border: 'none', borderRadius: 10, padding: 8, cursor: 'pointer', color: '#64748b', display: 'flex' }}>
+                <X style={{ width: 16, height: 16 }} />
+              </button>
+            </div>
+            <input
+              type="text"
+              autoFocus
+              placeholder="ex: Nouvelle Wilaya"
+              value={tempWilaya}
+              onChange={(e) => setTempWilaya(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
+              style={{ ...inputStyle, marginBottom: 20, background: '#fff', border: '1px solid #e2e8f0', boxSizing: 'border-box' }}
+            />
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+              <button
+                type="button"
+                onClick={() => { setShowWilayaModal(false); setTempWilaya(''); }}
+                style={{ padding: '9px 18px', borderRadius: 10, border: '1px solid #e2e8f0', background: '#f8fafc', color: '#64748b', cursor: 'pointer', fontWeight: 600, fontSize: 13 }}
+              >
+                Annuler
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  const name = tempWilaya.trim();
+                  if (!name) return;
+                  try {
+                    const newW = await addWilaya(name);
+                    setForm(prev => ({ ...prev, wilaya: newW }));
+                    setShowWilayaModal(false);
+                    setTempWilaya('');
+                  } catch (err) {
+                    alert(err.message);
+                  }
+                }}
+                style={{
+                  padding: '9px 20px', borderRadius: 10, border: 'none',
+                  background: 'linear-gradient(135deg, #7c3aed, #a855f7)',
+                  color: '#fff', cursor: 'pointer', fontWeight: 700, fontSize: 13,
+                  boxShadow: '0 4px 12px rgba(124,58,237,0.3)'
+                }}
+              >
+                Ajouter
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </DashboardShell>
   );
 }
 
-const labelStyle = { display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 6 };
-const inputStyle = {
-  width: '100%', padding: '10px 14px', borderRadius: 12, border: '1px solid #e2e8f0',
-  fontSize: 14, color: '#1e293b', outline: 'none', background: '#f8fafc', boxSizing: 'border-box',
-};
+export default function MyHousesPage() {
+  return (
+    <Suspense fallback={<div style={{ textAlign: 'center', padding: '40px 0', color: '#94a3b8' }}>Chargement...</div>}>
+      <MyHousesContent />
+    </Suspense>
+  );
+}

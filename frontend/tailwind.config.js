@@ -5,16 +5,22 @@ module.exports = {
     extend: {
       colors: {
         brand: {
-          // green accent (matches the restosdz-style UI)
-          50: '#ecfdf5',
-          100: '#d1fae5',
-          200: '#a7f3d0',
-          400: '#4ade80',
-          500: '#34c77b',
-          600: '#22a96a',
-          700: '#1b8a57',
+          // Cyan / Sky-blue — matches the hotel booking UI reference
+          50:  '#e0f7fa',
+          100: '#b2ebf2',
+          200: '#80deea',
+          400: '#26c6da',
+          500: '#00bcd4',
+          600: '#00acc1',
+          700: '#0097a7',
         },
-        ink: '#1f2937',
+        gold: {
+          // Yellow / Amber accent — used on CTA buttons
+          400: '#ffd740',
+          500: '#ffc107',
+          600: '#ffb300',
+        },
+        ink: '#1a2332',
       },
       fontFamily: {
         sans: ['var(--font-poppins)', 'system-ui', 'sans-serif'],

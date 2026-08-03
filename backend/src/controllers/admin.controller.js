@@ -213,9 +213,10 @@ export const getBookings = async (req, res, next) => {
 // GET /admin/hotels/all — all hotels with filtering
 export const getAllHotels = async (req, res, next) => {
   try {
-    const { status, q, page = 1, limit = 20 } = req.query;
+    const { status, q, type, page = 1, limit = 20 } = req.query;
     const filter = {};
     if (status) filter.status = status;
+    if (type) filter.type = type;
     if (q) filter.name = new RegExp(q, 'i');
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
@@ -338,9 +339,10 @@ export const updateHotelByAdmin = async (req, res, next) => {
 // GET /admin/houses/all — all houses with filtering
 export const getAllHouses = async (req, res, next) => {
   try {
-    const { status, q, page = 1, limit = 20 } = req.query;
+    const { status, q, type, page = 1, limit = 20 } = req.query;
     const filter = {};
     if (status) filter.status = status;
+    if (type) filter.type = type;
     if (q) filter.name = new RegExp(q, 'i');
 
     const skip = (parseInt(page) - 1) * parseInt(limit);

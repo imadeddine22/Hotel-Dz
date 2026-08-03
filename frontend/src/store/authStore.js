@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import api from '@/lib/api';
 import { useFavoritesStore } from '@/store/favoritesStore';
 
@@ -6,7 +7,6 @@ export const useAuthStore = create((set, get) => ({
   user: null,
   loading: true,
 
-  // Restore session on app load (cookie or stored token)
   init: async () => {
     try {
       const { data } = await api.get('/auth/me');
@@ -46,3 +46,21 @@ export const useAuthStore = create((set, get) => ({
 
   isRole: (...roles) => roles.includes(get().user?.role),
 }));
+
+export const useLangStore = create(
+  persist(
+    (set) => ({
+      lang: 'fr',
+      setLang: (lang) => {
+        if (typeof document !== 'undefined') {
+          document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+          document.documentElement.lang = lang;
+        }
+        set({ lang });
+      },
+    }),
+    {
+      name: 'dz-lang-storage',
+    }
+  )
+);

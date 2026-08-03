@@ -8,7 +8,7 @@ export const getHouses = async (req, res, next) => {
     const { wilaya, city, type, minPrice, maxPrice, q, sort, page = 1, limit = 12 } = req.query;
 
     const filter = { status: 'approved' };
-    if (wilaya) filter.wilaya = wilaya;
+    if (wilaya) filter.wilaya = new RegExp(wilaya.replace(/[-\s]/g, '[-s]'), 'i');
     if (city) filter.city = new RegExp(city, 'i');
     if (type) filter.type = type;
     if (q) filter.name = new RegExp(q, 'i');
@@ -61,7 +61,10 @@ export const getHouse = async (req, res, next) => {
 // GET /houses/my/list — owner's own houses
 export const getMyHouses = async (req, res, next) => {
   try {
-    const houses = await House.find({ owner: req.user._id }).sort({ createdAt: -1 });
+    const { type } = req.query;
+    const filter = { owner: req.user._id };
+    if (type) filter.type = type;
+    const houses = await House.find(filter).sort({ createdAt: -1 });
     res.json({ success: true, count: houses.length, houses });
   } catch (err) {
     next(err);
@@ -77,6 +80,7 @@ export const createHouse = async (req, res, next) => {
     const house = await House.create({
       ...req.body,
       amenities: parseArray(req.body.amenities),
+      suitableFor: parseArray(req.body.suitableFor),
       ...(coordinates && { coordinates }),
       owner: req.user._id,
       images,
@@ -103,6 +107,7 @@ export const updateHouse = async (req, res, next) => {
       if (req.body[f] !== undefined) house[f] = req.body[f];
     });
     if (req.body.amenities !== undefined) house.amenities = parseArray(req.body.amenities);
+    if (req.body.suitableFor !== undefined) house.suitableFor = parseArray(req.body.suitableFor);
     const coordinates = parseCoordinates(req.body);
     if (coordinates) house.coordinates = coordinates;
 

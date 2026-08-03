@@ -449,6 +449,11 @@
 /* === DASHBOARD PAGE === */
 .admin-page-header {
   margin-bottom: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 .admin-page-title {
   font-size: 24px;
@@ -529,8 +534,8 @@
 .admin-stat-icon.violet { background: #f5f3ff; color: #8b5cf6; }
 .admin-stat-card:has(.admin-stat-icon.violet)::after { background: #8b5cf6; }
 
-.admin-stat-icon.emerald { background: #ecfdf5; color: #10b981; }
-.admin-stat-card:has(.admin-stat-icon.emerald)::after { background: #10b981; }
+.admin-stat-icon.emerald { background: #e0f7fa; color: #00bcd4; }
+.admin-stat-card:has(.admin-stat-icon.emerald)::after { background: #00bcd4; }
 
 .admin-stat-icon.amber { background: #fffbeb; color: #f59e0b; }
 .admin-stat-card:has(.admin-stat-icon.amber)::after { background: #f59e0b; }
@@ -569,8 +574,8 @@
   border-radius: 20px;
 }
 .admin-stat-change.up {
-  color: #10b981;
-  background: #ecfdf5;
+  color: #00bcd4;
+  background: #e0f7fa;
 }
 .admin-stat-change.down {
   color: #ef4444;
@@ -703,8 +708,8 @@
   font-weight: 600;
 }
 .admin-hotel-card-status.approved {
-  background: #ecfdf5;
-  color: #10b981;
+  background: #e0f7fa;
+  color: #00bcd4;
 }
 .admin-hotel-card-status.pending {
   background: #fffbeb;
@@ -776,7 +781,7 @@
   background: linear-gradient(135deg, #3b82f6, #6366f1);
 }
 .admin-activity-avatar.user {
-  background: linear-gradient(135deg, #10b981, #06b6d4);
+  background: linear-gradient(135deg, #00bcd4, #06b6d4);
 }
 .admin-activity-info {
   flex: 1;
@@ -956,7 +961,7 @@
   height: 16px;
 }
 .admin-btn-approve {
-  background: #10b981;
+  background: #00bcd4;
   color: white;
 }
 .admin-btn-approve:hover {
@@ -1103,13 +1108,13 @@
 .admin-badge.admin { background: #f5f3ff; color: #7c3aed; }
 .admin-badge.owner { background: #eff6ff; color: #3b82f6; }
 .admin-badge.customer { background: #f1f5f9; color: #64748b; }
-.admin-badge.active { background: #ecfdf5; color: #10b981; }
+.admin-badge.active { background: #e0f7fa; color: #00bcd4; }
 .admin-badge.blocked { background: #fef2f2; color: #ef4444; }
-.admin-badge.confirmed { background: #ecfdf5; color: #10b981; }
+.admin-badge.confirmed { background: #e0f7fa; color: #00bcd4; }
 .admin-badge.pending { background: #fffbeb; color: #f59e0b; }
 .admin-badge.cancelled { background: #fef2f2; color: #ef4444; }
 .admin-badge.completed { background: #eff6ff; color: #3b82f6; }
-.admin-badge.paid { background: #ecfdf5; color: #10b981; }
+.admin-badge.paid { background: #e0f7fa; color: #00bcd4; }
 .admin-badge.unpaid { background: #f1f5f9; color: #64748b; }
 .admin-badge.refunded { background: #fff7ed; color: #ea580c; }
 
@@ -1386,7 +1391,7 @@
   border-radius: 20px;
 }
 .an-change svg { width: 12px; height: 12px; }
-.an-change.up   { color: #10b981; background: #ecfdf5; }
+.an-change.up   { color: #00bcd4; background: #e0f7fa; }
 .an-change.down { color: #ef4444; background: #fef2f2; }
 
 /* legend dots */

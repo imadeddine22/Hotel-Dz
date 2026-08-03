@@ -33,8 +33,9 @@ const HOTELS = [
 
 const ROOM_TYPES = [
   { type: 'single', title: 'Chambre Simple', pricePerNight: 8500, capacity: 1, bedsCount: 1, quantity: 5 },
-  { type: 'double', title: 'Chambre Double', pricePerNight: 14000, capacity: 2, bedsCount: 1, quantity: 8 },
+  { type: 'double', title: 'Chambre Double', pricePerNight: 14000, capacity: 2, bedsCount: 2, quantity: 8 },
   { type: 'suite', title: 'Suite Exécutive', pricePerNight: 28000, capacity: 3, bedsCount: 2, quantity: 3 },
+  { type: 'family', title: 'Chambre Familiale', pricePerNight: 22000, capacity: 6, bedsCount: 3, quantity: 4 },
 ];
 
 const HOUSES = [
@@ -55,8 +56,9 @@ const MESSAGES = [
 const rand = (arr) => arr[Math.floor(Math.random() * arr.length)];
 const daysFromNow = (d) => { const x = new Date(); x.setDate(x.getDate() + d); x.setHours(12, 0, 0, 0); return x; };
 
-const run = async () => {
-  await connectDB();
+// Seeds the currently-connected database. Caller is responsible for the
+// connection lifecycle (so it can run against Atlas or an in-memory Mongo).
+export const seedDatabase = async () => {
   console.log('🌱 Seeding database...');
 
   // Wipe
@@ -182,9 +184,15 @@ const run = async () => {
   console.log('   Admin   →  admin@hotelsdz.dz  /  admin123');
   console.log('   Hôtelier→  owner@hotelsdz.dz  /  owner123');
   console.log('   Client  →  sara@example.com   /  pass123\n');
-
-  await mongoose.disconnect();
-  process.exit(0);
 };
 
-run().catch((e) => { console.error('Seed failed:', e); process.exit(1); });
+// CLI entry: `npm run seed` connects to the configured DB, seeds, disconnects.
+const isDirectRun = process.argv[1] && process.argv[1].replace(/\\/g, '/').endsWith('src/seed.js');
+if (isDirectRun) {
+  (async () => {
+    await connectDB();
+    await seedDatabase();
+    await mongoose.disconnect();
+    process.exit(0);
+  })().catch((e) => { console.error('Seed failed:', e); process.exit(1); });
+}

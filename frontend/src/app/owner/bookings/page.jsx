@@ -28,15 +28,15 @@ export default function OwnerBookingsPage() {
   }, []);
 
   return (
-    <DashboardShell role="owner" title="Réservations reçues">
+    <DashboardShell role="owner" title="Réservations">
       {loading ? (
-        <p className="text-gray-400">Chargement...</p>
+        <p className="text-gray-500">Chargement...</p>
       ) : error ? (
-        <p className="rounded-lg bg-red-50 px-4 py-3 text-red-600">{error}</p>
+        <p className="rounded-lg bg-red-50 px-4 py-3 text-red-600 border border-red-100">{error}</p>
       ) : bookings.length === 0 ? (
-        <p className="text-gray-400">Aucune réservation pour le moment.</p>
+        <p className="text-gray-500">Aucune réservation pour le moment.</p>
       ) : (
-        <div className="overflow-x-auto rounded-2xl bg-white shadow-card">
+        <div className="overflow-x-auto rounded-2xl bg-white shadow-sm border border-gray-100">
           <table className="w-full text-left text-sm">
             <thead className="border-b border-gray-100 text-gray-500">
               <tr>
@@ -49,10 +49,10 @@ export default function OwnerBookingsPage() {
             </thead>
             <tbody>
               {bookings.map((b) => (
-                <tr key={b._id} className="border-b border-gray-50 last:border-0">
+                <tr key={b._id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition">
                   <td className="p-4">
-                    <div className="font-medium text-ink">{b.customer?.fullName}</div>
-                    <div className="text-xs text-gray-400">{b.customer?.email}</div>
+                    <div className="font-medium text-gray-900">{b.customer?.fullName}</div>
+                    <div className="text-xs text-gray-500">{b.customer?.email}</div>
                   </td>
                   <td className="p-4 text-gray-600">{b.hotel?.name}<div className="text-xs text-gray-400">{b.room?.title}</div></td>
                   <td className="p-4 text-gray-600">

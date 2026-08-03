@@ -9,7 +9,6 @@ const hotelSchema = new mongoose.Schema(
     wilaya: {
       type: String,
       required: [true, 'Wilaya is required'],
-      enum: { values: WILAYA_NAMES, message: '{VALUE} is not a valid wilaya' },
     },
     city: { type: String, required: [true, 'City is required'], trim: true },
     address: { type: String, default: '' },
@@ -30,6 +29,10 @@ const hotelSchema = new mongoose.Schema(
       enum: ['Luxe', 'Affaires', 'Balnéaire', 'Riad', 'Boutique', 'Montagne', 'Désert', 'Appart-hôtel', 'Économique'],
       default: 'Économique',
     },
+    suitableFor: [{ 
+      type: String, 
+      enum: ['Familles', 'Amis', 'Couples', 'Solo', 'Affaires'] 
+    }],
     status: {
       type: String,
       enum: ['pending', 'approved', 'rejected'],

@@ -3,49 +3,66 @@
 import { useEffect, useState } from 'react';
 import { MapPin, Star, Trash2, Home, CheckCircle, XCircle, Plus, X, BedDouble, Bath, Users, Pencil } from 'lucide-react';
 import MapPicker from '@/components/MapPicker';
+import ImageUploader from '@/components/ImageUploader';
+import { useWilayas } from '@/hooks/useWilayas';
 import api from '@/lib/api';
 
-const HOUSE_TYPES = ['Villa', 'Appartement', 'Maison', 'Chalet', 'Studio', 'Duplex', 'Riad', 'Ferme'];
-const WILAYA_NAMES = [
-  'Adrar','Chlef','Laghouat','Oum El Bouaghi','Batna','Béjaïa','Biskra','Béchar',
-  'Blida','Bouira','Tamanrasset','Tébessa','Tlemcen','Tiaret','Tizi Ouzou','Alger',
-  'Djelfa','Jijel','Sétif','Saïda','Skikda','Sidi Bel Abbès','Annaba','Guelma',
-  'Constantine','Médéa','Mostaganem',"M'Sila",'Mascara','Ouargla','Oran','El Bayadh',
-  'Illizi','Bordj Bou Arréridj','Boumerdès','El Tarf','Tindouf','Tissemsilt',
-  'El Oued','Khenchela','Souk Ahras','Tipaza','Mila','Aïn Defla','Naâma',
-  'Aïn Témouchent','Ghardaïa','Relizane','Timimoun','Bordj Badji Mokhtar',
-  'Ouled Djellal','Béni Abbès','In Salah','In Guezzam','Touggourt','Djanet',
-  "El M'Ghair",'El Meniaa'
-];
+const HOUSE_TYPES = ['Villa', 'Appartement', 'Maison', 'Chalet', 'Studio', 'Duplex', 'Riad', 'Ferme', 'Luxe', 'Affaires', 'Balnéaire', 'Boutique', 'Montagne', 'Désert', 'Appart-hôtel', 'Économique'];
+// Static WILAYA_NAMES removed, loaded dynamically via useWilayas hook.
+
+const SERVER = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:5000';
+function resolveImg(url) {
+  if (!url) return null;
+  if (url.startsWith('http')) return url;
+  return `${SERVER}${url}`;
+}
 
 const emptyForm = {
   name: '', description: '', wilaya: '', city: '', address: '',
-  type: 'Maison', rooms: 1, bathrooms: 1, capacity: 2,
-  pricePerNight: '', amenities: '', status: 'approved', lat: '', lng: '',
+  type: 'Maison', starRating: 3, rooms: 1, bathrooms: 1, capacity: 2,
+  pricePerNight: '', amenities: '', status: 'approved', lat: '', lng: '', suitableFor: [],
+  owner: '',
 };
 
 export default function AdminAllHousesPage() {
+  const { wilayas, addWilaya } = useWilayas();
   const [houses, setHouses]         = useState([]);
   const [loading, setLoading]       = useState(true);
   const [error, setError]           = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [typeFilter, setTypeFilter] = useState('');
   const [search, setSearch]         = useState('');
   const [showModal, setShowModal]   = useState(false);
   const [form, setForm]             = useState(emptyForm);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError]   = useState('');
   const [editingId, setEditingId]   = useState(null);
+  const [files, setFiles]           = useState(null);
+  const [showWilayaModal, setShowWilayaModal] = useState(false);
+  const [tempWilaya, setTempWilaya] = useState('');
+  const [owners, setOwners] = useState([]);
+
+  useEffect(() => {
+    api.get('/admin/users').then(({ data }) => {
+      const list = data.users?.filter(u => u.role === 'admin' || u.role === 'owner') || [];
+      setOwners(list);
+    }).catch(() => {});
+  }, []);
 
   const openEdit = (house) => {
     setForm({
       name: house.name, description: house.description || '', wilaya: house.wilaya,
-      city: house.city, address: house.address || '', type: house.type,
+      city: house.city, address: house.address || '', type: house.type, starRating: house.starRating || 3,
       rooms: house.rooms, bathrooms: house.bathrooms, capacity: house.capacity,
       pricePerNight: house.pricePerNight, status: house.status,
       amenities: house.amenities?.join(', ') || '',
-      lat: house.coordinates?.lat ?? '', lng: house.coordinates?.lng ?? ''
+      suitableFor: house.suitableFor || [],
+      lat: house.coordinates?.lat ?? '', lng: house.coordinates?.lng ?? '',
+      existingImages: house.images || [],
+      owner: house.owner?._id || house.owner || '',
     });
     setEditingId(house._id);
+    setFiles(null);
     setShowModal(true);
   };
 
@@ -54,6 +71,7 @@ export default function AdminAllHousesPage() {
     try {
       const params = {};
       if (statusFilter) params.status = statusFilter;
+      if (typeFilter) params.type = typeFilter;
       if (search) params.q = search;
       const { data } = await api.get('/admin/houses/all', { params });
       setHouses(data.houses);
@@ -64,7 +82,7 @@ export default function AdminAllHousesPage() {
     }
   };
 
-  useEffect(() => { load(); }, [statusFilter]);
+  useEffect(() => { load(); }, [statusFilter, typeFilter]);
 
   const handleSearch = (e) => { e.preventDefault(); load(); };
 
@@ -93,7 +111,13 @@ export default function AdminAllHousesPage() {
     setFormError('');
     try {
       const payload = new FormData();
-      Object.entries(form).forEach(([k, v]) => payload.append(k, v));
+      Object.entries(form).forEach(([k, v]) => {
+        if (k === 'suitableFor') payload.append(k, v.join(','));
+        else payload.append(k, v);
+      });
+      if (files) {
+        Array.from(files).forEach((f) => payload.append('images', f));
+      }
       
       if (editingId) {
         const { data } = await api.put(`/admin/houses/${editingId}`, payload, {
@@ -110,6 +134,7 @@ export default function AdminAllHousesPage() {
       setShowModal(false);
       setForm(emptyForm);
       setEditingId(null);
+      setFiles(null);
     } catch (e) {
       setFormError(e.response?.data?.message || e.message);
     } finally {
@@ -121,15 +146,34 @@ export default function AdminAllHousesPage() {
 
   return (
     <div>
-      <div className="admin-page-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div>
-          <h1 className="admin-page-title">Toutes les maisons</h1>
-          <p className="admin-page-subtitle">Locations de maisons et villas disponibles</p>
-        </div>
+      {/* Page Header */}
+      <div style={{ marginBottom: 16 }}>
+        <h1 style={{ fontSize: 24, fontWeight: 700, color: '#1e293b', margin: 0 }}>Toutes les maisons</h1>
+        <p style={{ fontSize: 14, color: '#94a3b8', margin: '4px 0 0' }}>Locations de maisons et villas disponibles</p>
+      </div>
+
+      {/* Add House Button */}
+      <div style={{ marginBottom: 20 }}>
         <button
-          className="admin-btn admin-btn-primary"
+          id="add-house-btn"
+          type="button"
           onClick={() => { setEditingId(null); setForm(emptyForm); setShowModal(true); }}
-          style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', fontSize: 14 }}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+            padding: '11px 22px',
+            fontSize: 14,
+            fontWeight: 700,
+            background: 'linear-gradient(135deg, #7c3aed, #a855f7)',
+            color: '#fff',
+            border: 'none',
+            borderRadius: 12,
+            cursor: 'pointer',
+            boxShadow: '0 4px 15px rgba(124,58,237,0.35)',
+          }}
+          onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+          onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
         >
           <Plus style={{ width: 18, height: 18 }} /> Ajouter une maison
         </button>
@@ -150,6 +194,23 @@ export default function AdminAllHousesPage() {
               onClick={() => setStatusFilter(f.value)}
             >
               {f.label}
+            </button>
+          ))}
+        </div>
+        <div className="no-scrollbar flex items-center gap-2 overflow-x-auto" style={{ maxWidth: '100%' }}>
+          <button
+            onClick={() => setTypeFilter('')}
+            className={`shrink-0 rounded-full px-4 py-1.5 text-sm ${!typeFilter ? 'bg-brand-500 text-white' : 'border border-gray-200 text-gray-600 bg-white'}`}
+          >
+            Tous les types
+          </button>
+          {HOUSE_TYPES.map((t) => (
+            <button
+              key={t}
+              onClick={() => setTypeFilter(t)}
+              className={`shrink-0 rounded-full px-4 py-1.5 text-sm ${typeFilter === t ? 'bg-brand-500 text-white' : 'border border-gray-200 text-gray-600 bg-white'}`}
+            >
+              {t}
             </button>
           ))}
         </div>
@@ -194,7 +255,7 @@ export default function AdminAllHousesPage() {
             <div key={h._id} className="admin-hotel-card">
               <div style={{ position: 'relative' }}>
                 <img
-                  src={h.images?.[0]?.url || 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&q=80'}
+                  src={resolveImg(h.images?.[0]?.url) || 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&q=80'}
                   alt={h.name}
                   className="admin-hotel-card-img"
                 />
@@ -241,7 +302,7 @@ export default function AdminAllHousesPage() {
                         <button
                           onClick={() => handleStatusChange(h._id, 'approve')}
                           className="admin-btn"
-                          style={{ padding: '4px 8px', fontSize: 11, background: '#ecfdf5', color: '#10b981', border: '1px solid #a7f3d0', borderRadius: 8 }}
+                          style={{ padding: '4px 8px', fontSize: 11, background: '#e0f7fa', color: '#00bcd4', border: '1px solid #a7f3d0', borderRadius: 8 }}
                           title="Approuver"
                         >
                           <CheckCircle style={{ width: 13, height: 13 }} />
@@ -301,7 +362,7 @@ export default function AdminAllHousesPage() {
                 </h2>
                 <p style={{ margin: '2px 0 0', fontSize: 13, color: '#94a3b8' }}>Remplissez les informations de la maison</p>
               </div>
-              <button onClick={() => { setShowModal(false); setFormError(''); setForm(emptyForm); setEditingId(null); }}
+              <button type="button" onClick={() => { setShowModal(false); setFormError(''); setForm(emptyForm); setEditingId(null); setFiles(null); }}
                 style={{ background: '#f1f5f9', border: 'none', borderRadius: 10, padding: 8, cursor: 'pointer', color: '#64748b' }}>
                 <X style={{ width: 18, height: 18 }} />
               </button>
@@ -322,11 +383,32 @@ export default function AdminAllHousesPage() {
                     onChange={(e) => setForm({ ...form, name: e.target.value })} />
                 </div>
 
+                <div style={{ gridColumn: '1/-1' }}>
+                  <label style={labelStyle}>Propriétaire *</label>
+                  <select required style={inputStyle} value={form.owner}
+                    onChange={(e) => setForm({ ...form, owner: e.target.value })}>
+                    <option value="">Sélectionner le propriétaire (Moi ou Hôtelier)</option>
+                    {owners.map(u => (
+                      <option key={u._id} value={u._id}>
+                        {u.fullName} ({u.role === 'admin' ? 'Admin' : 'Hôtelier'}) - {u.email}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
                 <div>
                   <label style={labelStyle}>Type *</label>
                   <select required style={inputStyle} value={form.type}
                     onChange={(e) => setForm({ ...form, type: e.target.value })}>
                     {HOUSE_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                </div>
+                
+                <div>
+                  <label style={labelStyle}>Étoiles *</label>
+                  <select required style={inputStyle} value={form.starRating}
+                    onChange={(e) => setForm({ ...form, starRating: e.target.value })}>
+                    {[1, 2, 3, 4, 5].map((s) => <option key={s} value={s}>{s} ★</option>)}
                   </select>
                 </div>
 
@@ -340,11 +422,20 @@ export default function AdminAllHousesPage() {
                 </div>
 
                 <div>
-                  <label style={labelStyle}>Wilaya *</label>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <label style={labelStyle}>Wilaya *</label>
+                    <button
+                      type="button"
+                      onClick={() => setShowWilayaModal(true)}
+                      style={{ fontSize: 11, color: '#7c3aed', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}
+                    >
+                      + Ajouter
+                    </button>
+                  </div>
                   <select required style={inputStyle} value={form.wilaya}
                     onChange={(e) => setForm({ ...form, wilaya: e.target.value })}>
                     <option value="">Choisir une wilaya</option>
-                    {WILAYA_NAMES.map((w) => <option key={w} value={w}>{w}</option>)}
+                    {wilayas.map((w) => <option key={w} value={w}>{w}</option>)}
                   </select>
                 </div>
 
@@ -399,6 +490,22 @@ export default function AdminAllHousesPage() {
                 </div>
 
                 <div style={{ gridColumn: '1/-1' }}>
+                  <label style={labelStyle}>Idéal pour (Cochez les options applicables)</label>
+                  <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', padding: '8px 14px', background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0' }}>
+                    {['Familles', 'Amis', 'Couples', 'Solo', 'Affaires'].map(opt => (
+                      <label key={opt} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, color: '#475569', cursor: 'pointer' }}>
+                        <input type="checkbox" checked={form.suitableFor.includes(opt)}
+                          onChange={(e) => {
+                            if (e.target.checked) setForm({ ...form, suitableFor: [...form.suitableFor, opt] });
+                            else setForm({ ...form, suitableFor: form.suitableFor.filter(x => x !== opt) });
+                          }}
+                        /> {opt}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <div style={{ gridColumn: '1/-1' }}>
                   <label style={labelStyle}>Localisation sur la carte</label>
                   <MapPicker
                     value={{ lat: form.lat, lng: form.lng }}
@@ -406,11 +513,20 @@ export default function AdminAllHousesPage() {
                     accent="#7c3aed"
                   />
                 </div>
+
+                <div style={{ gridColumn: '1/-1' }}>
+                  <label style={labelStyle}>Photos (la première sera la photo principale)</label>
+                  <ImageUploader 
+                    onChange={(selectedFiles) => setFiles(selectedFiles)} 
+                    maxFiles={6} 
+                    existingImages={form.existingImages || []} 
+                  />
+                </div>
               </div>
 
               <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', paddingTop: 4 }}>
                 <button type="button"
-                  onClick={() => { setShowModal(false); setFormError(''); setForm(emptyForm); setEditingId(null); }}
+                  onClick={() => { setShowModal(false); setFormError(''); setForm(emptyForm); setEditingId(null); setFiles(null); }}
                   style={{ padding: '10px 20px', borderRadius: 12, border: '1px solid #e2e8f0', background: '#f8fafc', color: '#64748b', cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>
                   Annuler
                 </button>
@@ -421,6 +537,60 @@ export default function AdminAllHousesPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Add Wilaya Modal */}
+      {showWilayaModal && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
+          zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20
+        }}>
+          <div style={{
+            background: '#fff', borderRadius: 20, width: '100%', maxWidth: 400,
+            boxShadow: '0 25px 60px rgba(0,0,0,0.2)', padding: '24px 26px'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#1e293b' }}>Ajouter une wilaya</h3>
+              <button type="button" onClick={() => { setShowWilayaModal(false); setTempWilaya(''); }}
+                style={{ background: '#f1f5f9', border: 'none', borderRadius: 10, padding: 8, cursor: 'pointer', color: '#64748b' }}>
+                <X style={{ width: 16, height: 16 }} />
+              </button>
+            </div>
+            <input
+              type="text"
+              placeholder="Nom de la wilaya (ex: Ghardaïa)"
+              value={tempWilaya}
+              onChange={(e) => setTempWilaya(e.target.value)}
+              style={{ ...inputStyle, marginBottom: 16, background: '#fff' }}
+            />
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+              <button
+                type="button"
+                onClick={() => { setShowWilayaModal(false); setTempWilaya(''); }}
+                style={{ padding: '8px 16px', borderRadius: 10, border: '1px solid #e2e8f0', background: '#f8fafc', color: '#64748b', cursor: 'pointer', fontWeight: 600, fontSize: 13 }}
+              >
+                Annuler
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  if (!tempWilaya.trim()) return;
+                  try {
+                    const newW = await addWilaya(tempWilaya.trim());
+                    setForm({ ...form, wilaya: newW });
+                    setShowWilayaModal(false);
+                    setTempWilaya('');
+                  } catch (err) {
+                    alert(err.message);
+                  }
+                }}
+                style={{ padding: '8px 18px', borderRadius: 10, border: 'none', background: '#7c3aed', color: '#fff', cursor: 'pointer', fontWeight: 600, fontSize: 13 }}
+              >
+                Ajouter
+              </button>
+            </div>
           </div>
         </div>
       )}

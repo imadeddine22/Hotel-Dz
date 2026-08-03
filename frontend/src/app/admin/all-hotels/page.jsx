@@ -3,37 +3,50 @@
 import { useEffect, useState } from 'react';
 import { MapPin, Star, Trash2, Eye, Building2, Plus, X, CheckCircle, XCircle, Pencil } from 'lucide-react';
 import MapPicker from '@/components/MapPicker';
+import { useWilayas } from '@/hooks/useWilayas';
 import api from '@/lib/api';
 import { formatDZD } from '@/lib/data';
 
 export default function AdminAllHotelsPage() {
+  const { wilayas, addWilaya } = useWilayas();
   const [hotels, setHotels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [typeFilter, setTypeFilter] = useState('');
   const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
 
-  const WILAYA_NAMES = [
-    'Adrar','Chlef','Laghouat','Oum El Bouaghi','Batna','Béjaïa','Biskra','Béchar',
-    'Blida','Bouira','Tamanrasset','Tébessa','Tlemcen','Tiaret','Tizi Ouzou','Alger',
-    'Djelfa','Jijel','Sétif','Saïda','Skikda','Sidi Bel Abbès','Annaba','Guelma',
-    'Constantine','Médéa','Mostaganem',"M'Sila",'Mascara','Ouargla','Oran','El Bayadh',
-    'Illizi','Bordj Bou Arréridj','Boumerdès','El Tarf','Tindouf','Tissemsilt',
-    'El Oued','Khenchela','Souk Ahras','Tipaza','Mila','Aïn Defla','Naâma',
-    'Aïn Témouchent','Ghardaïa','Relizane','Timimoun','Bordj Badji Mokhtar',
-    'Ouled Djellal','Béni Abbès','In Salah','In Guezzam','Touggourt','Djanet',
-    "El M'Ghair",'El Meniaa'
-  ];
+  const TYPES = ['Luxe', 'Affaires', 'Balnéaire', 'Riad', 'Boutique', 'Montagne', 'Désert', 'Appart-hôtel', 'Économique'];
+
+  // Static WILAYA_NAMES removed, loaded dynamically via useWilayas hook.
+
+  const SERVER = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:5000';
+  function resolveImg(url) {
+    if (!url) return null;
+    if (url.startsWith('http')) return url;
+    return `${SERVER}${url}`;
+  }
 
   const emptyForm = {
     name: '', description: '', wilaya: '', city: '', address: '',
-    starRating: 3, type: 'Économique', amenities: '', status: 'approved', lat: '', lng: '',
+    starRating: 3, type: 'Économique', amenities: '', status: 'approved', lat: '', lng: '', suitableFor: [],
+    owner: ''
   };
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState(null);
+  const [showWilayaModal, setShowWilayaModal] = useState(false);
+  const [tempWilaya, setTempWilaya] = useState('');
+  const [owners, setOwners] = useState([]);
+
+  useEffect(() => {
+    api.get('/admin/users').then(({ data }) => {
+      const list = data.users?.filter(u => u.role === 'admin' || u.role === 'owner') || [];
+      setOwners(list);
+    }).catch(() => {});
+  }, []);
 
   const openEdit = (hotel) => {
     setForm({
@@ -41,7 +54,9 @@ export default function AdminAllHotelsPage() {
       city: hotel.city, address: hotel.address || '', type: hotel.type,
       starRating: hotel.starRating, status: hotel.status,
       amenities: hotel.amenities?.join(', ') || '',
-      lat: hotel.coordinates?.lat ?? '', lng: hotel.coordinates?.lng ?? ''
+      suitableFor: hotel.suitableFor || [],
+      lat: hotel.coordinates?.lat ?? '', lng: hotel.coordinates?.lng ?? '',
+      owner: hotel.owner?._id || hotel.owner || ''
     });
     setEditingId(hotel._id);
     setShowModal(true);
@@ -52,6 +67,7 @@ export default function AdminAllHotelsPage() {
     try {
       const params = {};
       if (statusFilter) params.status = statusFilter;
+      if (typeFilter) params.type = typeFilter;
       if (search) params.q = search;
       const { data } = await api.get('/admin/hotels/all', { params });
       setHotels(data.hotels);
@@ -62,7 +78,7 @@ export default function AdminAllHotelsPage() {
     }
   };
 
-  useEffect(() => { load(); }, [statusFilter]);
+  useEffect(() => { load(); }, [statusFilter, typeFilter]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -94,7 +110,10 @@ export default function AdminAllHotelsPage() {
     setFormError('');
     try {
       const payload = new FormData();
-      Object.entries(form).forEach(([k, v]) => payload.append(k, v));
+      Object.entries(form).forEach(([k, v]) => {
+        if (k === 'suitableFor') payload.append(k, v.join(','));
+        else payload.append(k, v);
+      });
       
       if (editingId) {
         const { data } = await api.put(`/admin/hotels/${editingId}`, payload, {
@@ -152,6 +171,23 @@ export default function AdminAllHotelsPage() {
             </button>
           ))}
         </div>
+        <div className="no-scrollbar flex items-center gap-2 overflow-x-auto" style={{ maxWidth: '100%' }}>
+          <button
+            onClick={() => setTypeFilter('')}
+            className={`shrink-0 rounded-full px-4 py-1.5 text-sm ${!typeFilter ? 'bg-brand-500 text-white' : 'border border-gray-200 text-gray-600 bg-white'}`}
+          >
+            Tous les types
+          </button>
+          {TYPES.map((t) => (
+            <button
+              key={t}
+              onClick={() => setTypeFilter(t)}
+              className={`shrink-0 rounded-full px-4 py-1.5 text-sm ${typeFilter === t ? 'bg-brand-500 text-white' : 'border border-gray-200 text-gray-600 bg-white'}`}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
         <form onSubmit={handleSearch} style={{ marginLeft: 'auto' }}>
           <input
             type="text"
@@ -194,7 +230,7 @@ export default function AdminAllHotelsPage() {
             <div key={h._id} className="admin-hotel-card">
               <div style={{ position: 'relative' }}>
                 <img
-                  src={h.images?.[0]?.url || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&q=80'}
+                  src={resolveImg(h.images?.[0]?.url) || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&q=80'}
                   alt={h.name}
                   className="admin-hotel-card-img"
                 />
@@ -225,7 +261,7 @@ export default function AdminAllHotelsPage() {
                         <button
                           onClick={() => handleStatusChange(h._id, 'approve')}
                           className="admin-btn"
-                          style={{ padding: '4px 8px', fontSize: 11, background: '#ecfdf5', color: '#10b981', border: '1px solid #a7f3d0', borderRadius: 8 }}
+                          style={{ padding: '4px 8px', fontSize: 11, background: '#e0f7fa', color: '#00bcd4', border: '1px solid #a7f3d0', borderRadius: 8 }}
                           title="Approuver"
                         >
                           <CheckCircle style={{ width: 13, height: 13 }} />
@@ -303,6 +339,18 @@ export default function AdminAllHotelsPage() {
                   <input required style={inputStyle} placeholder="ex: Hôtel El Aurassi" value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })} />
                 </div>
+                <div style={{ gridColumn: '1/-1' }}>
+                  <label style={labelStyle}>Propriétaire *</label>
+                  <select required style={inputStyle} value={form.owner}
+                    onChange={(e) => setForm({ ...form, owner: e.target.value })}>
+                    <option value="">Sélectionner le propriétaire (Moi ou Hôtelier)</option>
+                    {owners.map(u => (
+                      <option key={u._id} value={u._id}>
+                        {u.fullName} ({u.role === 'admin' ? 'Admin' : 'Hôtelier'}) - {u.email}
+                      </option>
+                    ))}
+                  </select>
+                </div>
                 <div>
                   <label style={labelStyle}>Type *</label>
                   <select required style={inputStyle} value={form.type}
@@ -320,11 +368,20 @@ export default function AdminAllHotelsPage() {
                   </select>
                 </div>
                 <div>
-                  <label style={labelStyle}>Wilaya *</label>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <label style={labelStyle}>Wilaya *</label>
+                    <button
+                      type="button"
+                      onClick={() => setShowWilayaModal(true)}
+                      style={{ fontSize: 11, color: '#34c77b', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}
+                    >
+                      + Ajouter
+                    </button>
+                  </div>
                   <select required style={inputStyle} value={form.wilaya}
                     onChange={(e) => setForm({ ...form, wilaya: e.target.value })}>
                     <option value="">Choisir une wilaya</option>
-                    {WILAYA_NAMES.map(w => <option key={w} value={w}>{w}</option>)}
+                    {wilayas.map(w => <option key={w} value={w}>{w}</option>)}
                   </select>
                 </div>
                 <div>
@@ -350,6 +407,21 @@ export default function AdminAllHotelsPage() {
                     onChange={(e) => setForm({ ...form, amenities: e.target.value })} />
                 </div>
                 <div style={{ gridColumn: '1/-1' }}>
+                  <label style={labelStyle}>Idéal pour (Cochez les options applicables)</label>
+                  <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', padding: '8px 14px', background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0' }}>
+                    {['Familles', 'Amis', 'Couples', 'Solo', 'Affaires'].map(opt => (
+                      <label key={opt} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, color: '#475569', cursor: 'pointer' }}>
+                        <input type="checkbox" checked={form.suitableFor.includes(opt)}
+                          onChange={(e) => {
+                            if (e.target.checked) setForm({ ...form, suitableFor: [...form.suitableFor, opt] });
+                            else setForm({ ...form, suitableFor: form.suitableFor.filter(x => x !== opt) });
+                          }}
+                        /> {opt}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                <div style={{ gridColumn: '1/-1' }}>
                   <label style={labelStyle}>Statut</label>
                   <select style={inputStyle} value={form.status}
                     onChange={(e) => setForm({ ...form, status: e.target.value })}>
@@ -362,7 +434,7 @@ export default function AdminAllHotelsPage() {
                   <MapPicker
                     value={{ lat: form.lat, lng: form.lng }}
                     onChange={(lat, lng) => setForm((f) => ({ ...f, lat: lat ?? '', lng: lng ?? '' }))}
-                    accent="#34c77b"
+                    accent="#00bcd4"
                   />
                 </div>
               </div>
@@ -379,6 +451,60 @@ export default function AdminAllHotelsPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Add Wilaya Modal */}
+      {showWilayaModal && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
+          zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20
+        }}>
+          <div style={{
+            background: '#fff', borderRadius: 20, width: '100%', maxWidth: 400,
+            boxShadow: '0 25px 60px rgba(0,0,0,0.2)', padding: '24px 26px'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#1e293b' }}>Ajouter une wilaya</h3>
+              <button type="button" onClick={() => { setShowWilayaModal(false); setTempWilaya(''); }}
+                style={{ background: '#f1f5f9', border: 'none', borderRadius: 10, padding: 8, cursor: 'pointer', color: '#64748b' }}>
+                <X style={{ width: 16, height: 16 }} />
+              </button>
+            </div>
+            <input
+              type="text"
+              placeholder="Nom de la wilaya (ex: Ghardaïa)"
+              value={tempWilaya}
+              onChange={(e) => setTempWilaya(e.target.value)}
+              style={{ ...inputStyle, marginBottom: 16, background: '#fff' }}
+            />
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+              <button
+                type="button"
+                onClick={() => { setShowWilayaModal(false); setTempWilaya(''); }}
+                style={{ padding: '8px 16px', borderRadius: 10, border: '1px solid #e2e8f0', background: '#f8fafc', color: '#64748b', cursor: 'pointer', fontWeight: 600, fontSize: 13 }}
+              >
+                Annuler
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  if (!tempWilaya.trim()) return;
+                  try {
+                    const newW = await addWilaya(tempWilaya.trim());
+                    setForm({ ...form, wilaya: newW });
+                    setShowWilayaModal(false);
+                    setTempWilaya('');
+                  } catch (err) {
+                    alert(err.message);
+                  }
+                }}
+                style={{ padding: '8px 18px', borderRadius: 10, border: 'none', background: '#34c77b', color: '#fff', cursor: 'pointer', fontWeight: 600, fontSize: 13 }}
+              >
+                Ajouter
+              </button>
+            </div>
           </div>
         </div>
       )}

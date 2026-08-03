@@ -9,7 +9,7 @@ export const getHotels = async (req, res, next) => {
     const { wilaya, city, type, minStars, minPrice, maxPrice, q, sort, page = 1, limit = 12 } = req.query;
 
     const filter = { status: 'approved' };
-    if (wilaya) filter.wilaya = wilaya;
+    if (wilaya) filter.wilaya = new RegExp(wilaya.replace(/[-\s]/g, '[-s]'), 'i');
     if (city) filter.city = new RegExp(city, 'i');
     if (type) filter.type = type;
     if (minStars) filter.starRating = { $gte: Number(minStars) };
@@ -60,7 +60,10 @@ export const getHotel = async (req, res, next) => {
 // GET /hotels/my/list — owner's own hotels
 export const getMyHotels = async (req, res, next) => {
   try {
-    const hotels = await Hotel.find({ owner: req.user._id }).sort({ createdAt: -1 });
+    const { type } = req.query;
+    const filter = { owner: req.user._id };
+    if (type) filter.type = type;
+    const hotels = await Hotel.find(filter).sort({ createdAt: -1 });
     res.json({ success: true, count: hotels.length, hotels });
   } catch (err) {
     next(err);
@@ -76,6 +79,7 @@ export const createHotel = async (req, res, next) => {
     const hotel = await Hotel.create({
       ...req.body,
       amenities: parseArray(req.body.amenities),
+      suitableFor: parseArray(req.body.suitableFor),
       ...(coordinates && { coordinates }),
       owner: req.user._id,
       images,
@@ -102,6 +106,7 @@ export const updateHotel = async (req, res, next) => {
       if (req.body[f] !== undefined) hotel[f] = req.body[f];
     });
     if (req.body.amenities !== undefined) hotel.amenities = parseArray(req.body.amenities);
+    if (req.body.suitableFor !== undefined) hotel.suitableFor = parseArray(req.body.suitableFor);
     const coordinates = parseCoordinates(req.body);
     if (coordinates) hotel.coordinates = coordinates;
 

@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import {
   createBooking,
+  createHouseBooking,
   getMyBookings,
   getOwnerBookings,
   cancelBooking,
@@ -10,6 +11,7 @@ import { protect, authorize } from '../middlewares/auth.middleware.js';
 const router = Router();
 
 router.post('/', protect, authorize('customer'), createBooking);
+router.post('/house', protect, authorize('customer'), createHouseBooking);
 router.get('/my', protect, getMyBookings);
 router.get('/owner', protect, authorize('owner', 'admin'), getOwnerBookings);
 router.put('/:id/cancel', protect, cancelBooking);

@@ -3,6 +3,11 @@ import cors from 'cors';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 import { notFound, errorHandler } from './middlewares/error.middleware.js';
 import authRoutes from './routes/auth.routes.js';
@@ -15,11 +20,14 @@ import reviewRoutes from './routes/review.routes.js';
 import adminRoutes from './routes/admin.routes.js';
 import messageRoutes from './routes/message.routes.js';
 import favoriteRoutes from './routes/favorite.routes.js';
+import ownerRoutes from './routes/owner.routes.js';
+import wilayaRoutes from './routes/wilaya.routes.js';
 
 const app = express();
 
 // --- Security & core middleware ---
-app.use(helmet());
+// Disable CSP so local /uploads images are not blocked by browser
+app.use(helmet({ contentSecurityPolicy: false, crossOriginResourcePolicy: false }));
 app.use(
   cors({
     origin: (origin, cb) => {
@@ -54,6 +62,13 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
+// Serve uploaded images as static files (with CORS headers so Next.js can load them)
+app.use('/uploads', (req, res, next) => {
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  next();
+}, express.static(path.join(__dirname, '..', 'public', 'uploads')));
+
 // --- Health check ---
 app.get('/api/v1/health', (req, res) => {
   res.json({ success: true, message: 'DzHotels API is running', timestamp: new Date().toISOString() });
@@ -70,6 +85,8 @@ app.use('/api/v1/reviews', reviewRoutes);
 app.use('/api/v1/admin', adminRoutes);
 app.use('/api/v1/messages', messageRoutes);
 app.use('/api/v1/favorites', favoriteRoutes);
+app.use('/api/v1/owner', ownerRoutes);
+app.use('/api/v1/wilayas', wilayaRoutes);
 
 // --- Error handling (must be last) ---
 app.use(notFound);

@@ -3,15 +3,18 @@ import {
   createCheckout,
   handleWebhook,
   getPaymentStatus,
+  retryCheckout,
 } from '../controllers/payment.controller.js';
 import { protect, authorize } from '../middlewares/auth.middleware.js';
 
 const router = Router();
 
-// Webhook is public (verified by signature). Raw body parsing is set in app.js.
+// Webhook is public (verified by HMAC signature). Raw body parsing is set in app.js.
 router.post('/webhook', handleWebhook);
 
-router.post('/checkout', protect, authorize('customer'), createCheckout);
-router.get('/:bookingId', protect, getPaymentStatus);
+// Customer routes
+router.post('/checkout',               protect, authorize('customer'), createCheckout);
+router.post('/retry/:bookingId',        protect, authorize('customer'), retryCheckout);
+router.get('/:bookingId',               protect, getPaymentStatus);
 
 export default router;

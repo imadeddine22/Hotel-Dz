@@ -13,7 +13,7 @@ const MONTHS_FR = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Aoû', '
 
 const STATUS_COLORS = {
   pending: '#f59e0b',
-  confirmed: '#10b981',
+  confirmed: '#00bcd4',
   cancelled: '#ef4444',
   completed: '#3b82f6',
 };
@@ -96,7 +96,7 @@ export default function AdminDashboard() {
   const userSegs = [
     { color: '#f59e0b', pct: Math.round((custCount  / totalUsers) * 100) },
     { color: '#3b82f6', pct: Math.round((ownerCount / totalUsers) * 100) },
-    { color: '#10b981', pct: Math.round((adminCount / totalUsers) * 100) },
+    { color: '#00bcd4', pct: Math.round((adminCount / totalUsers) * 100) },
   ];
 
   /* mini donut segments for Hotels card */
@@ -104,7 +104,7 @@ export default function AdminDashboard() {
   const pendingH  = stats?.pendingHotels || 0;
   const totalH    = approvedH + pendingH || 1;
   const hotelSegs = [
-    { color: '#10b981', pct: Math.round((approvedH / totalH) * 100) },
+    { color: '#00bcd4', pct: Math.round((approvedH / totalH) * 100) },
     { color: '#f59e0b', pct: Math.round((pendingH  / totalH) * 100) },
   ];
 
@@ -157,7 +157,7 @@ export default function AdminDashboard() {
         <div className="an-stat-card">
           <div className="an-stat-top">
             <span className="an-stat-label">Hôtels approuvés</span>
-            <div className="an-stat-icon" style={{ background: '#ecfdf5', color: '#10b981' }}>
+            <div className="an-stat-icon" style={{ background: '#e0f7fa', color: '#00bcd4' }}>
               <Hotel />
             </div>
           </div>
@@ -185,7 +185,7 @@ export default function AdminDashboard() {
             <div className="an-legend-list">
               <span><span className="an-dot" style={{ background: '#f59e0b' }} />Clients</span>
               <span><span className="an-dot" style={{ background: '#3b82f6' }} />Hôteliers</span>
-              <span><span className="an-dot" style={{ background: '#10b981' }} />Admins</span>
+              <span><span className="an-dot" style={{ background: '#00bcd4' }} />Admins</span>
             </div>
           </div>
           <MiniDonut segments={userSegs} />
@@ -197,7 +197,7 @@ export default function AdminDashboard() {
             <span className="an-stat-label">En attente</span>
             <p className="an-stat-num">{stats?.pendingHotels ?? '—'}</p>
             <div className="an-legend-list">
-              <span><span className="an-dot" style={{ background: '#10b981' }} />Approuvés</span>
+              <span><span className="an-dot" style={{ background: '#00bcd4' }} />Approuvés</span>
               <span><span className="an-dot" style={{ background: '#f59e0b' }} />En attente</span>
             </div>
           </div>
@@ -216,7 +216,7 @@ export default function AdminDashboard() {
             <p className="an-wide-val">{stats ? formatDZD(stats.revenue) : '—'}</p>
             <span className="an-change up"><TrendingUp /> +22% vs mois dernier</span>
           </div>
-          <div className="an-wide-badge" style={{ background: '#ecfdf5', color: '#10b981' }}>
+          <div className="an-wide-badge" style={{ background: '#e0f7fa', color: '#00bcd4' }}>
             +22%
           </div>
         </div>
@@ -354,7 +354,7 @@ export default function AdminDashboard() {
             <Link href="/admin/hotels" className="an-quick-btn" style={{ '--qbg': '#fffbeb', '--qco': '#f59e0b' }}>
               <CheckSquare className="an-quick-ico" /> Approbations
             </Link>
-            <Link href="/admin/all-hotels" className="an-quick-btn" style={{ '--qbg': '#ecfdf5', '--qco': '#10b981' }}>
+            <Link href="/admin/all-hotels" className="an-quick-btn" style={{ '--qbg': '#e0f7fa', '--qco': '#00bcd4' }}>
               <Building2 className="an-quick-ico" /> Hôtels
             </Link>
             <Link href="/admin/all-houses" className="an-quick-btn" style={{ '--qbg': '#fdf4ff', '--qco': '#a855f7' }}>
@@ -429,7 +429,7 @@ export default function AdminDashboard() {
                     <tr key={u._id}>
                       <td>
                         <div className="an-tbl-user">
-                          <div className="an-tbl-avatar" style={{ background: 'linear-gradient(135deg,#10b981,#06b6d4)' }}>
+                          <div className="an-tbl-avatar" style={{ background: 'linear-gradient(135deg,#00bcd4,#06b6d4)' }}>
                             {u.fullName?.charAt(0)?.toUpperCase() || 'U'}
                           </div>
                           <div>

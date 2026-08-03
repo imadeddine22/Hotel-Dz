@@ -20,6 +20,7 @@ import {
   rejectHouse,
   deleteHouse,
 } from '../controllers/admin.controller.js';
+import { addWilaya } from '../controllers/wilaya.controller.js';
 import { protect, authorize } from '../middlewares/auth.middleware.js';
 import { upload } from '../middlewares/upload.middleware.js';
 
@@ -55,5 +56,8 @@ router.delete('/users/:id', deleteUser);
 
 // Bookings
 router.get('/bookings', getBookings);
+
+// Wilayas
+router.post('/wilayas', addWilaya);
 
 export default router;

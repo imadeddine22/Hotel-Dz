@@ -1,158 +1,207 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { Search, ChevronDown, Menu, X, User, LogOut, Heart } from 'lucide-react';
-import { useAuthStore } from '@/store/authStore';
-
-const LINKS = [
-  { label: 'Accueil', href: '/' },
-  { label: 'Hôtels', href: '/hotels' },
-  { label: 'Maisons', href: '/houses' },
-  { label: 'Destinations', href: '/hotels' },
-  { label: 'À propos', href: '/about' },
-  { label: 'Contact', href: '/contact' },
-];
+import { usePathname } from 'next/navigation';
+import { ChevronDown, Menu, X, Heart, Building2, User, Globe } from 'lucide-react';
+import { useAuthStore, useLangStore } from '@/store/authStore';
+import { TRANSLATIONS } from '@/lib/data';
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
-  const router = useRouter();
+  const [langOpen, setLangOpen] = useState(false);
+  const pathname = usePathname();
   const user = useAuthStore((s) => s.user);
-  const logout = useAuthStore((s) => s.logout);
+  const { lang, setLang } = useLangStore();
+  const t = TRANSLATIONS[lang] || TRANSLATIONS.fr;
+
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+      document.documentElement.lang = lang;
+    }
+  }, [lang]);
 
   const dashHref =
     user?.role === 'admin' ? '/admin' : user?.role === 'owner' ? '/owner/dashboard' : '/my-bookings';
 
-  const handleLogout = async () => {
-    await logout();
-    router.push('/');
-  };
+  const navLinks = [
+    { label: t.navHome, href: '/' },
+    { label: t.navHotels, href: '/hotels' },
+    { label: t.navHouses, href: '/houses' },
+    { label: t.navDestinations, href: '/destinations' },
+    { label: t.navPricing, href: '/pricing' },
+  ];
 
   return (
-    <header className="sticky top-0 z-50 border-b border-gray-100 bg-white/95 backdrop-blur">
-      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6">
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-2">
-          <span className="grid h-10 w-10 place-items-center rounded-full bg-brand-500 text-white">
-            <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M3 21h18M5 21V8l7-4 7 4v13M9 21v-5h6v5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-xs">
+      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        
+        {/* Left: Brand Logo */}
+        <Link href="/" className="flex items-center gap-3 shrink-0 group">
+          <span className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-br from-sky-400 to-brand-600 text-white shadow-md shadow-brand-500/20 group-hover:scale-105 transition-transform duration-300">
+            <Building2 className="h-6 w-6" />
           </span>
-          <span className="leading-none">
-            <span className="block text-xl font-extrabold tracking-tight text-ink">
+          <div className="flex flex-col">
+            <span className="text-2xl font-extrabold tracking-tight text-gray-900 leading-none">
               hotels<span className="text-brand-500">dz</span>
             </span>
-            <span className="block text-[11px] text-gray-400">séjournez en Algérie</span>
-          </span>
+            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] leading-none mt-1">
+              {t.tagline}
+            </span>
+          </div>
         </Link>
 
-        {/* Desktop nav */}
-        <nav className="hidden items-center gap-1 lg:flex">
-          <Link href="/hotels" className="grid h-10 w-10 place-items-center rounded-full text-gray-500 hover:bg-gray-100">
-            <Search className="h-5 w-5" />
-          </Link>
-          {LINKS.map((l, i) => (
-            <Link
-              key={l.label}
-              href={l.href}
-              className={`rounded-full px-4 py-2 text-sm font-medium transition ${
-                i === 0 ? 'bg-brand-50 text-brand-600' : 'text-gray-600 hover:bg-gray-100'
-              }`}
-            >
-              {l.label}
-            </Link>
-          ))}
+        {/* Center: Navigation Links */}
+        <nav className="hidden lg:flex items-center gap-1 bg-gray-50/80 p-1.5 rounded-full border border-gray-200/60">
+          {navLinks.map((link) => {
+            const isActive = link.href === '/' ? pathname === '/' : pathname.startsWith(link.href);
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
+                  isActive
+                    ? 'bg-white text-brand-600 shadow-xs font-bold'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
+                }`}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
         </nav>
 
-        {/* Right actions */}
-        <div className="hidden items-center gap-3 lg:flex">
-          {user ? (
-            <>
-              <Link
-                href="/favorites"
-                className="grid h-10 w-10 place-items-center rounded-full text-gray-500 hover:bg-gray-100"
-                title="Mes favoris"
-                aria-label="Mes favoris"
-              >
-                <Heart className="h-5 w-5" />
-              </Link>
-              <Link
-                href={dashHref}
-                className="flex items-center gap-2 rounded-full bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
-              >
-                <User className="h-4 w-4" /> {user.fullName.split(' ')[0]}
-              </Link>
-              <button
-                onClick={handleLogout}
-                className="grid h-10 w-10 place-items-center rounded-full text-gray-500 hover:bg-gray-100"
-                title="Déconnexion"
-                aria-label="Déconnexion"
-              >
-                <LogOut className="h-5 w-5" />
-              </button>
-            </>
-          ) : (
-            <>
-              <Link href="/login" className="text-sm font-medium text-gray-600 hover:text-ink">
-                Connexion
-              </Link>
-              <Link
-                href="/register"
-                className="rounded-full bg-gradient-to-r from-amber-400 to-orange-500 px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:brightness-105"
-              >
-                S&apos;inscrire
-              </Link>
-            </>
-          )}
-          <button className="flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-600">
-            Fr <ChevronDown className="h-4 w-4" />
-          </button>
+        {/* Right: Actions */}
+        <div className="hidden lg:flex items-center gap-3">
+          {/* Favorites */}
+          <Link
+            href="/favorites"
+            aria-label={t.favorites}
+            className={`grid h-10 w-10 place-items-center rounded-full transition ${
+              pathname.startsWith('/favorites')
+                ? 'bg-rose-50 text-rose-500'
+                : 'text-gray-600 hover:bg-gray-100'
+            }`}
+          >
+            <Heart className="h-5 w-5" />
+          </Link>
+
+          {/* Add Hotel Button */}
+          <Link
+            href="/register?role=owner"
+            className="inline-flex items-center gap-2 rounded-full bg-brand-500 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-brand-600 hover:shadow-md"
+          >
+            {t.suggestHotel}
+          </Link>
+
+          {/* User Account / Espace */}
+          <Link
+            href={user ? dashHref : '/login'}
+            className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2.5 text-sm font-bold text-gray-700 hover:bg-gray-50 transition"
+          >
+            <User className="h-4 w-4 text-brand-500" />
+            {user ? t.mySpace : t.login}
+          </Link>
+
+          {/* Language Switcher Dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setLangOpen(!langOpen)}
+              className="flex items-center gap-1.5 rounded-full border border-gray-200 px-3 py-2 text-xs font-bold text-gray-700 hover:bg-gray-50 transition"
+            >
+              <Globe className="h-3.5 w-3.5 text-brand-500" />
+              {lang.toUpperCase()}
+              <ChevronDown className="h-3.5 w-3.5 text-gray-400" />
+            </button>
+
+            {langOpen && (
+              <div className="absolute right-0 mt-2 w-32 rounded-2xl bg-white p-1.5 shadow-xl border border-gray-100 z-50">
+                {[
+                  { code: 'fr', label: 'Français' },
+                  { code: 'ar', label: 'العربية' },
+                  { code: 'en', label: 'English' },
+                ].map((l) => (
+                  <button
+                    key={l.code}
+                    onClick={() => {
+                      setLang(l.code);
+                      setLangOpen(false);
+                    }}
+                    className={`w-full rounded-xl px-3 py-2 text-xs font-bold text-left transition ${
+                      lang === l.code
+                        ? 'bg-brand-50 text-brand-600'
+                        : 'text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    {l.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Mobile toggle */}
+        {/* Mobile Toggle */}
         <button
-          onClick={() => setOpen((o) => !o)}
-          className="grid h-10 w-10 place-items-center rounded-lg hover:bg-gray-100 lg:hidden"
-          aria-label={open ? 'Fermer le menu' : 'Ouvrir le menu'}
+          onClick={() => setOpen(!open)}
+          className="grid h-11 w-11 place-items-center rounded-xl text-gray-700 hover:bg-gray-100 lg:hidden"
         >
           {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
         </button>
       </div>
 
-      {/* Mobile menu */}
+      {/* Mobile Navigation Drawer */}
       {open && (
-        <div className="border-t border-gray-100 bg-white px-4 py-3 lg:hidden">
-          {LINKS.map((l) => (
-            <Link key={l.label} href={l.href} className="block rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100">
-              {l.label}
-            </Link>
-          ))}
-          {user ? (
-            <>
-              <Link href="/favorites" className="block rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100">
-                Mes favoris
-              </Link>
-              <Link href={dashHref} className="block rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100">
-                Mon espace
-              </Link>
-              <button onClick={handleLogout} className="block w-full rounded-lg px-3 py-2 text-left text-red-600">
-                Déconnexion
-              </button>
-            </>
-          ) : (
-            <>
-              <Link href="/login" className="block rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100">
-                Connexion
-              </Link>
-              <Link
-                href="/register"
-                className="mt-2 block rounded-full bg-gradient-to-r from-amber-400 to-orange-500 px-6 py-2.5 text-center text-sm font-semibold text-white"
+        <div className="border-t border-gray-100 bg-white px-4 py-6 lg:hidden space-y-3">
+          {/* Mobile Language Switcher */}
+          <div className="flex items-center gap-2 mb-4 p-2 bg-gray-50 rounded-xl justify-center">
+            <Globe className="h-4 w-4 text-brand-500" />
+            {['fr', 'ar', 'en'].map((code) => (
+              <button
+                key={code}
+                onClick={() => setLang(code)}
+                className={`px-3 py-1 text-xs font-bold rounded-lg transition ${
+                  lang === code ? 'bg-brand-500 text-white' : 'text-gray-600 hover:bg-gray-200'
+                }`}
               >
-                S&apos;inscrire
+                {code.toUpperCase()}
+              </button>
+            ))}
+          </div>
+
+          {navLinks.map((link) => {
+            const isActive = link.href === '/' ? pathname === '/' : pathname.startsWith(link.href);
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setOpen(false)}
+                className={`block rounded-xl px-4 py-3 font-bold text-base transition ${
+                  isActive ? 'bg-brand-50 text-brand-600' : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                {link.label}
               </Link>
-            </>
-          )}
+            );
+          })}
+
+          <div className="pt-4 border-t border-gray-100 flex flex-col gap-3">
+            <Link
+              href="/register?role=owner"
+              onClick={() => setOpen(false)}
+              className="w-full rounded-xl bg-brand-500 py-3 text-center text-sm font-bold text-white shadow-sm"
+            >
+              {t.suggestHotel}
+            </Link>
+            <Link
+              href={user ? dashHref : '/login'}
+              onClick={() => setOpen(false)}
+              className="w-full rounded-xl border border-gray-200 py-3 text-center text-sm font-bold text-gray-700 hover:bg-gray-50"
+            >
+              {user ? t.mySpace : t.login}
+            </Link>
+          </div>
         </div>
       )}
     </header>

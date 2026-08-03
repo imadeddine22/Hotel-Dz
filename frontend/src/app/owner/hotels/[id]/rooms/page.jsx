@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { Plus, Trash2, Users, BedDouble } from 'lucide-react';
+import { Plus, Trash2, Users, BedDouble, Image as ImageIcon, X } from 'lucide-react';
 import DashboardShell from '@/components/DashboardShell';
+import ImageUploader from '@/components/ImageUploader';
 import api from '@/lib/api';
 import { formatDZD } from '@/lib/data';
 
@@ -55,7 +56,7 @@ export default function ManageRoomsPage() {
       {error && <p className="mb-4 rounded-lg bg-red-50 px-4 py-2 text-sm text-red-600">{error}</p>}
 
       {showForm && (
-        <form onSubmit={addRoom} className="mb-6 grid gap-4 rounded-2xl bg-white p-6 shadow-card sm:grid-cols-2">
+        <form onSubmit={addRoom} className="mb-6 grid gap-4 rounded-2xl bg-white p-6 shadow-sm border border-gray-100 sm:grid-cols-2">
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">Type</label>
             <select value={form.type} onChange={(e) => set('type', e.target.value)} className="w-full rounded-lg border border-gray-200 px-3 py-2.5 capitalize outline-none focus:border-brand-500">
@@ -65,13 +66,30 @@ export default function ManageRoomsPage() {
           <Field label="Titre" value={form.title} onChange={(v) => set('title', v)} />
           <Field label="Prix / nuit (DZD)" type="number" value={form.pricePerNight} onChange={(v) => set('pricePerNight', v)} />
           <Field label="Capacité" type="number" value={form.capacity} onChange={(v) => set('capacity', v)} />
-          <Field label="Nombre de lits" type="number" value={form.bedsCount} onChange={(v) => set('bedsCount', v)} />
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700">Nombre de lits</label>
+            <select value={form.bedsCount} onChange={(e) => set('bedsCount', e.target.value)}
+              className="w-full rounded-lg border border-gray-200 px-3 py-2.5 outline-none focus:border-brand-500">
+              <option value={1}>1 lit</option>
+              <option value={2}>2 lits</option>
+              <option value={3}>3 lits</option>
+              <option value={4}>4 lits</option>
+              <option value={5}>5 lits</option>
+            </select>
+            <p className="mt-1 text-xs text-gray-400">Permet aux clients de filtrer (1 lit, 2 lits, 3+ lits)</p>
+          </div>
           <Field label="Quantité disponible" type="number" value={form.quantity} onChange={(v) => set('quantity', v)} />
           <Field label="Équipements (virgules)" value={form.amenities} onChange={(v) => set('amenities', v)} required={false} />
-          <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Images</label>
-            <input type="file" accept="image/*" multiple onChange={(e) => setFiles(Array.from(e.target.files))} className="text-sm" />
+
+          {/* Photo de la chambre */}
+          <div className="sm:col-span-2">
+            <label className="mb-1 block text-sm font-medium text-gray-700">Photos de la chambre (la première sera principale)</label>
+            <ImageUploader 
+              onChange={(selectedFiles) => setFiles(Array.from(selectedFiles))} 
+              maxFiles={6} 
+            />
           </div>
+
           <div className="sm:col-span-2">
             <button className="rounded-lg bg-brand-500 px-6 py-2.5 font-semibold text-white hover:bg-brand-600">Enregistrer</button>
           </div>
@@ -80,10 +98,16 @@ export default function ManageRoomsPage() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {rooms.map((r) => (
-          <div key={r._id} className="overflow-hidden rounded-2xl bg-white shadow-card">
-            {r.images?.[0]?.url && <img src={r.images[0].url} alt={r.title} className="h-32 w-full object-cover" />}
+          <div key={r._id} className="overflow-hidden rounded-2xl bg-white border border-gray-100 shadow-sm transition hover:shadow-md">
+            {r.images?.[0]?.url ? (
+              <img src={r.images[0].url} alt={r.title} className="h-32 w-full object-cover" />
+            ) : (
+              <div className="flex h-32 w-full items-center justify-center bg-gray-50 text-gray-300">
+                <ImageIcon className="h-8 w-8" />
+              </div>
+            )}
             <div className="p-4">
-              <h3 className="font-bold text-ink">{r.title}</h3>
+              <h3 className="font-bold text-gray-900">{r.title}</h3>
               <p className="flex items-center gap-3 text-sm text-gray-500">
                 <span className="flex items-center gap-1"><Users className="h-4 w-4" />{r.capacity}</span>
                 <span className="flex items-center gap-1"><BedDouble className="h-4 w-4" />{r.bedsCount}</span>
@@ -91,14 +115,14 @@ export default function ManageRoomsPage() {
               </p>
               <div className="mt-2 flex items-center justify-between">
                 <span className="font-bold text-brand-600">{formatDZD(r.pricePerNight)}</span>
-                <button onClick={() => remove(r._id)} className="grid h-8 w-8 place-items-center rounded-lg bg-red-50 text-red-500 hover:bg-red-100">
+                <button onClick={() => remove(r._id)} className="grid h-8 w-8 place-items-center rounded-lg bg-red-50 text-red-500 hover:bg-red-100 transition">
                   <Trash2 className="h-4 w-4" />
                 </button>
               </div>
             </div>
           </div>
         ))}
-        {rooms.length === 0 && <p className="text-gray-400">Aucune chambre.</p>}
+        {rooms.length === 0 && <p className="text-gray-500">Aucune chambre.</p>}
       </div>
     </DashboardShell>
   );

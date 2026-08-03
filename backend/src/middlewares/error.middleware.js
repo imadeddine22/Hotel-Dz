@@ -46,6 +46,30 @@ export const errorHandler = (err, req, res, next) => {
     message = 'Token expired';
   }
 
+  // Database / network / TLS errors — never leak internals (SSL, hostnames,
+  // file paths) to the client. Surface a friendly, generic message instead.
+  const dbErrorNames = [
+    'MongooseServerSelectionError',
+    'MongoServerSelectionError',
+    'MongoNetworkError',
+    'MongoNetworkTimeoutError',
+    'MongoNotConnectedError',
+  ];
+  const looksLikeInfra =
+    dbErrorNames.includes(err.name) ||
+    /ECONNREFUSED|ETIMEDOUT|ENOTFOUND|querySrv|getaddrinfo|SSL routines|tlsv1 alert|ssl3_read_bytes|whitelist|topology|buffering timed out/i.test(
+      err.message || ''
+    );
+  if (looksLikeInfra) {
+    statusCode = 503;
+    message = 'Service temporairement indisponible. Veuillez réessayer dans un instant.';
+  }
+
+  // Log the real error server-side for any 5xx so we don't lose the detail.
+  if (statusCode >= 500) {
+    console.error(`[${req.method} ${req.originalUrl}]`, err.name, '-', err.message);
+  }
+
   res.status(statusCode).json({
     success: false,
     message,
