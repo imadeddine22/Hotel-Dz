@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { MapPin, Star, Trash2, Eye, Building2, Plus, X, CheckCircle, XCircle, Pencil } from 'lucide-react';
 import MapPicker from '@/components/MapPicker';
 import { useWilayas } from '@/hooks/useWilayas';
-import api from '@/lib/api';
+import api, { getServerURL } from '@/lib/api';
 import { formatDZD } from '@/lib/data';
 
 export default function AdminAllHotelsPage() {
@@ -23,7 +23,7 @@ export default function AdminAllHotelsPage() {
 
   // Static WILAYA_NAMES removed, loaded dynamically via useWilayas hook.
 
-  const SERVER = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:5000';
+  const SERVER = getServerURL();
   function resolveImg(url) {
     if (!url) return null;
     if (url.startsWith('http')) return url;

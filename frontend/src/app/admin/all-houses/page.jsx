@@ -10,7 +10,9 @@ import api from '@/lib/api';
 const HOUSE_TYPES = ['Villa', 'Appartement', 'Maison', 'Chalet', 'Studio', 'Duplex', 'Riad', 'Ferme', 'Luxe', 'Affaires', 'Balnéaire', 'Boutique', 'Montagne', 'Désert', 'Appart-hôtel', 'Économique'];
 // Static WILAYA_NAMES removed, loaded dynamically via useWilayas hook.
 
-const SERVER = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:5000';
+import { getServerURL } from '@/lib/api';
+
+const SERVER = getServerURL();
 function resolveImg(url) {
   if (!url) return null;
   if (url.startsWith('http')) return url;

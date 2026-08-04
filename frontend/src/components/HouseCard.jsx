@@ -2,7 +2,9 @@ import Link from 'next/link';
 import { MapPin, BedDouble, Bath, Users, Home } from 'lucide-react';
 import FavoriteButton from '@/components/FavoriteButton';
 
-const SERVER = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:5000';
+import { getServerURL } from '@/lib/api';
+
+const SERVER = getServerURL();
 
 function resolveImg(url) {
   if (!url) return null;

@@ -1,7 +1,26 @@
 import axios from 'axios';
 
+const PRODUCTION_API = 'https://backend-yikc.onrender.com/api/v1';
+const PRODUCTION_SERVER = 'https://backend-yikc.onrender.com';
+const LOCAL_API = 'http://localhost:5000/api/v1';
+const LOCAL_SERVER = 'http://localhost:5000';
+
+const isProduction = () =>
+  typeof window !== 'undefined' && window.location.hostname !== 'localhost';
+
+const getBaseURL = () => {
+  if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL;
+  return isProduction() ? PRODUCTION_API : LOCAL_API;
+};
+
+export const getServerURL = () => {
+  if (process.env.NEXT_PUBLIC_SERVER_URL) return process.env.NEXT_PUBLIC_SERVER_URL;
+  return isProduction() ? PRODUCTION_SERVER : LOCAL_SERVER;
+};
+
+
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1',
+  baseURL: getBaseURL(),
   withCredentials: true, // send the httpOnly cookie
 });
 

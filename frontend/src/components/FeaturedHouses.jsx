@@ -8,7 +8,9 @@ import { useAuthStore, useLangStore } from '@/store/authStore';
 import { TRANSLATIONS } from '@/lib/data';
 import FavoriteButton from '@/components/FavoriteButton';
 
-const SERVER = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:5000';
+import { getServerURL } from '@/lib/api';
+
+const SERVER = getServerURL();
 function resolveImg(url) {
   if (!url) return null;
   if (url.startsWith('http')) return url;
