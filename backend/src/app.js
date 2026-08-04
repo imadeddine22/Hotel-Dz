@@ -33,6 +33,7 @@ app.use(
     origin: (origin, cb) => {
       const allowed = [
         process.env.CLIENT_URL || 'http://localhost:3000',
+        'https://hotel-dz-three.vercel.app',
         'http://localhost:3000',
         'http://localhost:3001',
         'http://localhost:3002',
