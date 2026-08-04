@@ -36,7 +36,7 @@ const ADMIN_MENU = [
 export default function AdminLayout({ children }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, loading, logout } = useAuthStore();
+  const { user, loading, logout, isRole } = useAuthStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [unread, setUnread] = useState(0);
@@ -44,12 +44,12 @@ export default function AdminLayout({ children }) {
   useEffect(() => {
     if (loading) return;
     if (!user) router.replace('/login?redirect=' + pathname);
-    else if (user.role !== 'admin') router.replace('/');
+    else if (!isRole('admin')) router.replace('/');
   }, [user, loading, router, pathname]);
 
   // Pull the unread-message count for the bell + Messages badge.
   useEffect(() => {
-    if (!user || user.role !== 'admin') return;
+    if (!user || !isRole('admin')) return;
     api.get('/messages')
       .then(({ data }) => setUnread((data.messages || []).filter((m) => !m.isRead).length))
       .catch(() => {});
