@@ -9,17 +9,8 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import FavoriteButton from '@/components/FavoriteButton';
 import LocationMap from '@/components/LocationMap';
-import api from '@/lib/api';
+import api, { getImageUrl, resolveImg } from '@/lib/api';
 import { formatDZD, HOTELS as MOCK_HOTELS } from '@/lib/data';
-
-import { getServerURL } from '@/lib/api';
-
-const SERVER = getServerURL();
-function resolveImg(url) {
-  if (!url) return null;
-  if (url.startsWith('http')) return url;
-  return `${SERVER}${url}`;
-}
 
 export default function HotelDetailPage() {
   const { id } = useParams();

@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import { Plus, Trash2, Users, BedDouble, Image as ImageIcon, X } from 'lucide-react';
 import DashboardShell from '@/components/DashboardShell';
 import ImageUploader from '@/components/ImageUploader';
-import api from '@/lib/api';
+import api, { getImageUrl } from '@/lib/api';
 import { formatDZD } from '@/lib/data';
 
 const ROOM_TYPES = ['single', 'double', 'suite', 'family'];
@@ -100,7 +100,7 @@ export default function ManageRoomsPage() {
         {rooms.map((r) => (
           <div key={r._id} className="overflow-hidden rounded-2xl bg-white border border-gray-100 shadow-sm transition hover:shadow-md">
             {r.images?.[0]?.url ? (
-              <img src={r.images[0].url} alt={r.title} className="h-32 w-full object-cover" />
+              <img src={getImageUrl(r.images[0].url)} alt={r.title} className="h-32 w-full object-cover" />
             ) : (
               <div className="flex h-32 w-full items-center justify-center bg-gray-50 text-gray-300">
                 <ImageIcon className="h-8 w-8" />

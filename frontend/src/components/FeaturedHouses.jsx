@@ -77,8 +77,8 @@ export default function FeaturedHouses({ selectedCity }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <span style={{
             display: 'grid', placeItems: 'center', width: 48, height: 48,
-            borderRadius: '50%', background: 'linear-gradient(135deg, #a855f7, #7c3aed)', color: '#fff',
-            boxShadow: '0 4px 14px rgba(168,85,247,0.35)'
+            borderRadius: '50%', background: 'linear-gradient(135deg, #1e293b, #0f172a)', color: '#fff',
+            boxShadow: '0 4px 14px rgba(15,23,42,0.25)'
           }}>
             <Home size={22} />
           </span>
@@ -91,9 +91,9 @@ export default function FeaturedHouses({ selectedCity }) {
           {isOwner && (
             <Link href="/owner/my-houses?new=1" style={{
               display: 'flex', alignItems: 'center', gap: 6, borderRadius: 999,
-              background: 'linear-gradient(135deg, #a855f7, #7c3aed)',
+              background: 'linear-gradient(135deg, #1e293b, #0f172a)',
               padding: '8px 20px', fontSize: 13, fontWeight: 700,
-              color: '#fff', textDecoration: 'none', boxShadow: '0 4px 14px rgba(168,85,247,0.35)'
+              color: '#fff', textDecoration: 'none', boxShadow: '0 4px 14px rgba(15,23,42,0.25)'
             }}>
               <Plus size={15} /> {t.becomeOwner}
             </Link>
@@ -136,53 +136,54 @@ export default function FeaturedHouses({ selectedCity }) {
               const img = resolveImg(rawImg) || 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&q=80';
               const price = h.pricePerNight ?? h.price ?? 0;
               return (
-                <Link
+                <div
                   key={h._id || h.id}
-                  href={`/houses/${h._id || h.id}`}
                   style={{
                     position: 'relative', height: 288, width: 320, flexShrink: 0,
                     borderRadius: 20, overflow: 'hidden', scrollSnapAlign: 'start',
-                    boxShadow: '0 4px 20px rgba(0,0,0,0.1)', display: 'block', textDecoration: 'none'
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
                   }}
                   className="group"
                 >
-                  <img src={img} alt={h.name} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s' }} />
-                  {/* Type badge */}
-                  <span style={{
-                    position: 'absolute', top: 12, left: 12,
-                    background: 'rgba(168,85,247,0.9)', color: '#fff',
-                    borderRadius: 999, padding: '4px 12px', fontSize: 11, fontWeight: 700
-                  }}>
-                    {h.type || 'Maison'}
-                  </span>
-                  {/* Favorite Button */}
-                  <div style={{ position: 'absolute', top: 12, right: 12 }}>
-                    <FavoriteButton type="house" id={h._id || h.id} />
-                  </div>
-                  {/* Details overlay */}
-                  <div style={{
-                    position: 'absolute', inset: 0,
-                    background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 50%)',
-                    padding: '0 16px 16px'
-                  }}>
-                    <div style={{ position: 'absolute', bottom: 16, left: 16, right: 16 }}>
-                      <h3 style={{ fontSize: 17, fontWeight: 700, color: '#fff', margin: '0 0 4px' }}>{h.name}</h3>
-                      <p style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, color: '#e2e8f0', margin: '0 0 8px' }}>
-                        <MapPin size={14} /> {h.city}
-                      </p>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <div style={{ display: 'flex', gap: 10, fontSize: 12, color: '#cbd5e1' }}>
-                          {h.rooms && <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}><BedDouble size={13} /> {h.rooms} ch.</span>}
-                          {h.capacity && <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}><Users size={13} /> {h.capacity} pers.</span>}
+                  <Link href={`/houses/${h._id || h.id}`} className="absolute inset-0 block text-none">
+                    <img src={img} alt={h.name} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s' }} className="group-hover:scale-105" />
+                    {/* Type badge */}
+                    <span style={{
+                      position: 'absolute', top: 12, left: 12,
+                      background: 'rgba(15,23,42,0.9)', color: '#fff',
+                      borderRadius: 999, padding: '4px 12px', fontSize: 11, fontWeight: 700
+                    }}>
+                      {h.type || 'Maison'}
+                    </span>
+                    {/* Details overlay */}
+                    <div style={{
+                      position: 'absolute', inset: 0,
+                      background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 50%)',
+                      padding: '0 16px 16px'
+                    }}>
+                      <div style={{ position: 'absolute', bottom: 16, left: 16, right: 16 }}>
+                        <h3 style={{ fontSize: 17, fontWeight: 700, color: '#fff', margin: '0 0 4px' }}>{h.name}</h3>
+                        <p style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, color: '#e2e8f0', margin: '0 0 8px' }}>
+                          <MapPin size={14} /> {h.city}
+                        </p>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <div style={{ display: 'flex', gap: 10, fontSize: 12, color: '#cbd5e1' }}>
+                            {h.rooms && <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}><BedDouble size={13} /> {h.rooms} ch.</span>}
+                            {h.capacity && <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}><Users size={13} /> {h.capacity} pers.</span>}
+                          </div>
+                          <span style={{ fontSize: 14, fontWeight: 800, color: '#cbd5e1' }}>
+                            {price > 0 ? new Intl.NumberFormat('fr-DZ').format(price) + ' DZD' : '—'}
+                            <span style={{ fontWeight: 400, fontSize: 11 }}>/nuit</span>
+                          </span>
                         </div>
-                        <span style={{ fontSize: 14, fontWeight: 800, color: '#e9d5ff' }}>
-                          {price > 0 ? new Intl.NumberFormat('fr-DZ').format(price) + ' DZD' : '—'}
-                          <span style={{ fontWeight: 400, fontSize: 11 }}>/nuit</span>
-                        </span>
                       </div>
                     </div>
+                  </Link>
+                  {/* Favorite Button */}
+                  <div style={{ position: 'absolute', top: 12, right: 12, zIndex: 10 }}>
+                    <FavoriteButton type="house" id={h._id || h.id} />
                   </div>
-                </Link>
+                </div>
               );
             })
           ) : (

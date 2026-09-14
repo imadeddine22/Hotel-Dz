@@ -7,16 +7,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import FavoriteButton from '@/components/FavoriteButton';
 import LocationMap from '@/components/LocationMap';
-import api from '@/lib/api';
-
-import { getServerURL } from '@/lib/api';
-
-const SERVER = getServerURL();
-function resolveImg(url) {
-  if (!url) return null;
-  if (url.startsWith('http')) return url;
-  return `${SERVER}${url}`;
-}
+import api, { getImageUrl, resolveImg } from '@/lib/api';
 
 const MOCK = {
   name: 'Villa Yasmine', city: 'Alger', wilaya: 'Alger', type: 'Villa',

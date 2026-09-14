@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { MapPin } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import api from '@/lib/api';
+import api, { getImageUrl } from '@/lib/api';
 import { formatDZD } from '@/lib/data';
 
 const STATUS_STYLES = {
@@ -82,7 +82,8 @@ export default function MyBookingsPage() {
             {bookings.map((b) => {
               const isHouse = b.propertyType === 'house';
               const property = isHouse ? b.house : b.hotel;
-              const imgUrl = property?.images?.[0]?.url || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&q=80';
+              const rawUrl = property?.images?.[0]?.url;
+              const imgUrl = rawUrl ? getImageUrl(rawUrl) : 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&q=80';
 
               return (
                 <div key={b._id} className="flex flex-col gap-4 rounded-2xl bg-white p-4 shadow-card sm:flex-row">

@@ -1,87 +1,71 @@
 'use client';
 
-import { useState } from 'react';
-import {
-  CheckCircle2,
-  User,
-  Percent,
-  ShieldCheck,
-  ChevronDown,
-  ChevronUp,
-  ArrowRight,
-} from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { ChevronDown, ChevronUp, HelpCircle } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Link from 'next/link';
+import api from '@/lib/api';
 
-/* ─── FAQ data ─────────────────────────────────────────────── */
 const FAQS = [
   {
-    q: 'Comment fonctionne la commission de 10% ?',
-    a: "Lorsqu'un client effectue une réservation, HotelsDZ prélève automatiquement une commission de 10% sur le montant total. Le reste (90%) est versé directement au propriétaire après confirmation du séjour.",
+    q: "Quels sont les modes de paiement acceptés ?",
+    a: "Nous acceptons les paiements sécurisés par carte CIB et Edahabia pour tous les abonnements. Vous pouvez également payer par virement ou versement CCP si nécessaire."
   },
   {
-    q: 'Y a-t-il des frais pour inscrire mon hôtel ou maison ?',
-    a: "Non, l'inscription et la mise en ligne de votre établissement sont totalement gratuites. Vous ne payez que lorsque vous recevez une réservation confirmée.",
+    q: "Puis-je changer de plan ou annuler mon abonnement à tout moment ?",
+    a: "Oui, absolument. Vous pouvez mettre à niveau, rétrograder ou annuler votre abonnement à tout moment depuis vos paramètres de profil. En cas d'annulation, votre abonnement reste actif jusqu'à la fin de la période facturée."
   },
   {
-    q: 'Quand et comment je reçois mon paiement ?',
-    a: 'Le paiement est traité après le check-in du client. Les fonds sont virés sur votre compte bancaire (CIB) dans un délai de 2 à 5 jours ouvrés.',
+    q: "Quelle est la différence entre la facturation mensuelle et annuelle ?",
+    a: "L'abonnement annuel vous permet d'économiser l'équivalent de 2 mois d'abonnement gratuit (soit environ 17% de réduction sur l'année) et vous évite d'avoir à renouveler chaque mois."
   },
   {
-    q: 'La commission est-elle prélevée sur les annulations ?',
-    a: "Non. En cas d'annulation selon la politique d'annulation que vous avez définie, aucune commission n'est perçue sur les montants remboursés.",
+    q: "Y a-t-il des frais ou commissions supplémentaires sur mes réservations ?",
+    a: "Non. Contrairement à d'autres plateformes, HotelsDZ fonctionne sur un modèle d'abonnement pur. Vous gardez 100% de vos gains sans aucune commission prélevée sur vos réservations."
   },
   {
-    q: 'Les clients paient-ils des frais supplémentaires ?',
-    a: "Une frais de service de 10% est ajoutée au prix affiché lors du paiement pour couvrir les services de la plateforme (sécurité, support, paiement en ligne).",
-  },
+    q: "Que se passe-t-il si je dépasse la limite d'établissements de mon plan ?",
+    a: "Si vous atteignez votre limite, vous serez invité à passer au plan supérieur (Growth ou Pro) pour pouvoir ajouter de nouvelles annonces d'hôtels ou de maisons."
+  }
 ];
 
-/* ─── Feature list component ───────────────────────────────── */
-function FeatureItem({ text }) {
-  return (
-    <li className="flex items-start gap-3 text-sm text-gray-600">
-      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-brand-500" />
-      {text}
-    </li>
-  );
-}
+const COMPARISON_FEATURES = [
+  { name: "Nombre d'établissements", starter: "1", growth: "Jusqu'à 5", pro: "Illimité" },
+  { name: "Photos par annonce", starter: "5 photos", growth: "Illimitées", pro: "Illimitées" },
+  { name: "Réservation directe", starter: true, growth: true, pro: true },
+  { name: "Mise en avant (Featured)", starter: false, growth: true, pro: true },
+  { name: "Badge de profil vérifié", starter: false, growth: false, pro: true },
+  { name: "Statistiques de visites", starter: "De base", growth: "Avancées", pro: "Pro & Export" },
+  { name: "Dossiers de location en ligne", starter: false, growth: true, pro: true },
+  { name: "Accès API & Sync iCal", starter: false, growth: false, pro: true }
+];
 
-/* ─── Stat card (iOS emoji style) ──────────────────────────── */
-function StatCard({ emoji, value, label, color }) {
-  return (
-    <div className="flex flex-col items-center gap-2 rounded-2xl bg-white p-6 text-center shadow-card">
-      <span
-        className="grid h-14 w-14 place-items-center rounded-2xl text-3xl"
-        style={{ background: `${color}18` }}
-      >
-        {emoji}
-      </span>
-      <p className="text-3xl font-extrabold text-ink">{value}</p>
-      <p className="text-sm text-gray-500">{label}</p>
-    </div>
-  );
-}
+const DoubleLoopIcon = ({ color = 'text-slate-300' }) => (
+  <svg className={`h-8 w-16 ${color}`} viewBox="0 0 48 32" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round">
+    <path d="M16 8 C6 8, 6 24, 16 24 C22 24, 26 8, 32 8 C42 8, 42 24, 32 24 C26 24, 22 8, 16 8 Z" />
+  </svg>
+);
 
-/* ─── FAQ item ──────────────────────────────────────────────── */
 function FaqItem({ q, a }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
+    <div className={`overflow-hidden rounded-2xl border transition-all duration-300 ${
+      open ? 'border-teal-500 bg-teal-50/5 shadow-sm' : 'border-slate-100 bg-white hover:shadow-md'
+    }`}>
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center justify-between gap-4 px-6 py-4 text-left font-semibold text-ink transition hover:bg-gray-50"
+        className="flex w-full items-center justify-between gap-4 px-6 py-5 text-left font-bold text-slate-800 transition"
       >
-        {q}
+        <span className="text-sm md:text-base font-serif">{q}</span>
         {open ? (
-          <ChevronUp className="h-5 w-5 shrink-0 text-brand-500" />
+          <ChevronUp className="h-5 w-5 shrink-0 text-teal-600 animate-fade-in" />
         ) : (
-          <ChevronDown className="h-5 w-5 shrink-0 text-gray-400" />
+          <ChevronDown className="h-5 w-5 shrink-0 text-slate-400" />
         )}
       </button>
       {open && (
-        <div className="border-t border-gray-100 px-6 py-4 text-sm leading-relaxed text-gray-600">
+        <div className="px-6 pb-5 text-xs md:text-sm leading-relaxed text-slate-500 animate-fade-in">
           {a}
         </div>
       )}
@@ -89,426 +73,351 @@ function FaqItem({ q, a }) {
   );
 }
 
-/* ═══════════════════════════════════════════════════════════ */
 export default function PricingPage() {
-  const [view, setView] = useState('owner'); // 'owner' | 'guest'
+  const [billing, setBilling] = useState('monthly'); // 'monthly' | 'yearly'
+  const [prices, setPrices] = useState({
+    growthMonthly: 2900,
+    growthYearly: 29000,
+    proMonthly: 6900,
+    proYearly: 69000
+  });
+
+  useEffect(() => {
+    api.get('/pricing/prices')
+      .then(({ data }) => {
+        if (data.success && data.settings) {
+          setPrices({
+            growthMonthly: data.settings.growthMonthlyPrice || 2900,
+            growthYearly: data.settings.growthYearlyPrice || 29000,
+            proMonthly: data.settings.proMonthlyPrice || 6900,
+            proYearly: data.settings.proYearlyPrice || 69000
+          });
+        }
+      })
+      .catch((err) => console.error("Error loading prices:", err));
+  }, []);
 
   return (
-    <main className="min-h-screen bg-gray-50">
+    <main className="min-h-screen bg-slate-50">
       <Navbar />
 
-      {/* ── Hero ──────────────────────────────────────────── */}
-      <section className="bg-gradient-to-br from-brand-600 via-brand-500 to-cyan-400 py-20 text-center text-white">
-        <span className="inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-1.5 text-sm font-medium backdrop-blur-sm">
-          <Percent className="h-4 w-4" />
-          Tarification simple &amp; transparente
-        </span>
-        <h1 className="mt-4 text-5xl font-extrabold tracking-tight drop-shadow-sm">
-          Seulement <span className="text-yellow-300">10%</span> par réservation
-        </h1>
-        <p className="mx-auto mt-4 max-w-xl text-brand-50">
-          Aucun abonnement, aucun frais caché. Vous payez uniquement lorsque vous
-          réalisez ou recevez une réservation confirmée.
-        </p>
+      {/* Hero Header */}
+      <section className="text-center py-20 px-4 bg-gradient-to-b from-white to-slate-50 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:16px_16px] opacity-60"></div>
+        <div className="relative z-10 max-w-4xl mx-auto">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-100 px-4 py-1.5 text-xs font-extrabold text-brand-600 uppercase tracking-widest mb-4 border border-brand-200 shadow-sm animate-pulse">
+            ✦ Nouveau Modèle d'Abonnement
+          </span>
+          <h1 className="text-4xl md:text-6xl font-black font-serif text-slate-800 tracking-tight leading-none">
+            Flexible pricing plans <br />
+            for <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-slate-500">every growing business</span>
+          </h1>
+          <p className="mx-auto mt-6 max-w-2xl text-slate-500 text-sm md:text-base font-medium leading-relaxed">
+            Start free, scale as you grow. Choose the plan that matches your customer engagement goals. 
+            Aucune commission sur vos gains.
+          </p>
 
-        {/* Toggle */}
-        <div className="mt-8 inline-flex overflow-hidden rounded-full border border-white/30 bg-white/10 backdrop-blur-sm">
-          <button
-            onClick={() => setView('owner')}
-            className={`flex items-center gap-2 px-6 py-2.5 text-sm font-semibold transition ${
-              view === 'owner'
-                ? 'bg-white text-brand-600 shadow'
-                : 'text-white hover:bg-white/10'
-            }`}
-          >
-            🏨 Je suis propriétaire
-          </button>
-          <button
-            onClick={() => setView('guest')}
-            className={`flex items-center gap-2 px-6 py-2.5 text-sm font-semibold transition ${
-              view === 'guest'
-                ? 'bg-white text-brand-600 shadow'
-                : 'text-white hover:bg-white/10'
-            }`}
-          >
-            <User className="h-4 w-4" />
-            Je suis client
-          </button>
-        </div>
-      </section>
-
-      {/* ── Main pricing cards ─────────────────────────────── */}
-      <section className="mx-auto max-w-5xl px-4 py-16 sm:px-6">
-        {view === 'owner' ? (
-          <>
-            <p className="mb-10 text-center text-gray-500">
-              Rejoignez la plateforme gratuitement et commencez à recevoir des
-              réservations dès aujourd&apos;hui.
-            </p>
-            <div className="grid gap-6 md:grid-cols-2">
-
-              {/* Free listing card */}
-              <div className="flex flex-col rounded-3xl border border-gray-200 bg-white p-8 shadow-card">
-                <div className="flex items-center gap-3">
-                  <span className="grid h-11 w-11 place-items-center rounded-xl bg-brand-50 text-2xl">
-                    🏨
-                  </span>
-                  <div>
-                    <h2 className="text-xl font-bold text-ink">Inscription gratuite</h2>
-                    <p className="text-sm text-gray-400">Pour les propriétaires</p>
-                  </div>
-                </div>
-
-                <div className="my-6 border-t border-dashed border-gray-100" />
-
-                <div className="flex items-end gap-2">
-                  <span className="text-5xl font-extrabold text-ink">0</span>
-                  <span className="mb-1.5 text-2xl font-bold text-gray-400">DZD</span>
-                  <span className="mb-1.5 text-sm text-gray-400">/ mois</span>
-                </div>
-                <p className="mt-1 text-sm text-gray-500">Inscription &amp; mise en ligne offertes</p>
-
-                <ul className="mt-6 flex flex-col gap-3">
-                  {[
-                    'Publiez votre hôtel ou maison gratuitement',
-                    'Photos illimitées par annonce',
-                    'Tableau de bord propriétaire dédié',
-                    'Gestion des réservations en temps réel',
-                    'Support client 7j/7',
-                    'Visibilité dans les 58 wilayas',
-                  ].map((f) => (
-                    <FeatureItem key={f} text={f} />
-                  ))}
-                </ul>
-
-                <Link
-                  href="/register"
-                  className="mt-8 flex items-center justify-center gap-2 rounded-full bg-brand-500 px-6 py-3 font-semibold text-white transition hover:bg-brand-600"
-                >
-                  Inscrire mon établissement
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </div>
-
-              {/* Commission card */}
-              <div className="relative flex flex-col overflow-hidden rounded-3xl bg-gradient-to-br from-brand-600 to-cyan-500 p-8 text-white shadow-xl">
-                {/* Popular badge */}
-                <span className="absolute right-6 top-6 rounded-full bg-yellow-400 px-3 py-0.5 text-xs font-bold text-yellow-900">
-                  Par réservation
-                </span>
-
-                <div className="flex items-center gap-3">
-                  <span className="grid h-11 w-11 place-items-center rounded-xl bg-white/20 backdrop-blur-sm">
-                    <Percent className="h-6 w-6 text-white" />
-                  </span>
-                  <div>
-                    <h2 className="text-xl font-bold">Commission unique</h2>
-                    <p className="text-sm text-white/70">Seulement si vous gagnez</p>
-                  </div>
-                </div>
-
-                <div className="my-6 border-t border-dashed border-white/20" />
-
-                <div className="flex items-end gap-2">
-                  <span className="text-5xl font-extrabold">10</span>
-                  <span className="mb-1.5 text-3xl font-bold text-white/80">%</span>
-                  <span className="mb-1.5 text-sm text-white/60">/ réservation</span>
-                </div>
-                <p className="mt-1 text-sm text-white/70">Prélevé sur le montant total de chaque séjour</p>
-
-                {/* Example calculation */}
-                <div className="my-6 rounded-2xl bg-white/10 p-4 backdrop-blur-sm">
-                  <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-white/60">
-                    Exemple de calcul
-                  </p>
-                  <div className="space-y-1.5 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-white/80">Prix de la nuit</span>
-                      <span className="font-semibold">5 000 DZD</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-white/80">Durée du séjour</span>
-                      <span className="font-semibold">3 nuits</span>
-                    </div>
-                    <div className="flex justify-between border-t border-white/20 pt-1.5">
-                      <span className="text-white/80">Total brut</span>
-                      <span className="font-semibold">15 000 DZD</span>
-                    </div>
-                    <div className="flex justify-between text-yellow-300">
-                      <span>Commission HotelsDZ (10%)</span>
-                      <span className="font-bold">- 1 500 DZD</span>
-                    </div>
-                    <div className="flex justify-between border-t border-white/20 pt-1.5 text-base">
-                      <span className="font-bold">Vous recevez</span>
-                      <span className="font-extrabold">13 500 DZD</span>
-                    </div>
-                  </div>
-                </div>
-
-                <ul className="flex flex-col gap-3">
-                  {[
-                    'Zéro commission si pas de réservation',
-                    'Paiement sécurisé CIB / EDAHABIA',
-                    'Virement sous 2–5 jours ouvrés',
-                    'Protection contre les impayés',
-                  ].map((f) => (
-                    <li key={f} className="flex items-start gap-2 text-sm text-white/90">
-                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-yellow-300" />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-
-                <Link
-                  href="/owner/hotels/new"
-                  className="mt-8 flex items-center justify-center gap-2 rounded-full bg-white px-6 py-3 font-semibold text-brand-600 transition hover:bg-brand-50"
-                >
-                  Ajouter mon premier hôtel
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </div>
-            </div>
-          </>
-        ) : (
-          /* ── Guest view ── */
-          <>
-            <p className="mb-10 text-center text-gray-500">
-              Réservez facilement et en toute sécurité avec une frais de service
-              transparente.
-            </p>
-            <div className="grid gap-6 md:grid-cols-2">
-
-              {/* Free browsing */}
-              <div className="flex flex-col rounded-3xl border border-gray-200 bg-white p-8 shadow-card">
-                <div className="flex items-center gap-3">
-                  <span className="grid h-11 w-11 place-items-center rounded-xl bg-emerald-50 text-emerald-500">
-                    <User className="h-6 w-6" />
-                  </span>
-                  <div>
-                    <h2 className="text-xl font-bold text-ink">Navigation gratuite</h2>
-                    <p className="text-sm text-gray-400">Parcourez sans engagement</p>
-                  </div>
-                </div>
-
-                <div className="my-6 border-t border-dashed border-gray-100" />
-
-                <div className="flex items-end gap-2">
-                  <span className="text-5xl font-extrabold text-ink">0</span>
-                  <span className="mb-1.5 text-2xl font-bold text-gray-400">DZD</span>
-                </div>
-                <p className="mt-1 text-sm text-gray-500">Inscription &amp; recherche offertes</p>
-
-                <ul className="mt-6 flex flex-col gap-3">
-                  {[
-                    'Accès à toutes les annonces en Algérie',
-                    'Recherche avancée par wilaya / prix',
-                    'Avis et notes vérifiés',
-                    'Sauvegarde en favoris',
-                    'Consultation des disponibilités',
-                    'Aucun frais avant réservation',
-                  ].map((f) => (
-                    <FeatureItem key={f} text={f} />
-                  ))}
-                </ul>
-
-                <Link
-                  href="/hotels"
-                  className="mt-8 flex items-center justify-center gap-2 rounded-full bg-brand-500 px-6 py-3 font-semibold text-white transition hover:bg-brand-600"
-                >
-                  Explorer les hôtels
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </div>
-
-              {/* Service fee card */}
-              <div className="relative flex flex-col overflow-hidden rounded-3xl bg-gradient-to-br from-brand-600 to-cyan-500 p-8 text-white shadow-xl">
-                <span className="absolute right-6 top-6 rounded-full bg-yellow-400 px-3 py-0.5 text-xs font-bold text-yellow-900">
-                  Frais de service
-                </span>
-
-                <div className="flex items-center gap-3">
-                  <span className="grid h-11 w-11 place-items-center rounded-xl bg-white/20">
-                    <ShieldCheck className="h-6 w-6 text-white" />
-                  </span>
-                  <div>
-                    <h2 className="text-xl font-bold">Réservation sécurisée</h2>
-                    <p className="text-sm text-white/70">Payez uniquement à la réservation</p>
-                  </div>
-                </div>
-
-                <div className="my-6 border-t border-dashed border-white/20" />
-
-                <div className="flex items-end gap-2">
-                  <span className="text-5xl font-extrabold">10</span>
-                  <span className="mb-1.5 text-3xl font-bold text-white/80">%</span>
-                  <span className="mb-1.5 text-sm text-white/60">/ séjour</span>
-                </div>
-                <p className="mt-1 text-sm text-white/70">Frais de service inclus dans le total final</p>
-
-                {/* Example calculation */}
-                <div className="my-6 rounded-2xl bg-white/10 p-4 backdrop-blur-sm">
-                  <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-white/60">
-                    Exemple de calcul
-                  </p>
-                  <div className="space-y-1.5 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-white/80">Prix affiché / nuit</span>
-                      <span className="font-semibold">5 000 DZD</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-white/80">Durée du séjour</span>
-                      <span className="font-semibold">3 nuits</span>
-                    </div>
-                    <div className="flex justify-between border-t border-white/20 pt-1.5">
-                      <span className="text-white/80">Sous-total</span>
-                      <span className="font-semibold">15 000 DZD</span>
-                    </div>
-                    <div className="flex justify-between text-yellow-300">
-                      <span>Frais de service (10%)</span>
-                      <span className="font-bold">+ 1 500 DZD</span>
-                    </div>
-                    <div className="flex justify-between border-t border-white/20 pt-1.5 text-base">
-                      <span className="font-bold">Total à payer</span>
-                      <span className="font-extrabold">16 500 DZD</span>
-                    </div>
-                  </div>
-                </div>
-
-                <ul className="flex flex-col gap-3">
-                  {[
-                    'Paiement sécurisé CIB / EDAHABIA',
-                    'Confirmation instantanée de réservation',
-                    'Protection en cas de litige',
-                    'Support disponible 7j/7',
-                  ].map((f) => (
-                    <li key={f} className="flex items-start gap-2 text-sm text-white/90">
-                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-yellow-300" />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-
-                <Link
-                  href="/register"
-                  className="mt-8 flex items-center justify-center gap-2 rounded-full bg-white px-6 py-3 font-semibold text-brand-600 transition hover:bg-brand-50"
-                >
-                  Créer un compte gratuit
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </div>
-            </div>
-          </>
-        )}
-      </section>
-
-      {/* ── Stats ─────────────────────────────────────────── */}
-      <section className="bg-white py-14">
-        <div className="mx-auto max-w-5xl px-4 sm:px-6">
-          <h2 className="mb-8 text-center text-2xl font-bold text-ink">
-            Pourquoi choisir HotelsDZ ?
-          </h2>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <StatCard emoji="🏨" value="500+"  label="Établissements listés"     color="#00bcd4" />
-            <StatCard emoji="⭐️" value="4.8/5" label="Note moyenne des clients"  color="#ffc107" />
-            <StatCard emoji="📈" value="10%"   label="Commission tout compris"   color="#10b981" />
-            <StatCard emoji="🎧" value="7j/7"  label="Support client disponible" color="#8b5cf6" />
+          {/* Billing Switch Toggle */}
+          <div className="mt-10 inline-flex items-center gap-3 bg-slate-100 p-1.5 rounded-full border border-slate-200 shadow-sm">
+            <button
+              onClick={() => setBilling('monthly')}
+              className={`rounded-full px-5 py-2 text-xs font-black transition-all ${
+                billing === 'monthly' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              Mensuel
+            </button>
+            <button
+              onClick={() => setBilling('yearly')}
+              className={`rounded-full px-5 py-2 text-xs font-black transition-all flex items-center gap-1.5 ${
+                billing === 'yearly' ? 'bg-brand-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              Annuel
+              <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-extrabold ${billing === 'yearly' ? 'bg-white text-brand-700' : 'bg-brand-100 text-brand-700'}`}>
+                -17%
+              </span>
+            </button>
           </div>
         </div>
       </section>
 
-      {/* ── How it works ──────────────────────────────────── */}
-      <section className="mx-auto max-w-5xl px-4 py-16 sm:px-6">
-        <h2 className="mb-2 text-center text-3xl font-extrabold text-ink">
-          Comment ça marche ?
-        </h2>
-        <p className="mb-10 text-center text-gray-500">En 3 étapes simples</p>
-
-        <div className="grid gap-6 md:grid-cols-3">
-          {[
-            {
-              step: '01',
-              emoji: '🏠',
-              title: 'Listez votre bien',
-              desc: 'Créez votre compte propriétaire et publiez votre hôtel ou maison gratuitement avec photos et détails.',
-              color: '#00bcd4',
-            },
-            {
-              step: '02',
-              emoji: '⚡️',
-              title: 'Recevez des réservations',
-              desc: 'Les clients trouvent votre annonce, réservent et paient en ligne en toute sécurité via CIB ou EDAHABIA.',
-              color: '#ffc107',
-            },
-            {
-              step: '03',
-              emoji: '💰',
-              title: 'Encaissez vos revenus',
-              desc: 'Après le séjour, 90% du montant total vous est versé directement. HotelsDZ conserve 10% de commission.',
-              color: '#10b981',
-            },
-          ].map(({ step, emoji, title, desc, color }) => (
-            <div
-              key={step}
-              className="relative flex flex-col items-start rounded-3xl bg-white p-7 shadow-card"
-            >
-              <span
-                className="absolute right-5 top-5 text-6xl font-black opacity-5"
-                style={{ color }}
-              >
-                {step}
-              </span>
-              <span
-                className="mb-4 grid h-12 w-12 place-items-center rounded-2xl text-2xl"
-                style={{ background: `${color}18` }}
-              >
-                {emoji}
-              </span>
-              <h3 className="mb-2 font-bold text-ink">{title}</h3>
-              <p className="text-sm leading-relaxed text-gray-500">{desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── FAQ ───────────────────────────────────────────── */}
-      <section className="bg-white py-16">
-        <div className="mx-auto max-w-3xl px-4 sm:px-6">
-          <h2 className="mb-2 text-center text-3xl font-extrabold text-ink">
-            Questions fréquentes
-          </h2>
-          <p className="mb-8 text-center text-gray-500">
-            Tout ce que vous devez savoir sur notre tarification
+      {/* Compare Plans Desktop Unified Grid (Matches Screenshot) */}
+      <section className="max-w-7xl mx-auto px-4 pb-20 relative z-10">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-black font-serif text-slate-800">Compare plans</h2>
+          <p className="text-slate-500 text-sm mt-2 max-w-xl mx-auto">
+            See which plan fits your team's goals — from essential customer data tools to advanced automation and analytics.
           </p>
-          <div className="flex flex-col gap-3">
-            {FAQS.map((f) => (
-              <FaqItem key={f.q} q={f.q} a={f.a} />
+        </div>
+
+        {/* Large screen layout */}
+        <div className="hidden lg:block overflow-hidden rounded-3xl border border-slate-200/80 shadow-md bg-white">
+          <div className="grid grid-cols-4 items-stretch divide-x divide-slate-100">
+            
+            {/* Header Column 1: Title card */}
+            <div className="p-8 flex flex-col justify-end bg-slate-50/30">
+              <h4 className="text-2xl font-black text-slate-800 font-serif leading-none">Features</h4>
+            </div>
+
+            {/* Header Column 2: Starter Card */}
+            <div className="p-8 flex flex-col justify-between bg-white">
+              <div>
+                <div className="mb-4">
+                  <DoubleLoopIcon color="text-slate-200" />
+                </div>
+                <h3 className="text-lg font-bold text-slate-800 font-serif">Starter Plan</h3>
+                <p className="text-[11px] text-slate-400 font-bold mt-1 min-h-[32px]">Best for small teams getting started.</p>
+                <div className="flex items-baseline gap-1 mt-6">
+                  <span className="text-4xl font-black text-slate-800 tracking-tight">0</span>
+                  <span className="text-xs font-bold text-slate-400">DZD / {billing === 'monthly' ? 'mois' : 'an'}</span>
+                </div>
+              </div>
+              <Link
+                href="/register"
+                className="mt-8 block w-full text-center py-2.5 px-4 rounded-full font-bold text-xs text-slate-700 border border-slate-200 hover:bg-slate-50 hover:border-slate-300 transition"
+              >
+                Get started free
+              </Link>
+            </div>
+
+            {/* Header Column 3: Growth Card (Teal border highlight) */}
+            <div className="p-8 flex flex-col justify-between bg-teal-50/5 relative ring-2 ring-teal-500/50 ring-inset">
+              <div className="absolute -top-0.5 left-0 right-0 bg-teal-500 text-white font-extrabold text-[10px] text-center py-1 uppercase tracking-widest">
+                Most Popular
+              </div>
+              <div className="pt-2">
+                <div className="mb-4">
+                  <DoubleLoopIcon color="text-teal-400" />
+                </div>
+                <h3 className="text-lg font-bold text-slate-800 font-serif">Growth Plan</h3>
+                <p className="text-[11px] text-slate-400 font-bold mt-1 min-h-[32px]">For scaling teams ready to automate journeys.</p>
+                <div className="flex items-baseline gap-1 mt-6">
+                  <span className="text-4xl font-black text-slate-800 tracking-tight">
+                    {new Intl.NumberFormat('fr-DZ').format(billing === 'monthly' ? prices.growthMonthly : prices.growthYearly)}
+                  </span>
+                  <span className="text-xs font-bold text-slate-400">DZD / {billing === 'monthly' ? 'mois' : 'an'}</span>
+                </div>
+              </div>
+              <Link
+                href="/register?plan=growth"
+                className="mt-8 block w-full text-center py-2.5 px-4 rounded-full font-bold text-xs text-white bg-slate-900 hover:bg-slate-800 shadow-md transition"
+              >
+                Start free trial
+              </Link>
+            </div>
+
+            {/* Header Column 4: Pro Card */}
+            <div className="p-8 flex flex-col justify-between bg-white">
+              <div>
+                <div className="mb-4">
+                  <DoubleLoopIcon color="text-emerald-300" />
+                </div>
+                <h3 className="text-lg font-bold text-slate-800 font-serif">Pro Plan</h3>
+                <p className="text-[11px] text-slate-400 font-bold mt-1 min-h-[32px]">For businesses that need customization.</p>
+                <div className="flex items-baseline gap-1 mt-6">
+                  <span className="text-4xl font-black text-slate-800 tracking-tight">
+                    {new Intl.NumberFormat('fr-DZ').format(billing === 'monthly' ? prices.proMonthly : prices.proYearly)}
+                  </span>
+                  <span className="text-xs font-bold text-slate-400">DZD / {billing === 'monthly' ? 'mois' : 'an'}</span>
+                </div>
+              </div>
+              <Link
+                href="/contact?subject=pro-plan"
+                className="mt-8 block w-full text-center py-2.5 px-4 rounded-full font-bold text-xs text-slate-700 border border-slate-200 hover:bg-slate-50 hover:border-slate-300 transition"
+              >
+                Book demo
+              </Link>
+            </div>
+
+          </div>
+
+          {/* Comparison Rows */}
+          <div className="divide-y divide-slate-100 border-t border-slate-200">
+            {COMPARISON_FEATURES.map((feat, idx) => (
+              <div key={idx} className="grid grid-cols-4 items-center divide-x divide-slate-100 hover:bg-slate-50/20 transition-colors">
+                {/* Feature Name */}
+                <div className="p-5 text-sm font-bold text-slate-700 bg-slate-50/10">{feat.name}</div>
+                
+                {/* Starter */}
+                <div className="p-5 text-sm font-semibold text-slate-500 text-center">
+                  {typeof feat.starter === 'boolean' ? (
+                    feat.starter ? <span className="text-emerald-500 text-base">✔</span> : <span className="text-slate-300">✕</span>
+                  ) : feat.starter}
+                </div>
+
+                {/* Growth (Highlighted border) */}
+                <div className="p-5 text-sm font-bold text-teal-600 text-center bg-teal-50/5 ring-2 ring-teal-500/50 ring-inset">
+                  {typeof feat.growth === 'boolean' ? (
+                    feat.growth ? <span className="text-emerald-500 text-base">✔</span> : <span className="text-slate-300">✕</span>
+                  ) : feat.growth}
+                </div>
+
+                {/* Pro */}
+                <div className="p-5 text-sm font-semibold text-slate-500 text-center">
+                  {typeof feat.pro === 'boolean' ? (
+                    feat.pro ? <span className="text-emerald-500 text-base">✔</span> : <span className="text-slate-300">✕</span>
+                  ) : feat.pro}
+                </div>
+              </div>
             ))}
           </div>
         </div>
+
+        {/* Mobile alternative view (Simple cards stacked) */}
+        <div className="grid gap-6 lg:hidden">
+          {/* Card 1 */}
+          <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+            <h3 className="text-lg font-bold text-slate-800 font-serif">Starter Plan</h3>
+            <p className="text-4xl font-black text-slate-800 mt-2">0 DZD <span className="text-xs text-slate-400 font-bold">/ {billing === 'monthly' ? 'mois' : 'an'}</span></p>
+            <ul className="mt-4 space-y-2">
+              <li className="text-xs text-slate-600 font-semibold">1 établissement</li>
+              <li className="text-xs text-slate-600 font-semibold">5 photos max</li>
+              <li className="text-xs text-slate-600 font-semibold">Support par email</li>
+            </ul>
+            <Link href="/register" className="mt-6 block text-center py-2.5 rounded-full font-bold text-xs text-slate-700 border border-slate-200">
+              Get started free
+            </Link>
+          </div>
+          {/* Card 2 */}
+          <div className="bg-white rounded-2xl p-6 border-2 border-teal-500 shadow-sm relative">
+            <span className="absolute -top-3.5 right-6 bg-teal-500 text-white font-extrabold text-[8px] uppercase px-3 py-0.5 rounded-full">Most Popular</span>
+            <h3 className="text-lg font-bold text-slate-800 font-serif">Growth Plan</h3>
+            <p className="text-4xl font-black text-slate-800 mt-2">
+              {new Intl.NumberFormat('fr-DZ').format(billing === 'monthly' ? prices.growthMonthly : prices.growthYearly)} DZD
+              <span className="text-xs text-slate-400 font-bold"> / {billing === 'monthly' ? 'mois' : 'an'}</span>
+            </p>
+            <ul className="mt-4 space-y-2">
+              <li className="text-xs text-slate-600 font-semibold">Jusqu'à 5 établissements</li>
+              <li className="text-xs text-slate-600 font-semibold">Photos illimitées</li>
+              <li className="text-xs text-slate-600 font-semibold">Mise en avant (Featured)</li>
+              <li className="text-xs text-slate-600 font-semibold">Support prioritaire 7j/7</li>
+            </ul>
+            <Link href="/register?plan=growth" className="mt-6 block text-center py-2.5 rounded-full font-bold text-xs text-white bg-slate-900">
+              Start free trial
+            </Link>
+          </div>
+          {/* Card 3 */}
+          <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+            <h3 className="text-lg font-bold text-slate-800 font-serif">Pro Plan</h3>
+            <p className="text-4xl font-black text-slate-800 mt-2">
+              {new Intl.NumberFormat('fr-DZ').format(billing === 'monthly' ? prices.proMonthly : prices.proYearly)} DZD
+              <span className="text-xs text-slate-400 font-bold"> / {billing === 'monthly' ? 'mois' : 'an'}</span>
+            </p>
+            <ul className="mt-4 space-y-2">
+              <li className="text-xs text-slate-600 font-semibold">Établissements illimités</li>
+              <li className="text-xs text-slate-600 font-semibold">Badge vérifié</li>
+              <li className="text-xs text-slate-600 font-semibold">API Sync Calendrier</li>
+              <li className="text-xs text-slate-600 font-semibold">Dossiers de location</li>
+            </ul>
+            <Link href="/contact?subject=pro-plan" className="mt-6 block text-center py-2.5 rounded-full font-bold text-xs text-slate-700 border border-slate-200">
+              Book demo
+            </Link>
+          </div>
+        </div>
       </section>
 
-      {/* ── CTA banner ────────────────────────────────────── */}
-      <section className="mx-auto max-w-5xl px-4 py-16 sm:px-6">
-        <div className="overflow-hidden rounded-3xl bg-gradient-to-r from-brand-600 to-cyan-500 p-10 text-center text-white shadow-xl">
-          <Percent className="mx-auto mb-4 h-10 w-10 opacity-80" />
-          <h2 className="text-3xl font-extrabold">Prêt à commencer ?</h2>
-          <p className="mx-auto mt-3 max-w-md text-brand-50">
-            Rejoignez des centaines de propriétaires algériens et commencez à
-            générer des revenus dès aujourd&apos;hui — gratuitement.
+      {/* Partner Logos Grid */}
+      <section className="bg-white py-14 border-y border-slate-100 select-none">
+        <div className="max-w-7xl mx-auto px-4 text-center">
+          <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase mb-8">
+            REJOINT PAR LES LEADERS DE L'HÔTELLERIE 5 ÉTOILES EN ALGÉRIE
           </p>
-          <div className="mt-8 flex flex-wrap justify-center gap-4">
-            <Link
-              href="/register"
-              className="rounded-full bg-white px-8 py-3 font-bold text-brand-600 shadow transition hover:bg-brand-50"
-            >
-              Inscrire mon établissement
-            </Link>
-            <Link
-              href="/contact"
-              className="rounded-full border border-white/40 bg-white/10 px-8 py-3 font-semibold text-white backdrop-blur-sm transition hover:bg-white/20"
-            >
-              Nous contacter
-            </Link>
+          <div className="flex flex-wrap items-center justify-center gap-10 md:gap-16 opacity-75">
+            {/* Sheraton */}
+            <div className="flex items-center gap-2 text-slate-700 font-serif font-bold text-lg md:text-xl tracking-tight">
+              <span className="w-7 h-7 rounded-full border-2 border-slate-700 flex items-center justify-center font-serif text-sm font-bold shadow-sm">S</span>
+              <span>Sheraton</span>
+            </div>
+            {/* Sofitel */}
+            <div className="flex items-center gap-2 text-slate-700 font-serif font-bold text-lg md:text-xl tracking-widest uppercase">
+              <span>Sofitel</span>
+            </div>
+            {/* Marriott */}
+            <div className="flex items-center gap-1 text-slate-800 font-sans font-black text-lg md:text-xl tracking-tight uppercase">
+              <span className="text-red-700 font-serif text-2xl font-black leading-none mr-0.5">M</span>
+              <span>Marriott</span>
+            </div>
+            {/* Hyatt Regency */}
+            <div className="flex flex-col items-center text-slate-700 font-sans font-bold text-xs tracking-[0.2em] uppercase leading-none">
+              <span>Hyatt</span>
+              <span className="text-[8px] font-medium text-slate-400 mt-1 tracking-widest">Regency</span>
+            </div>
+            {/* El Aurassi */}
+            <div className="flex items-center gap-1.5 text-slate-700 font-serif font-bold text-lg md:text-xl">
+              <span className="text-lg text-slate-500">🌙</span>
+              <span>El Aurassi</span>
+            </div>
+            {/* Royal Hotel */}
+            <div className="flex items-center gap-1.5 text-slate-700 font-serif font-bold text-lg md:text-xl">
+              <span className="text-amber-500 text-lg">👑</span>
+              <span>Royal Hotel</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Split Screen Section (Matches Screenshot) */}
+      <section className="bg-white py-20 border-t border-slate-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="flex flex-col lg:flex-row gap-12 items-start">
+            
+            {/* Left Column (40% width) */}
+            <div className="w-full lg:w-[40%] sticky top-8">
+              <div className="border border-slate-200 rounded-lg px-3 py-1 flex items-center gap-1.5 text-xs font-black text-slate-500 bg-white w-fit shadow-sm">
+                <HelpCircle className="h-3.5 w-3.5 text-teal-600" />
+                <span>FAQ</span>
+              </div>
+              <h2 className="text-4xl md:text-5xl font-black font-serif text-slate-800 mt-4 tracking-tight leading-none">
+                Frequently asked <br />questions
+              </h2>
+              <p className="text-slate-500 text-sm mt-4 font-medium max-w-sm leading-relaxed">
+                These are the most commonly asked questions about HotelsDZ. Can't find what you're looking for?
+              </p>
+              <Link
+                href="/contact"
+                className="inline-block mt-6 px-6 py-3 rounded-full font-bold text-xs text-white bg-gradient-to-r from-slate-900 to-slate-800 hover:from-slate-800 hover:to-slate-700 transition shadow-md hover:scale-102"
+              >
+                Help Center
+              </Link>
+            </div>
+
+            {/* Right Column (60% width) */}
+            <div className="w-full lg:w-[60%] flex flex-col gap-4">
+              {FAQS.map((faq, i) => (
+                <FaqItem key={i} q={faq.q} a={faq.a} />
+              ))}
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* Final CTA Banner */}
+      <section className="max-w-5xl mx-auto px-4 py-20">
+        <div className="rounded-3xl bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 border border-slate-800 p-12 text-center text-white shadow-2xl relative overflow-hidden">
+          <div className="absolute inset-0 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:24px_24px] opacity-[0.03]"></div>
+          <div className="relative z-10">
+            <h2 className="text-3xl md:text-4xl font-serif font-black tracking-tight leading-tight">
+              Prêt à publier vos biens et garder 100% de vos gains ?
+            </h2>
+            <p className="mx-auto mt-4 max-w-lg text-slate-400 text-xs md:text-sm font-medium">
+              Inscrivez-vous dès aujourd'hui sur HotelsDZ. Choisissez le plan d'abonnement idéal et touchez des clients dans les 58 wilayas d'Algérie.
+            </p>
+            <div className="mt-8 flex flex-wrap justify-center gap-4">
+              <Link
+                href="/register"
+                className="rounded-full bg-white px-8 py-3.5 font-bold text-slate-900 shadow-md hover:bg-slate-50 transition hover:scale-102"
+              >
+                Inscrire mon établissement
+              </Link>
+              <Link
+                href="/contact"
+                className="rounded-full border border-slate-700 bg-slate-800/40 px-8 py-3.5 font-bold text-white backdrop-blur-sm transition hover:bg-slate-800/80 hover:scale-102"
+              >
+                Nous contacter
+              </Link>
+            </div>
           </div>
         </div>
       </section>

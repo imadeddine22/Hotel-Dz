@@ -5,8 +5,11 @@ import Navbar from '@/components/Navbar';
 import Hero from '@/components/Hero';
 import FeaturedHotels from '@/components/FeaturedHotels';
 import FeaturedHouses from '@/components/FeaturedHouses';
+import FeaturedSales from '@/components/FeaturedSales';
 import CitiesSection from '@/components/CitiesSection';
 import HotelsList from '@/components/HotelsList';
+import HomeDetailsSection from '@/components/HomeDetailsSection';
+import CtaBanner from '@/components/CtaBanner';
 import Footer from '@/components/Footer';
 
 export default function HomePage() {
@@ -19,7 +22,10 @@ export default function HomePage() {
       <FeaturedHotels />
       <CitiesSection selectedCity={selectedCity} onSelectCity={setSelectedCity} />
       <FeaturedHouses selectedCity={selectedCity} />
+      <FeaturedSales selectedCity={selectedCity} />
       <HotelsList selectedCity={selectedCity} onSelectCity={setSelectedCity} />
+      <HomeDetailsSection />
+      <CtaBanner />
       <Footer />
     </main>
   );

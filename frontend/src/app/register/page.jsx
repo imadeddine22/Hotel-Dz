@@ -26,6 +26,7 @@ export default function RegisterPage() {
     try {
       const user = await register(form);
       if (user.role === 'owner') router.push('/owner/dashboard');
+      else if (user.role === 'seller') router.push('/seller/dashboard');
       else router.push('/');
     } catch (err) {
       setError(err.message);
@@ -48,20 +49,25 @@ export default function RegisterPage() {
         )}
 
         {/* Role switch */}
-        <div className="mb-5 grid grid-cols-2 gap-2 rounded-xl bg-gray-100 p-1">
+        <div className="mb-5 grid grid-cols-3 gap-2">
           {[
-            { v: 'customer', label: 'Voyageur' },
-            { v: 'owner', label: 'Hôtelier' },
+            { v: 'customer', label: 'Voyageur', desc: 'Réserver & louer', icon: '🧳' },
+            { v: 'owner', label: 'Hôtelier', desc: 'Hôtels & locations', icon: '🏨' },
+            { v: 'seller', label: 'Vendeur', desc: 'Vendre un bien', icon: '🏠' },
           ].map((r) => (
             <button
               key={r.v}
               type="button"
               onClick={() => setForm({ ...form, role: r.v })}
-              className={`rounded-lg py-2 text-sm font-medium transition ${
-                form.role === r.v ? 'bg-white text-brand-600 shadow' : 'text-gray-500'
+              className={`flex flex-col items-center gap-1 rounded-xl border-2 px-2 py-3 text-center transition ${
+                form.role === r.v
+                  ? 'border-brand-500 bg-brand-50 text-brand-600 shadow-sm'
+                  : 'border-gray-100 bg-gray-50 text-gray-500 hover:border-gray-200'
               }`}
             >
-              {r.label}
+              <span className="text-xl">{r.icon}</span>
+              <span className="text-xs font-bold leading-tight">{r.label}</span>
+              <span className="text-[10px] font-medium leading-tight opacity-70">{r.desc}</span>
             </button>
           ))}
         </div>

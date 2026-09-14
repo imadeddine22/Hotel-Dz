@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { MapPin, Star, Trash2, Eye, Building2, Plus, X, CheckCircle, XCircle, Pencil } from 'lucide-react';
 import MapPicker from '@/components/MapPicker';
 import { useWilayas } from '@/hooks/useWilayas';
-import api, { getServerURL } from '@/lib/api';
+import api, { getImageUrl, resolveImg } from '@/lib/api';
 import { formatDZD } from '@/lib/data';
 
 export default function AdminAllHotelsPage() {
@@ -95,10 +95,17 @@ export default function AdminAllHotelsPage() {
     }
   };
 
-  const handleStatusChange = async (id, action) => {
+  const [viewingHotel, setViewingHotel] = useState(null);
+  const [rejectingHotel, setRejectingHotel] = useState(null);
+  const [rejectionReason, setRejectionReason] = useState('');
+
+  const handleStatusChange = async (id, action, reason = '') => {
     try {
-      const { data } = await api.put(`/admin/hotels/${id}/${action}`);
-      setHotels((prev) => prev.map((h) => h._id === id ? { ...h, status: data.hotel.status } : h));
+      const { data } = await api.put(`/admin/hotels/${id}/${action}`, { reason });
+      setHotels((prev) => prev.map((h) => h._id === id ? { ...h, status: data.hotel.status, rejectionReason: data.hotel.rejectionReason } : h));
+      setViewingHotel(null);
+      setRejectingHotel(null);
+      setRejectionReason('');
     } catch (e) {
       alert(e.response?.data?.message || e.message);
     }
@@ -256,25 +263,33 @@ export default function AdminAllHotelsPage() {
                     {h.owner?.fullName || '—'}
                   </span>
                   <div style={{ display: 'flex', gap: 4 }}>
-                    {h.status === 'pending' && (
-                      <>
-                        <button
-                          onClick={() => handleStatusChange(h._id, 'approve')}
-                          className="admin-btn"
-                          style={{ padding: '4px 8px', fontSize: 11, background: '#e0f7fa', color: '#00bcd4', border: '1px solid #a7f3d0', borderRadius: 8 }}
-                          title="Approuver"
-                        >
-                          <CheckCircle style={{ width: 13, height: 13 }} />
-                        </button>
-                        <button
-                          onClick={() => handleStatusChange(h._id, 'reject')}
-                          className="admin-btn"
-                          style={{ padding: '4px 8px', fontSize: 11, background: '#fef2f2', color: '#ef4444', border: '1px solid #fecaca', borderRadius: 8 }}
-                          title="Rejeter"
-                        >
-                          <XCircle style={{ width: 13, height: 13 }} />
-                        </button>
-                      </>
+                    <button
+                      onClick={() => setViewingHotel(h)}
+                      className="admin-btn"
+                      style={{ padding: '4px 8px', fontSize: 11, background: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1', borderRadius: 8 }}
+                      title="Voir l'offre"
+                    >
+                      <Eye style={{ width: 13, height: 13 }} />
+                    </button>
+                    {h.status !== 'approved' && (
+                      <button
+                        onClick={() => handleStatusChange(h._id, 'approve')}
+                        className="admin-btn"
+                        style={{ padding: '4px 8px', fontSize: 11, background: '#e0f7fa', color: '#00bcd4', border: '1px solid #a7f3d0', borderRadius: 8 }}
+                        title="Approuver"
+                      >
+                        <CheckCircle style={{ width: 13, height: 13 }} />
+                      </button>
+                    )}
+                    {h.status !== 'rejected' && (
+                      <button
+                        onClick={() => { setRejectingHotel(h); setRejectionReason(''); }}
+                        className="admin-btn"
+                        style={{ padding: '4px 8px', fontSize: 11, background: '#fef2f2', color: '#ef4444', border: '1px solid #fecaca', borderRadius: 8 }}
+                        title="Rejeter avec motif"
+                      >
+                        <XCircle style={{ width: 13, height: 13 }} />
+                      </button>
                     )}
                     <button
                       onClick={() => openEdit(h)}
@@ -503,6 +518,162 @@ export default function AdminAllHotelsPage() {
                 style={{ padding: '8px 18px', borderRadius: 10, border: 'none', background: '#34c77b', color: '#fff', cursor: 'pointer', fontWeight: 600, fontSize: 13 }}
               >
                 Ajouter
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* ── FULL HOTEL DETAILS MODAL ── */}
+      {viewingHotel && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
+          <div className="relative w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-3xl bg-white p-6 shadow-2xl border border-gray-100">
+            <div className="flex items-center justify-between border-b pb-4 mb-4">
+              <div>
+                <span className="text-xs font-bold text-indigo-600 uppercase tracking-wider">
+                  {viewingHotel.type} · {viewingHotel.starRating || 3} Étoiles
+                </span>
+                <h2 className="text-2xl font-extrabold text-gray-900">{viewingHotel.name}</h2>
+              </div>
+              <button onClick={() => setViewingHotel(null)} className="rounded-full p-2 text-gray-400 hover:bg-gray-100">
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+
+            {/* Gallery */}
+            {viewingHotel.images?.length > 0 ? (
+              <div className="grid gap-2 grid-cols-2 md:grid-cols-3 mb-6 rounded-2xl overflow-hidden">
+                {viewingHotel.images.map((img, i) => (
+                  <img
+                    key={i}
+                    src={getImageUrl(img.url)}
+                    alt=""
+                    className="h-40 w-full object-cover rounded-xl border border-gray-100"
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="mb-6 flex h-40 w-full items-center justify-center rounded-2xl bg-gray-50 text-gray-400 font-medium">
+                Aucune photo disponible
+              </div>
+            )}
+
+            {/* Owner & Location */}
+            <div className="grid md:grid-cols-2 gap-4 p-4 rounded-2xl bg-gray-50 mb-6 text-sm">
+              <div>
+                <p className="text-xs text-gray-400 font-bold uppercase">Propriétaire</p>
+                <p className="font-extrabold text-gray-900">{viewingHotel.owner?.fullName || 'Hôtelier'}</p>
+                <p className="text-xs text-gray-500">{viewingHotel.owner?.email || '—'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-400 font-bold uppercase">Emplacement</p>
+                <p className="font-bold text-gray-900">{viewingHotel.address || viewingHotel.city}, {viewingHotel.wilaya}</p>
+              </div>
+            </div>
+
+            {/* Description */}
+            {viewingHotel.description && (
+              <div className="mb-6">
+                <h4 className="font-bold text-gray-900 mb-1 text-sm">Description</h4>
+                <p className="text-sm text-gray-600 leading-relaxed bg-gray-50/50 p-4 rounded-2xl border border-gray-100">
+                  {viewingHotel.description}
+                </p>
+              </div>
+            )}
+
+            {/* Rejection reason notice if rejected */}
+            {viewingHotel.status === 'rejected' && viewingHotel.rejectionReason && (
+              <div className="mb-6 rounded-2xl bg-red-50 p-4 border border-red-200">
+                <p className="text-xs font-bold text-red-800 uppercase">Motif du refus enregistré :</p>
+                <p className="mt-1 text-sm font-semibold text-red-700 italic">"{viewingHotel.rejectionReason}"</p>
+              </div>
+            )}
+
+            {/* Action Bar */}
+            <div className="flex items-center justify-end gap-3 pt-4 border-t">
+              {viewingHotel.status !== 'approved' && (
+                <button
+                  onClick={() => handleStatusChange(viewingHotel._id, 'approve')}
+                  className="rounded-full bg-emerald-600 px-6 py-2.5 font-bold text-white shadow-md hover:bg-emerald-700 transition"
+                >
+                  Approuver l'hôtel
+                </button>
+              )}
+              {viewingHotel.status !== 'rejected' && (
+                <button
+                  onClick={() => {
+                    setRejectingHotel(viewingHotel);
+                    setRejectionReason('');
+                  }}
+                  className="rounded-full bg-amber-500 px-6 py-2.5 font-bold text-white shadow-md hover:bg-amber-600 transition"
+                >
+                  Rejeter avec motif
+                </button>
+              )}
+              <button
+                onClick={() => setViewingHotel(null)}
+                className="rounded-full border border-gray-200 px-6 py-2.5 font-bold text-gray-600 hover:bg-gray-50 transition"
+              >
+                Fermer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── REJECTION REASON MODAL ── */}
+      {rejectingHotel && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="relative w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl border border-gray-100">
+            <div className="flex items-center justify-between border-b pb-4 mb-4">
+              <h3 className="text-lg font-bold text-gray-900">Refuser l'hôtel : {rejectingHotel.name}</h3>
+              <button onClick={() => setRejectingHotel(null)} className="rounded-full p-1 text-gray-400 hover:bg-gray-100">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <p className="text-sm text-gray-500 mb-4">
+              Veuillez indiquer la raison du refus. Ce message sera transmis مباشرة لصاحب الفندق في لوحة التحكم الخاصة به.
+            </p>
+
+            {/* Suggestion Chips */}
+            <div className="flex flex-wrap gap-2 mb-4">
+              {[
+                'Informations incomplètes',
+                'Photos non conformes',
+                'Licence d\'établissement manquante',
+                'Coordonnées inexactes',
+              ].map((chip) => (
+                <button
+                  key={chip}
+                  type="button"
+                  onClick={() => setRejectionReason(chip)}
+                  className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 transition"
+                >
+                  + {chip}
+                </button>
+              ))}
+            </div>
+
+            <textarea
+              rows={4}
+              value={rejectionReason}
+              onChange={(e) => setRejectionReason(e.target.value)}
+              placeholder="Écrivez le motif du refus..."
+              className="w-full rounded-2xl border border-gray-200 p-4 text-sm outline-none focus:border-amber-500 transition resize-none mb-6"
+            />
+
+            <div className="flex items-center justify-end gap-3">
+              <button
+                onClick={() => setRejectingHotel(null)}
+                className="rounded-full border border-gray-200 px-5 py-2.5 text-sm font-bold text-gray-600 hover:bg-gray-50 transition"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={() => handleStatusChange(rejectingHotel._id, 'reject', rejectionReason)}
+                className="rounded-full bg-red-600 px-6 py-2.5 text-sm font-bold text-white shadow-md hover:bg-red-700 transition"
+              >
+                Confirmer le refus
               </button>
             </div>
           </div>

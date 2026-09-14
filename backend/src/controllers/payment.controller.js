@@ -6,7 +6,7 @@ import { sendEmail } from '../utils/sendEmail.js';
 
 const CLIENT_URL  = process.env.CLIENT_URL  || 'http://localhost:3000';
 const SERVER_URL  = process.env.SERVER_URL  || 'http://localhost:5000';
-const COMMISSION  = 0.10; // 10% plateforme
+const COMMISSION  = 0.00; // 0% platform fee / commission (Subscription model)
 
 /* ─────────────────────────────────────────────────────────────
    POST /payments/checkout  { bookingId }

@@ -86,6 +86,9 @@ export default function FavoriteButton({ type, id, className = '', size = 18 }) 
         setAnonFav(true);
       }
       setAnonFavs(favs);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('favorites-updated'));
+      }
 
       // Navigate to favorites if we just added
       if (!has) {

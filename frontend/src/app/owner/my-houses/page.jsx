@@ -194,6 +194,15 @@ function MyHousesContent() {
                   <span className="flex items-center gap-1"><Bath className="h-3.5 w-3.5" /> {h.bathrooms} SDB</span>
                   <span className="flex items-center gap-1"><Users className="h-3.5 w-3.5" /> {h.capacity} pers.</span>
                 </div>
+
+                {h.status === 'rejected' && (
+                  <div className="mt-3 rounded-xl bg-red-50 p-3 text-xs text-red-700 border border-red-200">
+                    <span className="font-bold block text-red-800">⚠️ Maison rejetée par l'administration :</span>
+                    <p className="mt-1 text-red-600 font-medium italic">
+                      "{h.rejectionReason || 'Aucun motif spécifié. Veuillez vérifier les 정보를.'}"
+                    </p>
+                  </div>
+                )}
                 {h.pricePerNight > 0 && (
                   <p className="mt-2 font-bold text-brand-500">
                     {h.pricePerNight.toLocaleString('fr-DZ')} DZD<span className="text-xs font-normal text-gray-400">/nuit</span>

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Plus, MapPin, Trash2, Pencil } from 'lucide-react';
 import DashboardShell from '@/components/DashboardShell';
-import api from '@/lib/api';
+import api, { getImageUrl } from '@/lib/api';
 
 const STATUS = {
   pending: 'bg-amber-50 text-amber-700',
@@ -75,7 +75,7 @@ export default function MyHotelsPage() {
           {hotels.map((h) => (
             <div key={h._id} className="overflow-hidden rounded-2xl bg-white border border-gray-100 shadow-sm transition hover:shadow-md">
               <div className="relative h-40">
-                {h.images?.[0]?.url && <img src={h.images[0].url} alt={h.name} className="h-full w-full object-cover" />}
+                {h.images?.[0]?.url && <img src={getImageUrl(h.images[0].url)} alt={h.name} className="h-full w-full object-cover" />}
                 <span className={`absolute right-3 top-3 rounded-full px-3 py-1 text-xs font-semibold capitalize ${STATUS[h.status]}`}>
                   {h.status}
                 </span>
@@ -83,6 +83,14 @@ export default function MyHotelsPage() {
               <div className="p-4">
                 <h3 className="font-bold text-gray-900">{h.name}</h3>
                 <p className="flex items-center gap-1 text-sm text-gray-500"><MapPin className="h-4 w-4 text-brand-500" /> {h.city}, {h.wilaya}</p>
+                {h.status === 'rejected' && (
+                  <div className="mt-3 rounded-xl bg-red-50 p-3 text-xs text-red-700 border border-red-200">
+                    <span className="font-bold block text-red-800">⚠️ Hôtel rejeté par l'administration :</span>
+                    <p className="mt-1 text-red-600 font-medium italic">
+                      "{h.rejectionReason || 'Aucun motif spécifié. Veuillez vérifier les informations.'}"
+                    </p>
+                  </div>
+                )}
                 <div className="mt-3 flex gap-2">
                   <Link href={`/owner/hotels/${h._id}/rooms`} className="flex-1 rounded-lg bg-brand-50 py-2 text-center text-sm font-semibold text-brand-700 hover:bg-brand-100 transition">
                     Chambres

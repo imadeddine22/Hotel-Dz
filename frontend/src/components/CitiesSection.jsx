@@ -13,7 +13,7 @@ export default function CitiesSection({ selectedCity, onSelectCity }) {
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <span className="grid h-12 w-12 place-items-center rounded-full bg-gradient-to-br from-sky-400 to-blue-600 text-white shadow">
+          <span className="grid h-12 w-12 place-items-center rounded-full bg-gradient-to-br from-brand-400 to-brand-600 text-white shadow">
             <MapPin className="h-6 w-6" />
           </span>
           <div>

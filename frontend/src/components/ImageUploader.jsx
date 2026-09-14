@@ -2,13 +2,25 @@
 
 import { useState, useRef } from 'react';
 import { UploadCloud, X, Image as ImageIcon, Star } from 'lucide-react';
+import { getImageUrl } from '@/lib/api';
 
-export default function ImageUploader({ onChange, maxFiles = 6, existingImages = [] }) {
+export default function ImageUploader({ onChange, setFiles: setFilesExternal, files: filesExternal, maxFiles = 6, existingImages = [] }) {
   const [previews, setPreviews] = useState(
-    existingImages.map(img => ({ url: img.url || img, isExisting: true }))
+    existingImages.map(img => ({ url: getImageUrl(img.url || img), isExisting: true }))
   );
   const [files, setFiles] = useState([]);
   const fileInputRef = useRef(null);
+
+  // Helper: notify parent using either onChange or setFiles
+  const notifyParent = (updatedFiles) => {
+    if (typeof onChange === 'function') {
+      const dt = new DataTransfer();
+      updatedFiles.forEach(file => dt.items.add(file));
+      onChange(dt.files);
+    } else if (typeof setFilesExternal === 'function') {
+      setFilesExternal(updatedFiles);
+    }
+  };
 
   const handleFileSelect = (e) => {
     const selectedFiles = Array.from(e.target.files);
@@ -27,12 +39,7 @@ export default function ImageUploader({ onChange, maxFiles = 6, existingImages =
     setPreviews(prev => [...prev, ...newPreviews]);
     const updatedFiles = [...files, ...selectedFiles];
     setFiles(updatedFiles);
-    
-    // Create a new FileList-like object or just pass the array to the parent
-    // The parent expects a FileList usually, so we can use DataTransfer
-    const dt = new DataTransfer();
-    updatedFiles.forEach(file => dt.items.add(file));
-    onChange(dt.files);
+    notifyParent(updatedFiles);
   };
 
   const removeImage = (indexToRemove) => {
@@ -45,10 +52,7 @@ export default function ImageUploader({ onChange, maxFiles = 6, existingImages =
       // Remove from files array
       const updatedFiles = files.filter(f => f !== previewToRemove.file);
       setFiles(updatedFiles);
-      
-      const dt = new DataTransfer();
-      updatedFiles.forEach(file => dt.items.add(file));
-      onChange(dt.files);
+      notifyParent(updatedFiles);
     }
     
     // Remove from previews

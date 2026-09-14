@@ -19,6 +19,7 @@ import {
   Building2,
   Home,
   Mail,
+  Tag,
 } from 'lucide-react';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
@@ -28,9 +29,11 @@ const ADMIN_MENU = [
   { href: '/admin/hotels', label: 'Approbations', icon: CheckSquare },
   { href: '/admin/all-hotels', label: 'Tous les hôtels', icon: Building2 },
   { href: '/admin/all-houses', label: 'Toutes les maisons', icon: Home },
+  { href: '/admin/all-sales', label: 'Ventes immobilières', icon: Tag },
   { href: '/admin/users', label: 'Utilisateurs', icon: Users },
   { href: '/admin/messages', label: 'Messages', icon: Mail },
   { href: '/admin/bookings', label: 'Réservations', icon: CalendarCheck },
+  { href: '/admin/pricing', label: 'Tarification', icon: Settings },
 ];
 
 export default function AdminLayout({ children }) {

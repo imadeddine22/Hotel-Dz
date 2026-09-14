@@ -1,5 +1,4 @@
 import mongoose from 'mongoose';
-import { WILAYA_NAMES } from '../utils/wilayas.js';
 
 const houseSchema = new mongoose.Schema(
   {
@@ -43,6 +42,7 @@ const houseSchema = new mongoose.Schema(
       default: 'pending',
       index: true,
     },
+    rejectionReason: { type: String, default: '' },
     avgRating: { type: Number, default: 0 },
     reviewsCount: { type: Number, default: 0 },
   },

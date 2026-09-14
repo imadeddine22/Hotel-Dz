@@ -5,14 +5,14 @@ module.exports = {
     extend: {
       colors: {
         brand: {
-          // Cyan / Sky-blue — matches the hotel booking UI reference
-          50:  '#e0f7fa',
-          100: '#b2ebf2',
-          200: '#80deea',
-          400: '#26c6da',
-          500: '#00bcd4',
-          600: '#00acc1',
-          700: '#0097a7',
+          // Deep navy / slate theme matching the footer background and branding
+          50:  '#f8fafc',
+          100: '#f1f5f9',
+          200: '#e2e8f0',
+          400: '#1e293b',
+          500: '#0f172a',
+          600: '#0b1329',
+          700: '#020617',
         },
         gold: {
           // Yellow / Amber accent — used on CTA buttons
@@ -23,8 +23,9 @@ module.exports = {
         ink: '#1a2332',
       },
       fontFamily: {
-        sans: ['var(--font-poppins)', 'system-ui', 'sans-serif'],
-        display: ['var(--font-display)', 'Georgia', 'serif'],
+        sans: ['"Plus Jakarta Sans"', 'var(--font-poppins)', 'system-ui', 'sans-serif'],
+        serif: ['"Playfair Display"', 'Georgia', 'serif'],
+        display: ['"Playfair Display"', 'Georgia', 'serif'],
       },
       boxShadow: {
         card: '0 6px 24px -8px rgba(0,0,0,0.18)',

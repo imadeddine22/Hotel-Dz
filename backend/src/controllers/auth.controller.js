@@ -13,11 +13,12 @@ const sanitize = (user) => ({
 
 const sendAuth = (res, user, status = 200) => {
   const token = generateToken(user._id);
+  const isProd = process.env.NODE_ENV === 'production';
   res
     .cookie('token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     })
     .status(status)
@@ -62,7 +63,12 @@ export const login = async (req, res, next) => {
 
 // POST /auth/logout
 export const logout = async (req, res) => {
-  res.clearCookie('token').json({ success: true, message: 'Logged out' });
+  const isProd = process.env.NODE_ENV === 'production';
+  res.clearCookie('token', {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: isProd ? 'none' : 'lax',
+  }).json({ success: true, message: 'Logged out' });
 };
 
 // GET /auth/me

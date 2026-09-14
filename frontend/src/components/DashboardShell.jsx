@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, Hotel, CalendarCheck, Users, CheckSquare, LogOut, Home, Mail, Search, Bell, Globe } from 'lucide-react';
+import { LayoutDashboard, Hotel, CalendarCheck, Users, CheckSquare, LogOut, Home, Mail, Search, Bell, Globe, Tag } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 
 const MENUS = {
@@ -14,11 +14,17 @@ const MENUS = {
     { href: '/owner/bookings', label: 'Bookings', icon: CalendarCheck },
     { href: '/', label: 'Site Public', icon: Globe },
   ],
+  seller: [
+    { href: '/seller/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { href: '/seller/my-listings', label: 'Mes Annonces', icon: Tag },
+    { href: '/', label: 'Site Public', icon: Globe },
+  ],
   admin: [
     { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/admin/hotels', label: 'Approvals', icon: CheckSquare },
     { href: '/admin/all-hotels', label: 'All Hotels', icon: Hotel },
     { href: '/admin/all-houses', label: 'All Houses', icon: Home },
+    { href: '/admin/all-sales', label: 'All Sales', icon: Tag },
     { href: '/admin/users', label: 'Users', icon: Users },
     { href: '/admin/messages', label: 'Messages', icon: Mail },
     { href: '/admin/bookings', label: 'Bookings', icon: CalendarCheck },

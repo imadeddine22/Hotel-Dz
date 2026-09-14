@@ -21,7 +21,10 @@ import adminRoutes from './routes/admin.routes.js';
 import messageRoutes from './routes/message.routes.js';
 import favoriteRoutes from './routes/favorite.routes.js';
 import ownerRoutes from './routes/owner.routes.js';
+import sellerRoutes from './routes/seller.routes.js';
+import saleRoutes from './routes/sale.routes.js';
 import wilayaRoutes from './routes/wilaya.routes.js';
+import pricingRoutes from './routes/pricing.routes.js';
 
 const app = express();
 
@@ -87,7 +90,10 @@ app.use('/api/v1/admin', adminRoutes);
 app.use('/api/v1/messages', messageRoutes);
 app.use('/api/v1/favorites', favoriteRoutes);
 app.use('/api/v1/owner', ownerRoutes);
+app.use('/api/v1/seller', sellerRoutes);
+app.use('/api/v1/sales', saleRoutes);
 app.use('/api/v1/wilayas', wilayaRoutes);
+app.use('/api/v1/pricing', pricingRoutes);
 
 // --- Error handling (must be last) ---
 app.use(notFound);

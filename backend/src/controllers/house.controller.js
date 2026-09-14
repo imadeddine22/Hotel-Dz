@@ -1,6 +1,7 @@
 import House from '../models/House.js';
 import { uploadMany, destroyImage } from '../utils/cloudinaryUpload.js';
 import { parseCoordinates } from '../utils/parseCoordinates.js';
+import { searchRegex, wilayaRegex } from '../utils/searchRegex.js';
 
 // GET /houses — public list of APPROVED houses with filters
 export const getHouses = async (req, res, next) => {
@@ -8,10 +9,10 @@ export const getHouses = async (req, res, next) => {
     const { wilaya, city, type, minPrice, maxPrice, q, sort, page = 1, limit = 12 } = req.query;
 
     const filter = { status: 'approved' };
-    if (wilaya) filter.wilaya = new RegExp(wilaya.replace(/[-\s]/g, '[-s]'), 'i');
-    if (city) filter.city = new RegExp(city, 'i');
+    if (wilaya) filter.wilaya = wilayaRegex(wilaya);
+    if (city) filter.city = searchRegex(city);
     if (type) filter.type = type;
-    if (q) filter.name = new RegExp(q, 'i');
+    if (q) filter.name = searchRegex(q);
     if (minPrice || maxPrice) {
       filter.pricePerNight = {};
       if (minPrice) filter.pricePerNight.$gte = Number(minPrice);

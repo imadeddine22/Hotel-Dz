@@ -45,8 +45,8 @@ export default function Hero() {
               <label className="mb-1 block text-xs font-bold text-gray-500">
                 {t.searchDestination}
               </label>
-              <div className="relative">
-                <MapPin className="pointer-events-none absolute left-3 top-3.2 h-5 w-5 text-gray-400" />
+              <div className="relative flex items-center">
+                <MapPin className="pointer-events-none absolute left-3 rtl:left-auto rtl:right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <input
                   type="text"
                   value={wilaya}
@@ -87,4 +87,3 @@ export default function Hero() {
     </section>
   );
 }
-

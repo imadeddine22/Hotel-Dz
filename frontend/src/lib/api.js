@@ -18,6 +18,16 @@ export const getServerURL = () => {
   return isProduction() ? PRODUCTION_SERVER : LOCAL_SERVER;
 };
 
+export const getImageUrl = (url) => {
+  if (!url) return '';
+  if (typeof url !== 'string') return url?.url ? getImageUrl(url.url) : '';
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('blob:')) return url;
+  const serverUrl = getServerURL();
+  return `${serverUrl}${url.startsWith('/') ? '' : '/'}${url}`;
+};
+
+export const resolveImg = getImageUrl;
+
 
 const api = axios.create({
   baseURL: getBaseURL(),

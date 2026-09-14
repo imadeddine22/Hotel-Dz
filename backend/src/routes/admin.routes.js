@@ -19,6 +19,10 @@ import {
   approveHouse,
   rejectHouse,
   deleteHouse,
+  getAllSales,
+  approveSale,
+  rejectSale,
+  deleteSale,
 } from '../controllers/admin.controller.js';
 import { addWilaya } from '../controllers/wilaya.controller.js';
 import { protect, authorize } from '../middlewares/auth.middleware.js';
@@ -48,6 +52,12 @@ router.put('/houses/:id', upload.array('images', 10), updateHouseByAdmin);
 router.put('/houses/:id/approve', approveHouse);
 router.put('/houses/:id/reject', rejectHouse);
 router.delete('/houses/:id', deleteHouse);
+
+// Sales (HouseForSale)
+router.get('/sales/all', getAllSales);
+router.put('/sales/:id/approve', approveSale);
+router.put('/sales/:id/reject', rejectSale);
+router.delete('/sales/:id', deleteSale);
 
 // Users
 router.get('/users', getUsers);

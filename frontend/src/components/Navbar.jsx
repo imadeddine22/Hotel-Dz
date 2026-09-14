@@ -1,19 +1,66 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ChevronDown, Menu, X, Heart, Building2, User, Globe } from 'lucide-react';
 import { useAuthStore, useLangStore } from '@/store/authStore';
+import { useFavoritesStore } from '@/store/favoritesStore';
 import { TRANSLATIONS } from '@/lib/data';
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
+  const langRef = useRef(null);
   const pathname = usePathname();
   const user = useAuthStore((s) => s.user);
   const { lang, setLang } = useLangStore();
   const t = TRANSLATIONS[lang] || TRANSLATIONS.fr;
+
+  const { hotelIds, houseIds, load } = useFavoritesStore();
+  const [anonCount, setAnonCount] = useState(0);
+
+  const updateAnonCount = () => {
+    if (typeof window !== 'undefined') {
+      try {
+        const favs = JSON.parse(localStorage.getItem('anon_favorites')) || { hotels: [], houses: [] };
+        const count = (favs.hotels?.length || 0) + (favs.houses?.length || 0);
+        setAnonCount(count);
+      } catch {
+        setAnonCount(0);
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      load();
+    }
+  }, [user, load]);
+
+  useEffect(() => {
+    updateAnonCount();
+    window.addEventListener('favorites-updated', updateAnonCount);
+    window.addEventListener('storage', updateAnonCount);
+    return () => {
+      window.removeEventListener('favorites-updated', updateAnonCount);
+      window.removeEventListener('storage', updateAnonCount);
+    };
+  }, []);
+
+  // Close language dropdown on outside click
+  useEffect(() => {
+    if (!langOpen) return;
+    const handleClickOutside = (e) => {
+      if (langRef.current && !langRef.current.contains(e.target)) {
+        setLangOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [langOpen]);
+
+  const totalFavorites = user ? (hotelIds.length + houseIds.length) : anonCount;
 
   useEffect(() => {
     if (typeof document !== 'undefined') {
@@ -23,12 +70,13 @@ export default function Navbar() {
   }, [lang]);
 
   const dashHref =
-    user?.role === 'admin' ? '/admin' : user?.role === 'owner' ? '/owner/dashboard' : '/my-bookings';
+    user?.role === 'admin' ? '/admin' : user?.role === 'owner' ? '/owner/dashboard' : user?.role === 'seller' ? '/seller/dashboard' : '/my-bookings';
 
   const navLinks = [
     { label: t.navHome, href: '/' },
     { label: t.navHotels, href: '/hotels' },
     { label: t.navHouses, href: '/houses' },
+    { label: t.navSales || 'Ventes', href: '/sales' },
     { label: t.navDestinations, href: '/destinations' },
     { label: t.navPricing, href: '/pricing' },
   ];
@@ -78,13 +126,18 @@ export default function Navbar() {
           <Link
             href="/favorites"
             aria-label={t.favorites}
-            className={`grid h-10 w-10 place-items-center rounded-full transition ${
+            className={`relative grid h-10 w-10 place-items-center rounded-full transition ${
               pathname.startsWith('/favorites')
                 ? 'bg-rose-50 text-rose-500'
                 : 'text-gray-600 hover:bg-gray-100'
             }`}
           >
             <Heart className="h-5 w-5" />
+            {totalFavorites > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-[9px] font-extrabold text-white ring-2 ring-white select-none leading-none">
+                {totalFavorites}
+              </span>
+            )}
           </Link>
 
           {/* Add Hotel Button */}
@@ -105,7 +158,7 @@ export default function Navbar() {
           </Link>
 
           {/* Language Switcher Dropdown */}
-          <div className="relative">
+          <div className="relative" ref={langRef}>
             <button
               onClick={() => setLangOpen(!langOpen)}
               className="flex items-center gap-1.5 rounded-full border border-gray-200 px-3 py-2 text-xs font-bold text-gray-700 hover:bg-gray-50 transition"
@@ -185,6 +238,25 @@ export default function Navbar() {
               </Link>
             );
           })}
+
+          {/* Mobile Favorites Link */}
+          <Link
+            href="/favorites"
+            onClick={() => setOpen(false)}
+            className={`flex items-center justify-between rounded-xl px-4 py-3 font-bold text-base transition ${
+              pathname.startsWith('/favorites') ? 'bg-rose-50 text-rose-600' : 'text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            <span className="flex items-center gap-2">
+              <Heart className="h-5 w-5 text-rose-500" />
+              {t.favorites}
+            </span>
+            {totalFavorites > 0 && (
+              <span className="rounded-full bg-rose-500 px-2.5 py-0.5 text-xs font-bold text-white">
+                {totalFavorites}
+              </span>
+            )}
+          </Link>
 
           <div className="pt-4 border-t border-gray-100 flex flex-col gap-3">
             <Link

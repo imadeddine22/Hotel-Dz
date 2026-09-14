@@ -1,13 +1,17 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Check, X, MapPin, Star, Clock } from 'lucide-react';
-import api from '@/lib/api';
+import { Check, X, MapPin, Star, Clock, Eye } from 'lucide-react';
+import api, { getImageUrl } from '@/lib/api';
 
 export default function AdminApprovalsPage() {
   const [hotels, setHotels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [viewingHotel, setViewingHotel] = useState(null);
+  const [rejectingHotel, setRejectingHotel] = useState(null);
+  const [rejectionReason, setRejectionReason] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -23,12 +27,18 @@ export default function AdminApprovalsPage() {
 
   useEffect(() => { load(); }, []);
 
-  const act = async (id, action) => {
+  const act = async (id, action, reason = '') => {
+    setSubmitting(true);
     try {
-      await api.put(`/admin/hotels/${id}/${action}`);
+      await api.put(`/admin/hotels/${id}/${action}`, { reason });
       setHotels((h) => h.filter((x) => x._id !== id));
+      setViewingHotel(null);
+      setRejectingHotel(null);
+      setRejectionReason('');
     } catch (e) {
       alert(e.message);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -75,13 +85,14 @@ export default function AdminApprovalsPage() {
           {hotels.map((h) => (
             <div key={h._id} className="admin-approval-card">
               <img
-                src={h.images?.[0]?.url || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&q=80'}
+                src={getImageUrl(h.images?.[0]?.url) || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&q=80'}
                 alt={h.name}
-                className="admin-approval-img"
+                className="admin-approval-img cursor-pointer"
+                onClick={() => setViewingHotel(h)}
               />
               <div className="admin-approval-info">
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                  <h3 className="admin-approval-name">{h.name}</h3>
+                  <h3 className="admin-approval-name cursor-pointer hover:text-indigo-600" onClick={() => setViewingHotel(h)}>{h.name}</h3>
                   <span className="admin-badge pending">
                     <Clock style={{ width: 12, height: 12, marginRight: 4, display: 'inline', verticalAlign: 'middle' }} />
                     En attente
@@ -107,16 +118,179 @@ export default function AdminApprovalsPage() {
                   )}
                 </div>
                 <div className="admin-approval-actions">
-                  <button onClick={() => act(h._id, 'approve')} className="admin-btn admin-btn-approve">
+                  <button onClick={() => setViewingHotel(h)} className="admin-btn" style={{ background: '#f1f5f9', color: '#475569' }}>
+                    <Eye style={{ width: 16, height: 16 }} /> Voir l'offre
+                  </button>
+                  <button onClick={() => act(h._id, 'approve')} disabled={submitting} className="admin-btn admin-btn-approve">
                     <Check /> Approuver
                   </button>
-                  <button onClick={() => act(h._id, 'reject')} className="admin-btn admin-btn-reject">
+                  <button onClick={() => { setRejectingHotel(h); setRejectionReason(''); }} disabled={submitting} className="admin-btn admin-btn-reject">
                     <X /> Rejeter
                   </button>
                 </div>
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* ── FULL HOTEL DETAILS MODAL ── */}
+      {viewingHotel && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
+          <div className="relative w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-3xl bg-white p-6 shadow-2xl border border-gray-100">
+            <div className="flex items-center justify-between border-b pb-4 mb-4">
+              <div>
+                <span className="text-xs font-bold text-indigo-600 uppercase tracking-wider">
+                  {viewingHotel.type} · {viewingHotel.starRating || 3} Étoiles
+                </span>
+                <h2 className="text-2xl font-extrabold text-gray-900">{viewingHotel.name}</h2>
+              </div>
+              <button onClick={() => setViewingHotel(null)} className="rounded-full p-2 text-gray-400 hover:bg-gray-100">
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+
+            {/* Gallery */}
+            {viewingHotel.images?.length > 0 ? (
+              <div className="grid gap-2 grid-cols-2 md:grid-cols-3 mb-6 rounded-2xl overflow-hidden">
+                {viewingHotel.images.map((img, i) => (
+                  <img
+                    key={i}
+                    src={getImageUrl(img.url)}
+                    alt=""
+                    className="h-40 w-full object-cover rounded-xl border border-gray-100"
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="mb-6 flex h-40 w-full items-center justify-center rounded-2xl bg-gray-50 text-gray-400 font-medium">
+                Aucune photo disponible
+              </div>
+            )}
+
+            {/* Owner & Location */}
+            <div className="grid md:grid-cols-2 gap-4 p-4 rounded-2xl bg-gray-50 mb-6 text-sm">
+              <div>
+                <p className="text-xs text-gray-400 font-bold uppercase">Propriétaire</p>
+                <p className="font-extrabold text-gray-900">{viewingHotel.owner?.fullName || 'Hôtelier'}</p>
+                <p className="text-xs text-gray-500">{viewingHotel.owner?.email || '—'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-400 font-bold uppercase">Emplacement</p>
+                <p className="font-bold text-gray-900">{viewingHotel.address || viewingHotel.city}, {viewingHotel.wilaya}</p>
+              </div>
+            </div>
+
+            {/* Description */}
+            {viewingHotel.description && (
+              <div className="mb-6">
+                <h4 className="font-bold text-gray-900 mb-1 text-sm">Description</h4>
+                <p className="text-sm text-gray-600 leading-relaxed bg-gray-50/50 p-4 rounded-2xl border border-gray-100">
+                  {viewingHotel.description}
+                </p>
+              </div>
+            )}
+
+            {/* Amenities */}
+            {viewingHotel.amenities?.length > 0 && (
+              <div className="mb-6">
+                <h4 className="font-bold text-gray-900 mb-2 text-sm">Équipements</h4>
+                <div className="flex flex-wrap gap-2">
+                  {viewingHotel.amenities.map((am, i) => (
+                    <span key={i} className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">
+                      {am}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Action Bar */}
+            <div className="flex items-center justify-end gap-3 pt-4 border-t">
+              <button
+                onClick={() => act(viewingHotel._id, 'approve')}
+                className="rounded-full bg-emerald-600 px-6 py-2.5 font-bold text-white shadow-md hover:bg-emerald-700 transition"
+              >
+                Approuver l'hôtel
+              </button>
+              <button
+                onClick={() => {
+                  setRejectingHotel(viewingHotel);
+                  setRejectionReason('');
+                }}
+                className="rounded-full bg-amber-500 px-6 py-2.5 font-bold text-white shadow-md hover:bg-amber-600 transition"
+              >
+                Rejeter avec motif
+              </button>
+              <button
+                onClick={() => setViewingHotel(null)}
+                className="rounded-full border border-gray-200 px-6 py-2.5 font-bold text-gray-600 hover:bg-gray-50 transition"
+              >
+                Fermer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── REJECTION REASON MODAL ── */}
+      {rejectingHotel && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="relative w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl border border-gray-100">
+            <div className="flex items-center justify-between border-b pb-4 mb-4">
+              <h3 className="text-lg font-bold text-gray-900">Refuser l'hôtel : {rejectingHotel.name}</h3>
+              <button onClick={() => setRejectingHotel(null)} className="rounded-full p-1 text-gray-400 hover:bg-gray-100">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <p className="text-sm text-gray-500 mb-4">
+              Veuillez indiquer la raison du refus. Ce message sera transmis مباشرة لصاحب الفندق في لوحة التحكم الخاصة به.
+            </p>
+
+            {/* Suggestion Chips */}
+            <div className="flex flex-wrap gap-2 mb-4">
+              {[
+                'Informations incomplètes',
+                'Photos non conformes',
+                'Licence d\'établissement manquante',
+                'Coordonnées inexactes',
+              ].map((chip) => (
+                <button
+                  key={chip}
+                  type="button"
+                  onClick={() => setRejectionReason(chip)}
+                  className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 transition"
+                >
+                  + {chip}
+                </button>
+              ))}
+            </div>
+
+            <textarea
+              rows={4}
+              value={rejectionReason}
+              onChange={(e) => setRejectionReason(e.target.value)}
+              placeholder="Écrivez le motif du refus..."
+              className="w-full rounded-2xl border border-gray-200 p-4 text-sm outline-none focus:border-amber-500 transition resize-none mb-6"
+            />
+
+            <div className="flex items-center justify-end gap-3">
+              <button
+                onClick={() => setRejectingHotel(null)}
+                className="rounded-full border border-gray-200 px-5 py-2.5 text-sm font-bold text-gray-600 hover:bg-gray-50 transition"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={() => act(rejectingHotel._id, 'reject', rejectionReason)}
+                disabled={submitting}
+                className="rounded-full bg-red-600 px-6 py-2.5 text-sm font-bold text-white shadow-md hover:bg-red-700 transition disabled:opacity-50"
+              >
+                {submitting ? 'Envoi...' : 'Confirmer le refus'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

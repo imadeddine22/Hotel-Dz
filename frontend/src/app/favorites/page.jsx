@@ -7,19 +7,10 @@ import { Heart, Hotel, Home, Trash2 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import HouseCard from '@/components/HouseCard';
-import api from '@/lib/api';
+import api, { getImageUrl, resolveImg } from '@/lib/api';
 import { formatDZD } from '@/lib/data';
 import { useAuthStore } from '@/store/authStore';
 import { HOTELS as MOCK_HOTELS, FEATURED } from '@/lib/data';
-
-import { getServerURL } from '@/lib/api';
-
-const SERVER = getServerURL();
-function resolveImg(url) {
-  if (!url) return null;
-  if (url.startsWith('http')) return url;
-  return `${SERVER}${url}`;
-}
 
 // ── localStorage helpers (shared with FavoriteButton) ──────────────
 const ANON_KEY = 'anon_favorites';

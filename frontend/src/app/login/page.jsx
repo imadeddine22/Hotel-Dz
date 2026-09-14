@@ -16,6 +16,7 @@ export default function LoginPage() {
 function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
+  const redirect = params.get('redirect');
   const login = useAuthStore((s) => s.login);
 
   const [form, setForm] = useState({ email: '', password: '' });
@@ -28,10 +29,10 @@ function LoginForm() {
     setLoading(true);
     try {
       const user = await login(form.email, form.password);
-      const redirect = params.get('redirect');
       if (redirect) router.push(redirect);
       else if (user.role === 'admin') router.push('/admin');
       else if (user.role === 'owner') router.push('/owner/dashboard');
+      else if (user.role === 'seller') router.push('/seller/dashboard');
       else router.push('/');
     } catch (err) {
       setError(err.message);

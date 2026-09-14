@@ -1,6 +1,7 @@
 import User from '../models/User.js';
 import Hotel from '../models/Hotel.js';
 import House from '../models/House.js';
+import HouseForSale from '../models/HouseForSale.js';
 import Booking from '../models/Booking.js';
 import Payment from '../models/Payment.js';
 import Review from '../models/Review.js';
@@ -24,7 +25,7 @@ export const approveHotel = async (req, res, next) => {
   try {
     const hotel = await Hotel.findByIdAndUpdate(
       req.params.id,
-      { status: 'approved' },
+      { status: 'approved', rejectionReason: '' },
       { new: true }
     );
     if (!hotel) return res.status(404).json({ success: false, message: 'Hotel not found' });
@@ -37,9 +38,10 @@ export const approveHotel = async (req, res, next) => {
 // PUT /admin/hotels/:id/reject
 export const rejectHotel = async (req, res, next) => {
   try {
+    const { reason } = req.body;
     const hotel = await Hotel.findByIdAndUpdate(
       req.params.id,
-      { status: 'rejected' },
+      { status: 'rejected', rejectionReason: reason || '' },
       { new: true }
     );
     if (!hotel) return res.status(404).json({ success: false, message: 'Hotel not found' });
@@ -84,9 +86,10 @@ export const toggleBlockUser = async (req, res, next) => {
 // GET /admin/stats  — enhanced with chart data
 export const getStats = async (req, res, next) => {
   try {
-    const [users, owners, hotels, pendingHotels, bookings, paidPayments, reviews, houses, pendingHouses] = await Promise.all([
+    const [users, owners, sellers, hotels, pendingHotels, bookings, paidPayments, reviews, houses, pendingHouses, sales, pendingSales] = await Promise.all([
       User.countDocuments(),
       User.countDocuments({ role: 'owner' }),
+      User.countDocuments({ role: 'seller' }),
       Hotel.countDocuments({ status: 'approved' }),
       Hotel.countDocuments({ status: 'pending' }),
       Booking.countDocuments(),
@@ -97,6 +100,8 @@ export const getStats = async (req, res, next) => {
       Review.countDocuments(),
       House.countDocuments({ status: 'approved' }),
       House.countDocuments({ status: 'pending' }),
+      HouseForSale.countDocuments({ status: 'approved' }),
+      HouseForSale.countDocuments({ status: 'pending' }),
     ]);
 
     // Monthly revenue for the last 6 months
@@ -158,10 +163,13 @@ export const getStats = async (req, res, next) => {
       stats: {
         users,
         owners,
+        sellers,
         hotels,
         pendingHotels,
         houses,
         pendingHouses,
+        sales,
+        pendingSales,
         bookings,
         reviews,
         revenue: paidPayments[0]?.total || 0,
@@ -419,7 +427,7 @@ export const approveHouse = async (req, res, next) => {
   try {
     const house = await House.findByIdAndUpdate(
       req.params.id,
-      { status: 'approved' },
+      { status: 'approved', rejectionReason: '' },
       { new: true }
     );
     if (!house) return res.status(404).json({ success: false, message: 'House not found' });
@@ -432,9 +440,10 @@ export const approveHouse = async (req, res, next) => {
 // PUT /admin/houses/:id/reject
 export const rejectHouse = async (req, res, next) => {
   try {
+    const { reason } = req.body;
     const house = await House.findByIdAndUpdate(
       req.params.id,
-      { status: 'rejected' },
+      { status: 'rejected', rejectionReason: reason || '' },
       { new: true }
     );
     if (!house) return res.status(404).json({ success: false, message: 'House not found' });
@@ -450,6 +459,81 @@ export const deleteHouse = async (req, res, next) => {
     const house = await House.findByIdAndDelete(req.params.id);
     if (!house) return res.status(404).json({ success: false, message: 'House not found' });
     res.json({ success: true, message: 'House deleted successfully' });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ============ SALES (HouseForSale) ============
+
+// GET /admin/sales/all — all sale listings with filtering
+export const getAllSales = async (req, res, next) => {
+  try {
+    const { status, q, type, page = 1, limit = 20 } = req.query;
+    const filter = {};
+    if (status) filter.status = status;
+    if (type) filter.type = type;
+    if (q) filter.title = new RegExp(q, 'i');
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const [salesData, total] = await Promise.all([
+      HouseForSale.find(filter)
+        .populate('seller', 'fullName email')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit)),
+      HouseForSale.countDocuments(filter),
+    ]);
+
+    res.json({
+      success: true,
+      count: salesData.length,
+      total,
+      pages: Math.ceil(total / parseInt(limit)),
+      sales: salesData,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// PUT /admin/sales/:id/approve
+export const approveSale = async (req, res, next) => {
+  try {
+    const sale = await HouseForSale.findByIdAndUpdate(
+      req.params.id,
+      { status: 'approved', rejectionReason: '' },
+      { new: true }
+    );
+    if (!sale) return res.status(404).json({ success: false, message: 'Sale listing not found' });
+    res.json({ success: true, sale });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// PUT /admin/sales/:id/reject
+export const rejectSale = async (req, res, next) => {
+  try {
+    const { reason } = req.body;
+    const sale = await HouseForSale.findByIdAndUpdate(
+      req.params.id,
+      { status: 'rejected', rejectionReason: reason || '' },
+      { new: true }
+    );
+    if (!sale) return res.status(404).json({ success: false, message: 'Sale listing not found' });
+    res.json({ success: true, sale });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// DELETE /admin/sales/:id — delete a sale listing
+export const deleteSale = async (req, res, next) => {
+  try {
+    const sale = await HouseForSale.findByIdAndDelete(req.params.id);
+    if (!sale) return res.status(404).json({ success: false, message: 'Sale listing not found' });
+    res.json({ success: true, message: 'Sale listing deleted successfully' });
   } catch (err) {
     next(err);
   }

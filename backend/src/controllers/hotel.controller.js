@@ -2,6 +2,7 @@ import Hotel from '../models/Hotel.js';
 import Room from '../models/Room.js';
 import { uploadMany, destroyImage } from '../utils/cloudinaryUpload.js';
 import { parseCoordinates } from '../utils/parseCoordinates.js';
+import { searchRegex, wilayaRegex } from '../utils/searchRegex.js';
 
 // GET /hotels  — public list of APPROVED hotels with filters
 export const getHotels = async (req, res, next) => {
@@ -9,11 +10,11 @@ export const getHotels = async (req, res, next) => {
     const { wilaya, city, type, minStars, minPrice, maxPrice, q, sort, page = 1, limit = 12 } = req.query;
 
     const filter = { status: 'approved' };
-    if (wilaya) filter.wilaya = new RegExp(wilaya.replace(/[-\s]/g, '[-s]'), 'i');
-    if (city) filter.city = new RegExp(city, 'i');
+    if (wilaya) filter.wilaya = wilayaRegex(wilaya);
+    if (city) filter.city = searchRegex(city);
     if (type) filter.type = type;
     if (minStars) filter.starRating = { $gte: Number(minStars) };
-    if (q) filter.name = new RegExp(q, 'i');
+    if (q) filter.name = searchRegex(q);
 
     let query = Hotel.find(filter);
 

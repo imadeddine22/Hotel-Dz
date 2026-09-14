@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
   CalendarCheck, Hotel, Users, Wallet, Store,
-  TrendingUp, CheckSquare, Building2, ArrowUpRight, Home,
+  TrendingUp, CheckSquare, Building2, ArrowUpRight, Home, Tag,
 } from 'lucide-react';
 import api from '@/lib/api';
 import { formatDZD } from '@/lib/data';
@@ -177,6 +177,18 @@ export default function AdminDashboard() {
           <span className="an-change up"><TrendingUp /> +{stats?.pendingHouses ?? 0} en attente</span>
         </div>
 
+        {/* Card: Ventes */}
+        <div className="an-stat-card">
+          <div className="an-stat-top">
+            <span className="an-stat-label">Ventes immobilières</span>
+            <div className="an-stat-icon" style={{ background: '#ecfdf5', color: '#10b981' }}>
+              <Tag />
+            </div>
+          </div>
+          <p className="an-stat-num">{stats?.sales ?? '—'}</p>
+          <span className="an-change up"><TrendingUp /> +{stats?.pendingSales ?? 0} en attente</span>
+        </div>
+
         {/* Card: Utilisateurs + mini donut */}
         <div className="an-stat-card an-stat-card--split">
           <div className="an-stat-split-left">
@@ -232,6 +244,20 @@ export default function AdminDashboard() {
           </div>
           <div className="an-wide-badge" style={{ background: '#f5f3ff', color: '#8b5cf6' }}>
             +5%
+          </div>
+        </div>
+
+        <div className="an-wide-card">
+          <div className="an-wide-icon" style={{ background: '#ecfdf5', color: '#10b981' }}>
+            <Tag />
+          </div>
+          <div className="an-wide-body">
+            <p className="an-wide-label">Vendeurs inscrits</p>
+            <p className="an-wide-val">{stats?.sellers ?? '—'}</p>
+            <span className="an-change up"><TrendingUp /> +{stats?.pendingSales ?? 0} annonces en attente</span>
+          </div>
+          <div className="an-wide-badge" style={{ background: '#ecfdf5', color: '#10b981' }}>
+            +{stats?.pendingSales ?? 0}
           </div>
         </div>
       </div>
@@ -359,6 +385,9 @@ export default function AdminDashboard() {
             </Link>
             <Link href="/admin/all-houses" className="an-quick-btn" style={{ '--qbg': '#fdf4ff', '--qco': '#a855f7' }}>
               <Home className="an-quick-ico" /> Maisons
+            </Link>
+            <Link href="/admin/all-sales" className="an-quick-btn" style={{ '--qbg': '#ecfdf5', '--qco': '#10b981' }}>
+              <Tag className="an-quick-ico" /> Ventes
             </Link>
             <Link href="/admin/users" className="an-quick-btn" style={{ '--qbg': '#eff6ff', '--qco': '#3b82f6' }}>
               <Users className="an-quick-ico" /> Utilisateurs
