@@ -49,7 +49,7 @@ export default function FeaturedHouses({ selectedCity }) {
   return (
     <section style={{ maxWidth: 1280, margin: '0 auto', padding: '48px 24px' }}>
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <span style={{
             display: 'grid', placeItems: 'center', width: 48, height: 48,

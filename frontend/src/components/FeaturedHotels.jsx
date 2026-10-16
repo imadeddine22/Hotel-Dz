@@ -35,7 +35,7 @@ export default function FeaturedHotels() {
   return (
     <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
       {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <span className="grid h-12 w-12 place-items-center rounded-full bg-gradient-to-br bg-brand-500 text-white text-white shadow">
             <Star className="h-6 w-6 fill-white" />

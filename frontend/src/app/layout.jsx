@@ -1,5 +1,16 @@
+import localFont from 'next/font/local';
 import './globals.css';
 import AuthInit from '@/components/AuthInit';
+
+// Fredoka (variable, 300–700) shipped with the app from @fontsource-variable/fredoka, so neither
+// the build nor visitors depend on Google Fonts. The latin file covers French accents (é, ï, â…).
+const fredoka = localFont({
+  src: '../../node_modules/@fontsource-variable/fredoka/files/fredoka-latin-wght-normal.woff2',
+  weight: '300 700',
+  display: 'swap',
+  variable: '--font-fredoka',
+  fallback: ['system-ui', 'Segoe UI', 'Tahoma', 'sans-serif'],
+});
 import { JsonLd, SITE_NAME, SITE_URL } from '@/lib/seo';
 
 const DESCRIPTION =
@@ -57,7 +68,7 @@ const siteLd = [
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="fr">
+    <html lang="fr" className={fredoka.variable}>
       <body className="font-sans antialiased">
         <a href="#main-content" className="skip-link">
           Aller au contenu principal

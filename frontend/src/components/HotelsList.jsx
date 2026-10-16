@@ -49,7 +49,7 @@ function HotelsListContent({ selectedCity, onSelectCity }) {
   return (
     <section id="hotels-list" className="mx-auto max-w-7xl px-4 py-12 sm:px-6 scroll-mt-24">
       {/* Header row */}
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-2xl font-extrabold text-ink">
             {wilaya ? `Hôtels à ${wilaya}` : 'Tous les hôtels'}{' '}

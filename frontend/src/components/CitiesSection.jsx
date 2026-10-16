@@ -26,7 +26,7 @@ export default function CitiesSection({ selectedCity, onSelectCity }) {
   return (
     <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
       {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <span className="grid h-12 w-12 place-items-center rounded-full bg-gradient-to-br from-brand-400 to-brand-600 text-white shadow">
             <MapPin className="h-6 w-6" />
