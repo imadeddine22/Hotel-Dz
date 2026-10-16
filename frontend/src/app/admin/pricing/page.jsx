@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import AdminLayout from '@/components/AdminLayout';
 import api from '@/lib/api';
 import { Save, RefreshCw, AlertCircle, CheckCircle } from 'lucide-react';
 
@@ -64,7 +63,7 @@ export default function AdminPricingPage() {
   };
 
   return (
-    <AdminLayout>
+    <>
       <div className="max-w-4xl mx-auto py-6 px-4">
         {/* Header */}
         <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-100">
@@ -187,6 +186,6 @@ export default function AdminPricingPage() {
           </form>
         )}
       </div>
-    </AdminLayout>
+    </>
   );
 }

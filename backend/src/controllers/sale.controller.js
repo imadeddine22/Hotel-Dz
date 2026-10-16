@@ -1,5 +1,6 @@
 import HouseForSale from '../models/HouseForSale.js';
 import { searchRegex, wilayaRegex } from '../utils/searchRegex.js';
+import { canView } from '../middlewares/auth.middleware.js';
 
 // GET /sales — public list of APPROVED sale listings with filters
 export const getListings = async (req, res, next) => {
@@ -92,12 +93,16 @@ export const getListings = async (req, res, next) => {
 // GET /sales/:id — public details (increments view count)
 export const getListing = async (req, res, next) => {
   try {
-    const listing = await HouseForSale.findByIdAndUpdate(
-      req.params.id,
-      { $inc: { views: 1 } },
-      { new: true }
-    ).populate('seller', 'fullName email phone avatar');
-    if (!listing) return res.status(404).json({ success: false, message: 'Listing not found' });
+    const listing = await HouseForSale.findById(req.params.id).populate('seller', 'fullName email phone avatar');
+    // Pending/rejected listings are only visible to their seller and admins
+    if (!listing || !canView(req, listing, 'seller')) {
+      return res.status(404).json({ success: false, message: 'Listing not found' });
+    }
+    // Count public views only; ?noview=1 lets server-side renderers (SEO metadata) read without inflating them
+    if (listing.status === 'approved' && !req.query.noview) {
+      await HouseForSale.updateOne({ _id: listing._id }, { $inc: { views: 1 } });
+      listing.views += 1;
+    }
 
     res.json({ success: true, listing });
   } catch (err) {

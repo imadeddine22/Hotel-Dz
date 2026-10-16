@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { MapPin, Star, Trash2, Eye, Building2, Plus, X, CheckCircle, XCircle, Pencil } from 'lucide-react';
 import MapPicker from '@/components/MapPicker';
 import { useWilayas } from '@/hooks/useWilayas';
-import api, { getImageUrl, resolveImg } from '@/lib/api';
+import api, { getImageUrl, getServerURL, resolveImg } from '@/lib/api';
 import { formatDZD } from '@/lib/data';
 
 export default function AdminAllHotelsPage() {

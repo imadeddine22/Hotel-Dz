@@ -19,6 +19,10 @@ export const addReview = async (req, res, next) => {
     if (booking.status === 'cancelled') {
       return res.status(400).json({ success: false, message: 'Cannot review a cancelled booking' });
     }
+    // An unpaid booking costs nothing to create, so it must not unlock reviews
+    if (booking.paymentStatus !== 'paid') {
+      return res.status(403).json({ success: false, message: 'You can only review a paid booking' });
+    }
 
     const exists = await Review.findOne({ booking: bookingId });
     if (exists) {

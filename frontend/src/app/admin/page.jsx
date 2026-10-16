@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
   CalendarCheck, Hotel, Users, Wallet, Store,
-  TrendingUp, CheckSquare, Building2, ArrowUpRight, Home, Tag,
+  TrendingUp, TrendingDown, CheckSquare, Building2, ArrowUpRight, Home, Tag,
 } from 'lucide-react';
 import api from '@/lib/api';
 import { formatDZD } from '@/lib/data';
@@ -81,6 +81,29 @@ export default function AdminDashboard() {
     })();
   }, []);
 
+  /* Real month-over-month change from a monthly series ([{ _id: { year, month }, [key] }]).
+     Replaces hard-coded "+18% vs mois dernier" figures. Returns null when there's nothing to compare. */
+  const monthTrend = (series = [], key = 'count') => {
+    const now = new Date();
+    const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const valueFor = (d) =>
+      series.find((s) => s._id.year === d.getFullYear() && s._id.month === d.getMonth() + 1)?.[key] || 0;
+    const cur = valueFor(now);
+    const last = valueFor(prev);
+    if (!last) return null;
+    return Math.round(((cur - last) / last) * 100);
+  };
+  const TrendBadge = ({ value }) =>
+    value === null ? (
+      <span className="an-change">Pas de comparaison disponible</span>
+    ) : (
+      <span className={`an-change ${value >= 0 ? 'up' : 'down'}`}>
+        {value >= 0 ? <TrendingUp /> : <TrendingDown />} {value >= 0 ? '+' : ''}{value}% vs mois dernier
+      </span>
+    );
+  const bookingsTrend = monthTrend(stats?.charts?.monthlyBookings, 'count');
+  const revenueTrend = monthTrend(stats?.charts?.monthlyRevenue, 'total');
+
   /* chart data */
   const chartData  = stats?.charts?.monthlyRevenue || [];
   const maxRevenue = Math.max(...chartData.map(d => d.total), 1);
@@ -150,7 +173,7 @@ export default function AdminDashboard() {
             </div>
           </div>
           <p className="an-stat-num">{stats?.bookings ?? '—'}</p>
-          <span className="an-change up"><TrendingUp /> +18% vs mois dernier</span>
+          <TrendBadge value={bookingsTrend} />
         </div>
 
         {/* Card: Approuvés */}
@@ -162,7 +185,7 @@ export default function AdminDashboard() {
             </div>
           </div>
           <p className="an-stat-num">{stats?.hotels ?? '—'}</p>
-          <span className="an-change up"><TrendingUp /> +8% vs mois dernier</span>
+          <span className="an-change">{stats?.pendingHotels ?? 0} en attente de validation</span>
         </div>
 
         {/* Card: Maisons */}
@@ -226,11 +249,13 @@ export default function AdminDashboard() {
           <div className="an-wide-body">
             <p className="an-wide-label">Revenu total</p>
             <p className="an-wide-val">{stats ? formatDZD(stats.revenue) : '—'}</p>
-            <span className="an-change up"><TrendingUp /> +22% vs mois dernier</span>
+            <TrendBadge value={revenueTrend} />
           </div>
-          <div className="an-wide-badge" style={{ background: '#e0f7fa', color: '#00bcd4' }}>
-            +22%
-          </div>
+          {revenueTrend !== null && (
+            <div className="an-wide-badge" style={{ background: '#e0f7fa', color: '#00bcd4' }}>
+              {revenueTrend >= 0 ? '+' : ''}{revenueTrend}%
+            </div>
+          )}
         </div>
 
         <div className="an-wide-card">
@@ -240,10 +265,7 @@ export default function AdminDashboard() {
           <div className="an-wide-body">
             <p className="an-wide-label">Hôteliers inscrits</p>
             <p className="an-wide-val">{stats?.owners ?? '—'}</p>
-            <span className="an-change up"><TrendingUp /> +5% vs mois dernier</span>
-          </div>
-          <div className="an-wide-badge" style={{ background: '#f5f3ff', color: '#8b5cf6' }}>
-            +5%
+            <span className="an-change">{stats?.users ?? 0} utilisateurs au total</span>
           </div>
         </div>
 

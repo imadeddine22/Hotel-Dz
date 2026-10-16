@@ -10,7 +10,6 @@ import HouseCard from '@/components/HouseCard';
 import api, { getImageUrl, resolveImg } from '@/lib/api';
 import { formatDZD } from '@/lib/data';
 import { useAuthStore } from '@/store/authStore';
-import { HOTELS as MOCK_HOTELS, FEATURED } from '@/lib/data';
 
 // ── localStorage helpers (shared with FavoriteButton) ──────────────
 const ANON_KEY = 'anon_favorites';
@@ -29,18 +28,9 @@ function setAnonFavs(favs) {
 }
 
 // Mock houses for anonymous favorites
-const MOCK_HOUSES = [
-  { _id: 'hm1', name: 'Villa Yasmine', city: 'Alger', wilaya: 'Alger', type: 'Villa', rooms: 4, bathrooms: 2, capacity: 8, pricePerNight: 15000, images: [{ url: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&q=80' }] },
-  { _id: 'hm2', name: 'Chalet Tikjda', city: 'Bouira', wilaya: 'Bouira', type: 'Chalet', rooms: 3, bathrooms: 1, capacity: 6, pricePerNight: 9000, images: [{ url: 'https://images.unsplash.com/photo-1518780664697-55e3ad937233?w=800&q=80' }] },
-  { _id: 'hm3', name: 'Appartement Vue Mer', city: 'Béjaïa', wilaya: 'Béjaïa', type: 'Appartement', rooms: 2, bathrooms: 1, capacity: 4, pricePerNight: 6000, images: [{ url: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&q=80' }] },
-  { _id: 'hm4', name: 'Riad Tlemcen', city: 'Tlemcen', wilaya: 'Tlemcen', type: 'Riad', rooms: 3, bathrooms: 2, capacity: 6, pricePerNight: 11000, images: [{ url: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800&q=80' }] },
-];
 
 // Combine all known mock hotels
-const ALL_MOCK_HOTELS = [...MOCK_HOTELS, ...FEATURED].reduce((acc, h) => {
-  if (!acc.find((x) => (x._id || x.id) === (h._id || h.id))) acc.push(h);
-  return acc;
-}, []);
+
 
 export default function FavoritesPage() {
   const router = useRouter();
@@ -73,8 +63,7 @@ export default function FavoritesPage() {
           const { data } = await api.get(`/hotels/${hid}`);
           resolvedHotels.push(data.hotel || data);
         } catch {
-          const mock = ALL_MOCK_HOTELS.find((m) => (m._id || m.id) === hid);
-          if (mock) resolvedHotels.push({ _id: mock._id || mock.id, name: mock.name, city: mock.city, wilaya: mock.wilaya || '', images: mock.images || (mock.img ? [{ url: mock.img }] : []), starRating: mock.stars || mock.starRating || 0, price: mock.price || 0 });
+          /* deleted or no longer approved → drop it */
         }
       }
 
@@ -84,8 +73,7 @@ export default function FavoritesPage() {
           const { data } = await api.get(`/houses/${hid}`);
           resolvedHouses.push(data.house || data);
         } catch {
-          const mock = MOCK_HOUSES.find((m) => m._id === hid);
-          if (mock) resolvedHouses.push(mock);
+          /* deleted or no longer approved → drop it */
         }
       }
 

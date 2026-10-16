@@ -2,7 +2,9 @@ import crypto from 'crypto';
 import chargilyClient from '../config/chargily.js';
 import Payment from '../models/Payment.js';
 import Booking from '../models/Booking.js';
+import Room from '../models/Room.js';
 import { sendEmail } from '../utils/sendEmail.js';
+import { holdExpired, isBookingStillAvailable } from '../utils/checkAvailability.js';
 
 const CLIENT_URL  = process.env.CLIENT_URL  || 'http://localhost:3000';
 const SERVER_URL  = process.env.SERVER_URL  || 'http://localhost:5000';
@@ -30,6 +32,14 @@ export const createCheckout = async (req, res, next) => {
     if (booking.paymentStatus === 'paid')
       return res.status(400).json({ success: false, message: 'Réservation déjà payée' });
 
+    // Paying a cancelled booking would re-confirm it via the webhook, possibly over another guest
+    if (['cancelled', 'completed'].includes(booking.status))
+      return res.status(400).json({ success: false, message: `Réservation ${booking.status === 'cancelled' ? 'annulée' : 'terminée'}` });
+
+    // The 30-min hold of an unpaid booking may have run out and its dates been taken since
+    if (holdExpired(booking) && !(await isBookingStillAvailable(booking, Room)))
+      return res.status(409).json({ success: false, message: "Ces dates ne sont plus disponibles. Veuillez refaire une réservation." });
+
     // Calcul de la commission
     const baseAmount  = booking.totalPrice;          // montant propriétaire
     const platformFee = Math.round(baseAmount * COMMISSION);
@@ -53,7 +63,9 @@ export const createCheckout = async (req, res, next) => {
       ? (booking.house?.name || 'Hébergement HotelsDZ')
       : (booking.hotel?.name || 'Hébergement HotelsDZ');
 
-    const checkout = await chargilyClient.createCheckout({
+    let checkout;
+    try {
+      checkout = await chargilyClient.createCheckout({
       amount:           totalAmount,
       currency:         'dzd',
       success_url:      `${CLIENT_URL}/payment/success?booking=${booking._id}`,
@@ -62,7 +74,15 @@ export const createCheckout = async (req, res, next) => {
       description:      `Réservation — ${propertyName} (${booking.nights} nuit(s))`,
       locale:           'fr',
       metadata: [{ booking_id: booking._id.toString(), payment_id: payment._id.toString() }],
-    });
+      });
+    } catch (err) {
+      // Chargily down or misconfigured (e.g. invalid CHARGILY_SECRET_KEY → 401): log details, show a clear message
+      console.error('Chargily checkout failed:', err.message);
+      return res.status(502).json({
+        success: false,
+        message: 'Le service de paiement est momentanément indisponible. Votre réservation est enregistrée : réessayez le paiement depuis « Mes réservations ».',
+      });
+    }
 
     payment.chargilyCheckoutId  = checkout.id;
     payment.chargilyCheckoutUrl = checkout.checkout_url;
@@ -91,7 +111,11 @@ export const handleWebhook = async (req, res) => {
     const secret    = process.env.CHARGILY_SECRET_KEY || '';
 
     const expected = crypto.createHmac('sha256', secret).update(rawBody).digest('hex');
-    if (!signature || signature !== expected) {
+    const valid =
+      typeof signature === 'string' &&
+      signature.length === expected.length &&
+      crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected));
+    if (!secret || !valid) {
       return res.status(403).json({ success: false, message: 'Signature invalide' });
     }
 
@@ -110,8 +134,8 @@ export const handleWebhook = async (req, res) => {
         await payment.save();
       }
 
-      // Mettre à jour la Booking
-      const booking = await Booking.findById(meta.booking_id)
+      // Mettre à jour la Booking — prefer the booking linked to our own Payment record over metadata
+      const booking = await Booking.findById(payment?.booking || meta.booking_id)
         .populate('customer', 'email fullName')
         .populate('hotel',    'name')
         .populate('house',    'name');
@@ -126,7 +150,7 @@ export const handleWebhook = async (req, res) => {
           ? (booking.house?.name || 'HotelsDZ')
           : (booking.hotel?.name || 'HotelsDZ');
 
-        // Email de confirmation
+        // Email de confirmation — an SMTP failure must not make Chargily retry an already-applied payment
         await sendEmail({
           to:      booking.customer.email,
           subject: `✅ Réservation confirmée — ${propName}`,
@@ -148,7 +172,7 @@ export const handleWebhook = async (req, res) => {
               </table>
               <p style="color:#666;font-size:14px">Merci d'avoir choisi HotelsDZ 🏨</p>
             </div>`,
-        });
+        }).catch((e) => console.error('Confirmation email failed:', e.message));
       }
 
     } else if (event.type === 'checkout.failed' || event.type === 'checkout.canceled') {
@@ -190,8 +214,15 @@ export const getPaymentStatus = async (req, res, next) => {
 export const retryCheckout = async (req, res, next) => {
   try {
     req.body.bookingId = req.params.bookingId;
+    const booking = await Booking.findById(req.params.bookingId).select('customer');
+    if (!booking)
+      return res.status(404).json({ success: false, message: 'Réservation introuvable' });
+    // Check ownership BEFORE deleting anything — otherwise anyone could wipe another customer's checkout
+    if (booking.customer.toString() !== req.user._id.toString())
+      return res.status(403).json({ success: false, message: 'Non autorisé' });
+
     // Supprimer l'ancien pending pour en créer un nouveau
-    await Payment.deleteOne({ booking: req.params.bookingId, status: 'pending' });
+    await Payment.deleteOne({ booking: booking._id, customer: req.user._id, status: 'pending' });
     return createCheckout(req, res, next);
   } catch (err) {
     next(err);

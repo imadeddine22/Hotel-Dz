@@ -316,9 +316,9 @@ export default function SalesPage() {
           {/* Title & Sorting */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8 border-b border-gray-200/60 pb-8">
             <div>
-              <h2 className="text-3xl font-bold text-gray-900 leading-tight font-serif">
-                Notre catalogue de biens à vendre
-              </h2>
+              <h1 className="text-3xl font-bold text-gray-900 leading-tight font-serif">
+                Maisons et appartements à vendre en Algérie
+              </h1>
               <p className="text-sm font-medium text-gray-500 mt-2">
                 Découvrez notre sélection d'annonces immobilières en vente.
               </p>

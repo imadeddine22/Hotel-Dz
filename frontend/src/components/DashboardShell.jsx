@@ -3,32 +3,32 @@
 import { useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, Hotel, CalendarCheck, Users, CheckSquare, LogOut, Home, Mail, Search, Bell, Globe, Tag } from 'lucide-react';
+import { LayoutDashboard, Hotel, CalendarCheck, Users, CheckSquare, LogOut, Home, Mail, Globe, Tag } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 
 const MENUS = {
   owner: [
-    { href: '/owner/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/owner/my-hotels', label: 'My Hotels', icon: Hotel },
-    { href: '/owner/my-houses', label: 'My Houses', icon: Home },
-    { href: '/owner/bookings', label: 'Bookings', icon: CalendarCheck },
-    { href: '/', label: 'Site Public', icon: Globe },
+    { href: '/owner/dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
+    { href: '/owner/my-hotels', label: 'Mes hôtels', icon: Hotel },
+    { href: '/owner/my-houses', label: 'Mes maisons', icon: Home },
+    { href: '/owner/bookings', label: 'Réservations', icon: CalendarCheck },
+    { href: '/', label: 'Site public', icon: Globe },
   ],
   seller: [
-    { href: '/seller/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/seller/my-listings', label: 'Mes Annonces', icon: Tag },
-    { href: '/', label: 'Site Public', icon: Globe },
+    { href: '/seller/dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
+    { href: '/seller/my-listings', label: 'Mes annonces', icon: Tag },
+    { href: '/', label: 'Site public', icon: Globe },
   ],
   admin: [
-    { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/admin/hotels', label: 'Approvals', icon: CheckSquare },
-    { href: '/admin/all-hotels', label: 'All Hotels', icon: Hotel },
-    { href: '/admin/all-houses', label: 'All Houses', icon: Home },
-    { href: '/admin/all-sales', label: 'All Sales', icon: Tag },
-    { href: '/admin/users', label: 'Users', icon: Users },
+    { href: '/admin', label: 'Tableau de bord', icon: LayoutDashboard },
+    { href: '/admin/hotels', label: 'Validations', icon: CheckSquare },
+    { href: '/admin/all-hotels', label: 'Tous les hôtels', icon: Hotel },
+    { href: '/admin/all-houses', label: 'Toutes les maisons', icon: Home },
+    { href: '/admin/all-sales', label: 'Toutes les ventes', icon: Tag },
+    { href: '/admin/users', label: 'Utilisateurs', icon: Users },
     { href: '/admin/messages', label: 'Messages', icon: Mail },
-    { href: '/admin/bookings', label: 'Bookings', icon: CalendarCheck },
-    { href: '/', label: 'Site Public', icon: Globe },
+    { href: '/admin/bookings', label: 'Réservations', icon: CalendarCheck },
+    { href: '/', label: 'Site public', icon: Globe },
   ],
 };
 
@@ -60,7 +60,7 @@ export default function DashboardShell({ role, title, children }) {
           <span className="text-xl font-bold text-gray-900 tracking-tight">hotels<span className="text-indigo-600">dz</span></span>
         </Link>
 
-        <p className="px-3 text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Overview</p>
+        <p className="px-3 text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Menu</p>
         
         <nav className="flex flex-1 flex-col gap-2">
           {menu.map((m) => {
@@ -89,7 +89,7 @@ export default function DashboardShell({ role, title, children }) {
               onClick={async () => { await logout(); router.push('/'); }}
               className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-red-500 hover:bg-red-50 transition-all"
             >
-              <LogOut className="h-5 w-5 text-red-400" /> Logout
+              <LogOut className="h-5 w-5 text-red-400" /> Déconnexion
             </button>
           </div>
         </div>
@@ -100,23 +100,9 @@ export default function DashboardShell({ role, title, children }) {
         {/* Top Header */}
         <header className="flex h-20 items-center justify-between px-8 py-4">
           
-          {/* Search Bar */}
-          <div className="relative w-full max-w-md hidden sm:block">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-            <input 
-              type="text" 
-              placeholder="Search everything..." 
-              className="h-12 w-full rounded-full bg-white pl-12 pr-4 text-sm font-medium text-gray-700 outline-none placeholder:text-gray-400 border border-transparent focus:border-indigo-100 focus:ring-4 focus:ring-indigo-50 transition-all shadow-sm"
-            />
-          </div>
-
+          {/* Search box and notification bell removed: they were placeholders with no behaviour */}
           <div className="flex items-center gap-6 ml-auto">
-            {/* Notification Bell */}
-            <button className="relative rounded-full bg-white p-3 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors shadow-sm">
-              <Bell className="h-5 w-5" />
-              <span className="absolute top-2.5 right-3 h-2 w-2 rounded-full bg-red-500 border-2 border-white"></span>
-            </button>
-            
+
             {/* User Profile */}
             <div className="flex items-center gap-3 rounded-full bg-white p-1.5 pr-4 shadow-sm border border-gray-50 cursor-pointer hover:shadow-md transition-shadow">
               <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 text-white font-bold text-sm">

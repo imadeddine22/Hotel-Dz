@@ -1,9 +1,10 @@
 'use client';
 
-import { useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Star, ChevronLeft, ChevronRight, MapPin, Plus } from 'lucide-react';
-import { FEATURED, TRANSLATIONS } from '@/lib/data';
+import { TRANSLATIONS } from '@/lib/data';
+import api, { getImageUrl } from '@/lib/api';
 import { useAuthStore, useLangStore } from '@/store/authStore';
 import FavoriteButton from '@/components/FavoriteButton';
 
@@ -13,6 +14,19 @@ export default function FeaturedHotels() {
   const { lang } = useLangStore();
   const t = TRANSLATIONS[lang] || TRANSLATIONS.fr;
   const isOwner = user?.role === 'owner';
+  const [hotels, setHotels] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Best-rated approved hotels from the API (previously hard-coded demo data with dead links)
+  useEffect(() => {
+    api
+      .get('/hotels', { params: { limit: 8, sort: 'rating' } })
+      .then(({ data }) => setHotels(data.hotels || []))
+      .catch(() => setHotels([]))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (!loading && hotels.length === 0) return null;
 
   const scroll = (dir) => {
     scroller.current?.scrollBy({ left: dir * 380, behavior: 'smooth' });
@@ -63,15 +77,20 @@ export default function FeaturedHotels() {
           ref={scroller}
           className="no-scrollbar flex snap-x gap-5 overflow-x-auto scroll-smooth pb-2"
         >
-          {FEATURED.map((h) => (
+          {loading &&
+            Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="h-72 w-80 shrink-0 animate-pulse rounded-2xl bg-gray-200" aria-hidden="true" />
+            ))}
+          {hotels.map((h) => (
             <div
-              key={h.id}
+              key={h._id}
               className="group relative h-72 w-80 shrink-0 snap-start overflow-hidden rounded-2xl shadow-card"
             >
-              <Link href={`/hotels/${h.id}`} className="absolute inset-0 block">
+              <Link href={`/hotels/${h._id}`} className="absolute inset-0 block">
                 <img
-                  src={h.img}
+                  src={getImageUrl(h.images?.[0]) || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80'}
                   alt={h.name}
+                  loading="lazy"
                   className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
                 />
                 <span className="absolute left-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-gradient-to-br bg-brand-500 text-white text-white shadow">
@@ -85,7 +104,7 @@ export default function FeaturedHotels() {
                 </div>
               </Link>
               <div className="absolute right-3 top-3 z-10">
-                <FavoriteButton type="hotel" id={h.id} />
+                <FavoriteButton type="hotel" id={h._id} />
               </div>
             </div>
           ))}

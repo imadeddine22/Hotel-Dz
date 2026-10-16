@@ -2,24 +2,9 @@ import Booking from '../models/Booking.js';
 import Room from '../models/Room.js';
 import Hotel from '../models/Hotel.js';
 import House from '../models/House.js';
-import { countOverlapping } from '../utils/checkAvailability.js';
+import { countOverlapping, countOverlappingHouse } from '../utils/checkAvailability.js';
 
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
-
-/**
- * Count active bookings for a HOUSE that overlap the [checkIn, checkOut) range.
- */
-const countOverlappingHouse = async (houseId, checkIn, checkOut, excludeId = null) => {
-  const filter = {
-    house: houseId,
-    propertyType: 'house',
-    status: { $in: ['pending', 'confirmed'] },
-    checkIn: { $lt: checkOut },
-    checkOut: { $gt: checkIn },
-  };
-  if (excludeId) filter._id = { $ne: excludeId };
-  return Booking.countDocuments(filter);
-};
 
 // POST /bookings  (customer) — hotel room booking
 export const createBooking = async (req, res, next) => {
@@ -189,6 +174,10 @@ export const cancelBooking = async (req, res, next) => {
 
     if (['cancelled', 'completed'].includes(booking.status)) {
       return res.status(400).json({ success: false, message: `Booking already ${booking.status}` });
+    }
+    // A stay that has already started can't be cancelled (and marked refunded) by the customer or owner
+    if (!isAdmin && new Date(booking.checkIn) <= new Date()) {
+      return res.status(400).json({ success: false, message: 'This stay has already started and can no longer be cancelled' });
     }
 
     booking.status = 'cancelled';

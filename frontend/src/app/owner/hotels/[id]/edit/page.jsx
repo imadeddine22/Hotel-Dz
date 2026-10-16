@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useId, useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import DashboardShell from '@/components/DashboardShell';
 import MapPicker from '@/components/MapPicker';
 import ImageUploader from '@/components/ImageUploader';
 import { useWilayas } from '@/hooks/useWilayas';
+import CommuneDatalist from '@/components/CommuneDatalist';
 import api from '@/lib/api';
 
 const TYPES = ['Luxe', 'Affaires', 'Balnéaire', 'Riad', 'Boutique', 'Montagne', 'Désert', 'Appart-hôtel', 'Économique'];
@@ -28,6 +29,9 @@ export default function EditHotelPage() {
         setForm({
           name: h.name, description: h.description || '', wilaya: h.wilaya,
           city: h.city, address: h.address || '', type: h.type,
+          // Must be loaded too: the form re-sends every field, so missing ones were overwritten on save
+          starRating: h.starRating ?? 3,
+          amenities: (h.amenities || []).join(', '),
           lat: h.coordinates?.lat ?? '', lng: h.coordinates?.lng ?? '',
           suitableFor: h.suitableFor || [],
           existingImages: h.images || []
@@ -88,7 +92,8 @@ export default function EditHotelPage() {
               {wilayas.map((w) => <option key={w} value={w}>{w}</option>)}
             </select>
           </div>
-          <Input label="Ville / Commune" value={form.city} onChange={(v) => set('city', v)} />
+          <Input label="Ville / Commune" value={form.city} onChange={(v) => set('city', v)} list="hotel-communes" placeholder="Choisissez ou saisissez une commune" />
+          <CommuneDatalist id="hotel-communes" wilaya={form.wilaya} />
         </div>
 
         <Input label="Adresse" value={form.address} onChange={(v) => set('address', v)} required={false} />
@@ -156,11 +161,12 @@ export default function EditHotelPage() {
   );
 }
 
-function Input({ label, value, onChange, type = 'text', required = true, placeholder }) {
+function Input({ label, value, onChange, type = 'text', required = true, placeholder, list }) {
+  const id = useId();
   return (
     <div>
-      <label className="mb-1 block text-sm font-medium text-gray-700">{label}</label>
-      <input type={type} required={required} value={value} placeholder={placeholder}
+      <label htmlFor={id} className="mb-1 block text-sm font-medium text-gray-700">{label}</label>
+      <input id={id} type={type} required={required} value={value} placeholder={placeholder} list={list} autoComplete={list ? 'off' : undefined}
         onChange={(e) => onChange(e.target.value)}
         className="w-full rounded-lg border border-gray-200 px-4 py-2.5 outline-none focus:border-brand-500" />
     </div>

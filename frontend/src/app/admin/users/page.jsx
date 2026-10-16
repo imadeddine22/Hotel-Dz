@@ -7,8 +7,11 @@ import api from '@/lib/api';
 const ROLE_COLORS = {
   admin: '#8b5cf6',
   owner: '#3b82f6',
+  seller: '#10b981',
   customer: '#64748b',
 };
+
+const ROLE_LABELS = { admin: 'Admin', owner: 'Hôtelier', seller: 'Vendeur', customer: 'Client' };
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState([]);
@@ -72,6 +75,7 @@ export default function AdminUsersPage() {
               { label: 'Tous', value: '' },
               { label: 'Clients', value: 'customer' },
               { label: 'Hôteliers', value: 'owner' },
+              { label: 'Vendeurs', value: 'seller' },
               { label: 'Admins', value: 'admin' },
             ].map((f) => (
               <button
@@ -149,7 +153,7 @@ export default function AdminUsersPage() {
                     <td>{u.email}</td>
                     <td>
                       <span className={`admin-badge ${u.role}`}>
-                        {u.role === 'admin' ? 'Admin' : u.role === 'owner' ? 'Hôtelier' : 'Client'}
+                        {ROLE_LABELS[u.role] || u.role}
                       </span>
                     </td>
                     <td>

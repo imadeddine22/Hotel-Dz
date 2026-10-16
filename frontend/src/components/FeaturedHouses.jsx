@@ -17,58 +17,34 @@ function resolveImg(url) {
   return `${SERVER}${url}`;
 }
 
-const MOCK_HOUSES = [
-  {
-    id: 'hm1', name: 'Villa Yasmine', city: 'Alger', wilaya: 'Alger', type: 'Villa',
-    rooms: 4, bathrooms: 2, capacity: 8, pricePerNight: 15000,
-    img: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&q=80',
-  },
-  {
-    id: 'hm2', name: 'Chalet Forêt de Tikjda', city: 'Bouira', wilaya: 'Bouira', type: 'Chalet',
-    rooms: 3, bathrooms: 1, capacity: 6, pricePerNight: 9000,
-    img: 'https://images.unsplash.com/photo-1518780664697-55e3ad937233?w=800&q=80',
-  },
-  {
-    id: 'hm3', name: 'Appartement Vue Mer Béjaïa', city: 'Béjaïa', wilaya: 'Béjaïa', type: 'Appartement',
-    rooms: 2, bathrooms: 1, capacity: 4, pricePerNight: 6000,
-    img: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&q=80',
-  },
-  {
-    id: 'hm4', name: 'Riad Tlemcen', city: 'Tlemcen', wilaya: 'Tlemcen', type: 'Riad',
-    rooms: 3, bathrooms: 2, capacity: 6, pricePerNight: 11000,
-    img: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800&q=80',
-  },
-  {
-    id: 'hm5', name: 'Ferme Ouargla', city: 'Ouargla', wilaya: 'Ouargla', type: 'Ferme',
-    rooms: 5, bathrooms: 3, capacity: 10, pricePerNight: 8000,
-    img: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80',
-  },
-];
 
 export default function FeaturedHouses({ selectedCity }) {
-  const [houses, setHouses] = useState(MOCK_HOUSES);
+  const [houses, setHouses] = useState([]);
+  const [loaded, setLoaded] = useState(false);
   const scroller = { current: null };
   const user = useAuthStore((s) => s.user);
   const { lang } = useLangStore();
   const t = TRANSLATIONS[lang] || TRANSLATIONS.fr;
   const isOwner = user?.role === 'owner';
 
+  // Newest approved houses, filtered by the selected wilaya on the server
   useEffect(() => {
-    api.get('/houses', { params: { limit: 6, sort: 'newest' } })
-      .then(({ data }) => { if (data.houses?.length) setHouses(data.houses); })
-      .catch(() => {});
-  }, []);
+    const params = { limit: 6, sort: 'newest' };
+    if (selectedCity) params.wilaya = selectedCity;
+    api.get('/houses', { params })
+      .then(({ data }) => setHouses(data.houses || []))
+      .catch(() => setHouses([]))
+      .finally(() => setLoaded(true));
+  }, [selectedCity]);
 
-  const filteredHouses = selectedCity
-    ? houses.filter((h) =>
-        (h.city || h.wilaya || '').toLowerCase().includes(selectedCity.toLowerCase())
-      )
-    : houses;
+  const filteredHouses = houses;
 
   const scroll = (dir) => {
     const el = document.getElementById('houses-scroller');
     el?.scrollBy({ left: dir * 380, behavior: 'smooth' });
   };
+
+  if (loaded && houses.length === 0 && !selectedCity) return null;
 
   return (
     <section style={{ maxWidth: 1280, margin: '0 auto', padding: '48px 24px' }}>

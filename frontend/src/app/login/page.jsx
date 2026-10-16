@@ -16,7 +16,9 @@ export default function LoginPage() {
 function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
-  const redirect = params.get('redirect');
+  // Only same-site paths: "https://evil.com" or "//evil.com" would be an open redirect after login
+  const rawRedirect = params.get('redirect');
+  const redirect = rawRedirect && /^\/(?!\/)/.test(rawRedirect) && !rawRedirect.includes('\\') ? rawRedirect : null;
   const login = useAuthStore((s) => s.login);
 
   const [form, setForm] = useState({ email: '', password: '' });
@@ -56,9 +58,11 @@ function LoginForm() {
 
         <form onSubmit={submit} className="space-y-4">
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Email</label>
+            <label htmlFor="login-email" className="mb-1 block text-sm font-medium text-gray-700">Email</label>
             <input
+              id="login-email"
               type="email"
+              autoComplete="email"
               required
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
@@ -67,9 +71,11 @@ function LoginForm() {
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Mot de passe</label>
+            <label htmlFor="login-password" className="mb-1 block text-sm font-medium text-gray-700">Mot de passe</label>
             <input
+              id="login-password"
               type="password"
+              autoComplete="current-password"
               required
               value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}

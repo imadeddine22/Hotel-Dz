@@ -118,10 +118,15 @@ export default function HotelCard({ hotel, list = false, onHover }) {
           </div>
 
           <div className="mt-auto pt-4">
-            <span className="text-xl font-extrabold text-brand-600">
-              {formatDZD(hotel.price)}
-            </span>
-            <span className="text-sm text-gray-400"> / nuit</span>
+            {hotel.price > 0 ? (
+              <>
+                <span className="text-xs text-gray-500">À partir de </span>
+                <span className="text-xl font-extrabold text-brand-600">{formatDZD(hotel.price)}</span>
+                <span className="text-sm text-gray-400"> / nuit</span>
+              </>
+            ) : (
+              <span className="text-sm font-semibold text-brand-600">Voir les chambres</span>
+            )}
           </div>
         </div>
       </Link>

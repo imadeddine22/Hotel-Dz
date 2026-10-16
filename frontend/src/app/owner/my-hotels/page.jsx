@@ -1,5 +1,6 @@
 'use client';
 
+import { statusLabel } from '@/lib/statusLabels';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Plus, MapPin, Trash2, Pencil } from 'lucide-react';
@@ -77,7 +78,7 @@ export default function MyHotelsPage() {
               <div className="relative h-40">
                 {h.images?.[0]?.url && <img src={getImageUrl(h.images[0].url)} alt={h.name} className="h-full w-full object-cover" />}
                 <span className={`absolute right-3 top-3 rounded-full px-3 py-1 text-xs font-semibold capitalize ${STATUS[h.status]}`}>
-                  {h.status}
+                  {statusLabel(h.status)}
                 </span>
               </div>
               <div className="p-4">

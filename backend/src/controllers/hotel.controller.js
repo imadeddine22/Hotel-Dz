@@ -3,6 +3,11 @@ import Room from '../models/Room.js';
 import { uploadMany, destroyImage } from '../utils/cloudinaryUpload.js';
 import { parseCoordinates } from '../utils/parseCoordinates.js';
 import { searchRegex, wilayaRegex } from '../utils/searchRegex.js';
+import { canView } from '../middlewares/auth.middleware.js';
+
+// Fields an owner may set. Status, ratings and owner are server-controlled.
+const EDITABLE = ['name', 'description', 'wilaya', 'city', 'address', 'starRating', 'type'];
+const pick = (body, keys) => Object.fromEntries(keys.filter((k) => body[k] !== undefined).map((k) => [k, body[k]]));
 
 // GET /hotels  — public list of APPROVED hotels with filters
 export const getHotels = async (req, res, next) => {
@@ -32,6 +37,16 @@ export const getHotels = async (req, res, next) => {
       .limit(lim)
       .lean();
 
+    // "À partir de" price = cheapest active room of each hotel (hotels have no price of their own)
+    const minPrices = await Room.aggregate([
+      { $match: { hotel: { $in: hotels.map((h) => h._id) }, isActive: true } },
+      { $group: { _id: '$hotel', price: { $min: '$pricePerNight' } } },
+    ]);
+    const priceByHotel = new Map(minPrices.map((p) => [String(p._id), p.price]));
+    hotels.forEach((h) => {
+      h.price = priceByHotel.get(String(h._id)) ?? null;
+    });
+
     res.json({
       success: true,
       count: hotels.length,
@@ -49,7 +64,8 @@ export const getHotels = async (req, res, next) => {
 export const getHotel = async (req, res, next) => {
   try {
     const hotel = await Hotel.findById(req.params.id).populate('owner', 'fullName email phone');
-    if (!hotel) return res.status(404).json({ success: false, message: 'Hotel not found' });
+    // Pending/rejected hotels are only visible to their owner and admins
+    if (!hotel || !canView(req, hotel)) return res.status(404).json({ success: false, message: 'Hotel not found' });
 
     const rooms = await Room.find({ hotel: hotel._id, isActive: true });
     res.json({ success: true, hotel, rooms });
@@ -78,7 +94,7 @@ export const createHotel = async (req, res, next) => {
 
     const coordinates = parseCoordinates(req.body);
     const hotel = await Hotel.create({
-      ...req.body,
+      ...pick(req.body, EDITABLE),
       amenities: parseArray(req.body.amenities),
       suitableFor: parseArray(req.body.suitableFor),
       ...(coordinates && { coordinates }),
@@ -102,8 +118,7 @@ export const updateHotel = async (req, res, next) => {
       return res.status(403).json({ success: false, message: 'Not your hotel' });
     }
 
-    const fields = ['name', 'description', 'wilaya', 'city', 'address', 'starRating', 'type'];
-    fields.forEach((f) => {
+    EDITABLE.forEach((f) => {
       if (req.body[f] !== undefined) hotel[f] = req.body[f];
     });
     if (req.body.amenities !== undefined) hotel.amenities = parseArray(req.body.amenities);

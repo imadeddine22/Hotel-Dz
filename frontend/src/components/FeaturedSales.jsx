@@ -7,91 +7,33 @@ import api, { getImageUrl } from '@/lib/api';
 import { useAuthStore, useLangStore } from '@/store/authStore';
 import { TRANSLATIONS } from '@/lib/data';
 
-const MOCK_SALES = [
-  {
-    _id: 'sale1',
-    title: 'Villa Moderne avec Piscine',
-    city: 'Alger',
-    wilaya: 'Alger',
-    type: 'Villa',
-    area: 320,
-    rooms: 6,
-    price: 45000000,
-    images: [{ url: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&q=80' }]
-  },
-  {
-    _id: 'sale2',
-    title: 'Appartement F4 à Hydra',
-    city: 'Alger',
-    wilaya: 'Alger',
-    type: 'Appartement',
-    area: 120,
-    rooms: 4,
-    price: 25000000,
-    images: [{ url: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&q=80' }]
-  },
-  {
-    _id: 'sale3',
-    title: 'Bel Appartement Vue Mer',
-    city: 'Béjaïa',
-    wilaya: 'Béjaïa',
-    type: 'Appartement',
-    area: 95,
-    rooms: 3,
-    price: 14500000,
-    images: [{ url: 'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?w=800&q=80' }]
-  },
-  {
-    _id: 'sale4',
-    title: 'Chalet en Bois à Tikjda',
-    city: 'Bouira',
-    wilaya: 'Bouira',
-    type: 'Chalet',
-    area: 150,
-    rooms: 5,
-    price: 18000000,
-    images: [{ url: 'https://images.unsplash.com/photo-1518780664697-55e3ad937233?w=800&q=80' }]
-  },
-  {
-    _id: 'sale5',
-    title: 'Duplex Haut Standing Oran',
-    city: 'Oran',
-    wilaya: 'Oran',
-    type: 'Duplex',
-    area: 180,
-    rooms: 5,
-    price: 32000000,
-    images: [{ url: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80' }]
-  }
-];
 
 export default function FeaturedSales({ selectedCity }) {
-  const [sales, setSales] = useState(MOCK_SALES);
+  const [sales, setSales] = useState([]);
   const [loading, setLoading] = useState(true);
   const user = useAuthStore((s) => s.user);
   const { lang } = useLangStore();
   const t = TRANSLATIONS[lang] || TRANSLATIONS.fr;
   const isSeller = user?.role === 'seller';
 
+  // Newest approved sale listings, filtered by the selected wilaya on the server
   useEffect(() => {
-    api.get('/sales', { params: { limit: 6, sort: 'newest' } })
-      .then(({ data }) => {
-        if (data.listings?.length) setSales(data.listings);
-      })
-      .catch((err) => console.error(err))
+    const params = { limit: 6, sort: 'newest' };
+    if (selectedCity) params.wilaya = selectedCity;
+    api.get('/sales', { params })
+      .then(({ data }) => setSales(data.listings || []))
+      .catch(() => setSales([]))
       .finally(() => setLoading(false));
-  }, []);
+  }, [selectedCity]);
 
-  const filteredSales = selectedCity
-    ? sales.filter((s) =>
-        (s.city || s.wilaya || '').toLowerCase().includes(selectedCity.toLowerCase())
-      )
-    : sales;
+  const filteredSales = sales;
 
   const scroll = (dir) => {
     const el = document.getElementById('sales-scroller');
     el?.scrollBy({ left: dir * 380, behavior: 'smooth' });
   };
+
+  if (!loading && sales.length === 0 && !selectedCity) return null;
 
   return (
     <section style={{ maxWidth: 1280, margin: '0 auto', padding: '48px 24px' }}>

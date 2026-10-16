@@ -10,7 +10,7 @@ import Footer from '@/components/Footer';
 import FavoriteButton from '@/components/FavoriteButton';
 import LocationMap from '@/components/LocationMap';
 import api, { getImageUrl, resolveImg } from '@/lib/api';
-import { formatDZD, HOTELS as MOCK_HOTELS } from '@/lib/data';
+import { formatDZD } from '@/lib/data';
 
 export default function HotelDetailPage() {
   const { id } = useParams();
@@ -19,7 +19,6 @@ export default function HotelDetailPage() {
   const [rooms, setRooms] = useState([]);
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [mock, setMock] = useState(false);
   const [bedFilter, setBedFilter] = useState('all'); // 'all' | '1' | '2' | '3plus'
 
   // Bucket a room into the beds filter groups (1 / 2 / 3+).
@@ -47,26 +46,15 @@ export default function HotelDetailPage() {
           setReviews(r.data.reviews || []);
         } catch { /* no reviews */ }
       } catch {
-        // Mock fallback
-        const m = MOCK_HOTELS.find((h) => h.id === id) || MOCK_HOTELS[0];
-        setHotel({
-          _id: m.id, name: m.name, city: m.city, wilaya: m.city, type: m.type,
-          starRating: m.stars, avgRating: m.rating, reviewsCount: m.reviews,
-          description: 'Un hôtel confortable avec un excellent service, idéalement situé.',
-          images: [{ url: m.img }], amenities: ['Wifi', 'Parking', 'Restaurant', 'Climatisation'],
-        });
-        setRooms([
-          { _id: 'r1', title: 'Chambre Simple', type: 'single', pricePerNight: Math.round(m.price * 0.7), capacity: 1, bedsCount: 1, quantity: 5, amenities: ['Wifi', 'TV'], images: [{ url: 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=600&q=80' }] },
-          { _id: 'r2', title: 'Chambre Double', type: 'double', pricePerNight: m.price, capacity: 2, bedsCount: 2, quantity: 5, amenities: ['Wifi', 'Climatisation', 'TV'], images: [{ url: 'https://images.unsplash.com/photo-1566665797739-1674de7a421a?w=600&q=80' }] },
-          { _id: 'r3', title: 'Suite Exécutive', type: 'suite', pricePerNight: Math.round(m.price * 1.6), capacity: 3, bedsCount: 2, quantity: 2, amenities: ['Wifi', 'Vue mer', 'Minibar'], images: [{ url: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=600&q=80' }] },
-          { _id: 'r4', title: 'Chambre Familiale', type: 'family', pricePerNight: Math.round(m.price * 1.9), capacity: 6, bedsCount: 3, quantity: 3, amenities: ['Wifi', 'Cuisine', 'Balcon'], images: [{ url: 'https://images.unsplash.com/photo-1590490360182-c33d57733427?w=600&q=80' }] },
-        ]);
-        setMock(true);
+        // Not found, not approved or API unreachable: show "introuvable" instead of a fake hotel
+        setHotel(null);
+        setRooms([]);
       } finally {
         setLoading(false);
       }
     })();
   }, [id]);
+
 
   if (loading) {
     return (
@@ -108,11 +96,6 @@ export default function HotelDetailPage() {
       <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:px-6 lg:grid-cols-3">
         {/* Left: description, amenities, rooms, reviews */}
         <div className="lg:col-span-2">
-          {mock && (
-            <p className="mb-4 rounded-lg bg-amber-50 px-4 py-2 text-sm text-amber-700">
-              API hors ligne — données de démonstration.
-            </p>
-          )}
 
           <h2 className="mb-2 text-xl font-bold text-ink">À propos</h2>
           <p className="mb-6 text-gray-600">{hotel.description || 'Aucune description.'}</p>

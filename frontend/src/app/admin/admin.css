@@ -1108,6 +1108,7 @@
 .admin-badge.admin { background: #f5f3ff; color: #7c3aed; }
 .admin-badge.owner { background: #eff6ff; color: #3b82f6; }
 .admin-badge.customer { background: #f1f5f9; color: #64748b; }
+.admin-badge.seller { background: #ecfdf5; color: #059669; }
 .admin-badge.active { background: #e0f7fa; color: #00bcd4; }
 .admin-badge.blocked { background: #fef2f2; color: #ef4444; }
 .admin-badge.confirmed { background: #e0f7fa; color: #00bcd4; }

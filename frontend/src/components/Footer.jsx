@@ -4,6 +4,9 @@ import Link from 'next/link';
 import { Mail, Phone, MapPin } from 'lucide-react';
 import { TRANSLATIONS } from '@/lib/data';
 import { useLangStore } from '@/store/authStore';
+import { WILAYA_LIST } from '@/lib/wilayas';
+
+const POPULAR = ['Alger', 'Oran', 'Constantine', 'Annaba', 'Béjaïa', 'Tlemcen', 'Tipaza', 'Jijel', 'Sétif', 'Ghardaïa', 'Tamanrasset', 'Djanet'];
 
 export default function Footer() {
   const { lang } = useLangStore();
@@ -30,7 +33,7 @@ export default function Footer() {
             href="/register"
             className="inline-block bg-white hover:bg-slate-50 text-slate-900 font-bold px-8 py-3.5 rounded-full text-xs transition shadow-md hover:scale-102"
           >
-            {lang === 'ar' ? 'ابدأ مجاناً' : 'Start for free'}
+            {lang === 'ar' ? 'ابدأ مجاناً' : 'Commencer gratuitement'}
           </Link>
         </div>
       </div>
@@ -50,6 +53,7 @@ export default function Footer() {
               <li><Link href="/houses" className="hover:text-white transition">{t.navHouses}</Link></li>
               <li><Link href="/sales" className="hover:text-white transition">{t.navSales}</Link></li>
               <li><Link href="/destinations" className="hover:text-white transition">{t.navDestinations}</Link></li>
+              <li><Link href="/outils" className="hover:text-white transition">{lang === 'ar' ? 'أدوات مجانية' : 'Outils gratuits'}</Link></li>
             </ul>
           </div>
 
@@ -106,9 +110,18 @@ export default function Footer() {
 
         </div>
 
+        <nav aria-label={lang === 'ar' ? 'وجهات شائعة' : 'Destinations populaires'} className="mt-12 border-t border-slate-900/60 pt-8">
+          <p className="text-[10px] font-black tracking-widest text-white uppercase mb-4">{lang === 'ar' ? 'وجهات شائعة' : 'Destinations populaires'}</p>
+          <ul className="flex flex-wrap gap-x-5 gap-y-2 text-xs font-semibold">
+            {POPULAR.map((w) => (
+              <li key={w}><Link href={`/destinations/${encodeURIComponent(w)}`} className="hover:text-white transition">{lang === 'ar' ? `فنادق ${WILAYA_LIST.find((x) => x.name === w)?.arabic || w}` : `Hôtels à ${w}`}</Link></li>
+            ))}
+          </ul>
+        </nav>
+
         {/* ─── Massive Branding Watermark Logo at the Bottom ─── */}
         <div className="mt-16 text-center select-none opacity-[0.04] hover:opacity-[0.08] transition duration-700">
-          <h2 className="text-[5rem] md:text-[11rem] font-black font-serif tracking-tighter text-white flex items-center justify-center leading-none">
+          <div aria-hidden="true" className="text-[5rem] md:text-[11rem] font-black font-serif tracking-tighter text-white flex items-center justify-center leading-none">
             Hotels
             <span className="inline-block mx-4 transform scale-75 md:scale-100">
               <svg className="h-16 md:h-32 w-24 md:w-48 text-teal-400" viewBox="0 0 48 32" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round">
@@ -116,11 +129,11 @@ export default function Footer() {
               </svg>
             </span>
             DZ
-          </h2>
+          </div>
         </div>
 
         {/* Mini Bottom Bar */}
-        <div className="border-t border-slate-900/60 py-6 text-center text-[10px] font-black uppercase tracking-widest text-slate-600">
+        <div className="border-t border-slate-900/60 py-6 text-center text-[10px] font-black uppercase tracking-widest text-slate-500">
           © {new Date().getFullYear()} HotelsDZ. {t.copyright}
         </div>
 

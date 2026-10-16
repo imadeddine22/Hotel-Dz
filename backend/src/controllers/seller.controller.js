@@ -2,6 +2,10 @@ import HouseForSale from '../models/HouseForSale.js';
 import { uploadMany, destroyImage } from '../utils/cloudinaryUpload.js';
 import { parseCoordinates } from '../utils/parseCoordinates.js';
 
+// Fields a seller may set. Status, views and reference are server-controlled.
+const EDITABLE = ['title', 'description', 'wilaya', 'city', 'address', 'type', 'price', 'area', 'rooms', 'bathrooms', 'contactPhone', 'contactEmail'];
+const pick = (body, keys) => Object.fromEntries(keys.filter((k) => body[k] !== undefined).map((k) => [k, body[k]]));
+
 // GET /seller/stats
 export const getSellerStats = async (req, res, next) => {
   try {
@@ -48,7 +52,7 @@ export const createListing = async (req, res, next) => {
 
     const coordinates = parseCoordinates(req.body);
     const listing = await HouseForSale.create({
-      ...req.body,
+      ...pick(req.body, EDITABLE),
       amenities: parseArray(req.body.amenities),
       ...(coordinates && { coordinates }),
       seller: req.user._id,
@@ -73,8 +77,7 @@ export const updateListing = async (req, res, next) => {
       return res.status(403).json({ success: false, message: 'Not your listing' });
     }
 
-    const fields = ['title', 'description', 'wilaya', 'city', 'address', 'type', 'price', 'area', 'rooms', 'bathrooms', 'contactPhone', 'contactEmail'];
-    fields.forEach((f) => {
+    EDITABLE.forEach((f) => {
       if (req.body[f] !== undefined) listing[f] = req.body[f];
     });
     if (req.body.amenities !== undefined) listing.amenities = parseArray(req.body.amenities);

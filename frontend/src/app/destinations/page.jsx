@@ -5,7 +5,6 @@ import { Search, MapPin, Compass, Navigation, Building2, Home, Star, ArrowRight 
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import api from '@/lib/api';
-import { HOTELS as MOCK_HOTELS } from '@/lib/data';
 import { formatDZD } from '@/lib/data';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
@@ -13,33 +12,6 @@ import Link from 'next/link';
 // Dynamically load Map component to prevent window references and SSR hydrations mismatches
 const NearbyMap = dynamic(() => import('@/components/NearbyMap'), { ssr: false });
 
-const MOCK_HOUSES = [
-  {
-    id: 'hm1', name: 'Villa Yasmine', city: 'Alger', wilaya: 'Alger', type: 'Villa',
-    rooms: 4, bathrooms: 2, capacity: 8, pricePerNight: 15000,
-    img: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&q=80',
-  },
-  {
-    id: 'hm2', name: 'Chalet Forêt de Tikjda', city: 'Bouira', wilaya: 'Bouira', type: 'Chalet',
-    rooms: 3, bathrooms: 1, capacity: 6, pricePerNight: 9000,
-    img: 'https://images.unsplash.com/photo-1518780664697-55e3ad937233?w=800&q=80',
-  },
-  {
-    id: 'hm3', name: 'Appartement Vue Mer Béjaïa', city: 'Béjaïa', wilaya: 'Béjaïa', type: 'Appartement',
-    rooms: 2, bathrooms: 1, capacity: 4, pricePerNight: 6000,
-    img: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&q=80',
-  },
-  {
-    id: 'hm4', name: 'Riad Tlemcen', city: 'Tlemcen', wilaya: 'Tlemcen', type: 'Riad',
-    rooms: 3, bathrooms: 2, capacity: 6, pricePerNight: 11000,
-    img: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800&q=80',
-  },
-  {
-    id: 'hm5', name: 'Ferme Ouargla', city: 'Ouargla', wilaya: 'Ouargla', type: 'Ferme',
-    rooms: 5, bathrooms: 3, capacity: 10, pricePerNight: 8000,
-    img: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80',
-  }
-];
 
 const CITY_COORDS = {
   'Alger': { lat: 36.7538, lng: 3.0588 },
@@ -88,9 +60,9 @@ export default function DestinationsPage() {
       const hList = hotelsRes.data.hotels || [];
       const mList = housesRes.data.houses || [];
 
-      // Fallbacks if backend DB is clean/empty
-      const finalHotels = hList.length ? hList : MOCK_HOTELS;
-      const finalHouses = mList.length ? mList : MOCK_HOUSES;
+      // Real listings only — demo fallbacks produced cards linking to non-existent pages
+      const finalHotels = hList;
+      const finalHouses = mList;
 
       const normalized = [
         ...finalHotels.map(h => ({

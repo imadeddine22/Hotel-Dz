@@ -184,7 +184,7 @@ export default function OwnerDashboard() {
               <span className="flex h-5 w-5 items-center justify-center rounded-full bg-gray-100">
                 <CalendarCheck className="h-3 w-3" />
               </span>
-              Consulter et approuver les demandes
+              Consulter les réservations de vos clients
             </p>
           </div>
         </Link>

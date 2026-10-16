@@ -4,9 +4,10 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
 export const metadata = {
-  title: 'À propos — HotelsDZ',
+  title: 'À propos',
+  alternates: { canonical: '/about' },
   description:
-    "HotelsDZ connecte les hôteliers algériens aux voyageurs : réservation simple, paiement en DZD, hôtels vérifiés dans les 58 wilayas.",
+    "HotelsDZ connecte les hôteliers algériens aux voyageurs : réservation simple, paiement en DZD, hôtels vérifiés dans les 69 wilayas.",
 };
 
 const VALUES = [
@@ -22,7 +23,7 @@ const VALUES = [
   },
   {
     icon: MapPin,
-    title: '58 wilayas couvertes',
+    title: '69 wilayas couvertes',
     text: "D'Alger à Tamanrasset, trouvez un séjour authentique partout en Algérie.",
   },
   {
@@ -34,7 +35,7 @@ const VALUES = [
 
 const STATS = [
   { value: '650+', label: 'Hôtels partenaires' },
-  { value: '58', label: 'Wilayas couvertes' },
+  { value: '69', label: 'Wilayas couvertes' },
   { value: '12 000+', label: 'Nuits réservées' },
   { value: '4.6/5', label: 'Satisfaction moyenne' },
 ];

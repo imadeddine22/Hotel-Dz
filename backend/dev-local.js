@@ -32,6 +32,8 @@ const start = async () => {
   // Seed demo data (the models are registered on the active connection).
   const { seedDatabase } = await import('./src/seed.js');
   await seedDatabase();
+  const { syncWilayas } = await import('./src/config/db.js');
+  await syncWilayas();
 
   const app = (await import('./src/app.js')).default;
   app.listen(PORT, () => {

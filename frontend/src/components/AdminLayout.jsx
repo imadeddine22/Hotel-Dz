@@ -15,7 +15,6 @@ import {
   ChevronDown,
   Menu,
   X,
-  Search,
   Building2,
   Home,
   Mail,
@@ -126,13 +125,9 @@ export default function AdminLayout({ children }) {
         {/* Top Bar */}
         <header className="admin-topbar">
           <div className="admin-topbar-left">
-            <button className="admin-menu-btn" onClick={() => setSidebarOpen(true)}>
+            <button className="admin-menu-btn" onClick={() => setSidebarOpen(true)} aria-label="Ouvrir le menu">
               <Menu className="w-5 h-5" />
             </button>
-            <div className="admin-search-box">
-              <Search className="admin-search-icon" />
-              <input type="text" placeholder="Rechercher..." className="admin-search-input" />
-            </div>
           </div>
           <div className="admin-topbar-right">
             <Link href="/admin/messages" className="admin-notif-btn" aria-label="Messages">

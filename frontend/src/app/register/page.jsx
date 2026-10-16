@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/authStore';
@@ -18,6 +18,13 @@ export default function RegisterPage() {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Links like "Devenir propriétaire" point to /register?role=owner — preselect that role.
+  // (Read from window rather than useSearchParams to keep the page statically renderable.)
+  useEffect(() => {
+    const role = new URLSearchParams(window.location.search).get('role');
+    if (['customer', 'owner', 'seller'].includes(role)) setForm((f) => ({ ...f, role }));
+  }, []);
 
   const submit = async (e) => {
     e.preventDefault();
@@ -58,6 +65,7 @@ export default function RegisterPage() {
             <button
               key={r.v}
               type="button"
+              aria-pressed={form.role === r.v}
               onClick={() => setForm({ ...form, role: r.v })}
               className={`flex flex-col items-center gap-1 rounded-xl border-2 px-2 py-3 text-center transition ${
                 form.role === r.v
@@ -65,7 +73,7 @@ export default function RegisterPage() {
                   : 'border-gray-100 bg-gray-50 text-gray-500 hover:border-gray-200'
               }`}
             >
-              <span className="text-xl">{r.icon}</span>
+              <span className="text-xl" aria-hidden="true">{r.icon}</span>
               <span className="text-xs font-bold leading-tight">{r.label}</span>
               <span className="text-[10px] font-medium leading-tight opacity-70">{r.desc}</span>
             </button>
@@ -75,7 +83,7 @@ export default function RegisterPage() {
         <form onSubmit={submit} className="space-y-4">
           <Field label="Nom complet" value={form.fullName} onChange={(v) => setForm({ ...form, fullName: v })} />
           <Field label="Email" type="email" value={form.email} onChange={(v) => setForm({ ...form, email: v })} />
-          <Field label="Téléphone" value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} required={false} />
+          <Field label="Téléphone" type="tel" value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} required={false} />
           <Field label="Mot de passe" type="password" value={form.password} onChange={(v) => setForm({ ...form, password: v })} />
           <button
             disabled={loading}
@@ -96,12 +104,18 @@ export default function RegisterPage() {
   );
 }
 
+const AUTOCOMPLETE = { email: 'email', password: 'new-password', tel: 'tel' };
+
 function Field({ label, value, onChange, type = 'text', required = true }) {
+  const id = useId();
   return (
     <div>
-      <label className="mb-1 block text-sm font-medium text-gray-700">{label}</label>
+      <label htmlFor={id} className="mb-1 block text-sm font-medium text-gray-700">{label}</label>
       <input
+        id={id}
         type={type}
+        autoComplete={AUTOCOMPLETE[type]}
+        minLength={type === 'password' ? 6 : undefined}
         required={required}
         value={value}
         onChange={(e) => onChange(e.target.value)}

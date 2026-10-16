@@ -2,12 +2,13 @@
 
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Plus, Pencil, Trash2, X, Eye, Clock, CheckCircle, XCircle, MapPin, ChevronDown, Tag } from 'lucide-react';
+import { Plus, Pencil, Trash2, X, Eye, Clock, CheckCircle, XCircle, MapPin, Tag } from 'lucide-react';
 import DashboardShell from '@/components/DashboardShell';
 import ImageUploader from '@/components/ImageUploader';
 import api, { getImageUrl } from '@/lib/api';
 import { formatDZD } from '@/lib/data';
 import { useWilayas } from '@/hooks/useWilayas';
+import CommuneDatalist from '@/components/CommuneDatalist';
 
 const PROPERTY_TYPES = ['Appartement', 'Villa', 'Maison', 'Duplex', 'Studio', 'Terrain', 'Local commercial', 'Ferme', 'Chalet', 'Immeuble'];
 
@@ -34,7 +35,6 @@ function SellerListingsContent() {
   const [existingImages, setExistingImages] = useState([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-  const [openSelect, setOpenSelect] = useState(null); // 'type' | 'wilaya'
   const { wilayas } = useWilayas();
 
   const fetchListings = async () => {
@@ -157,7 +157,7 @@ function SellerListingsContent() {
             <h2 className="text-lg font-bold text-gray-900">
               {editId ? 'Modifier l\'annonce' : 'Nouvelle annonce'}
             </h2>
-            <button onClick={() => { setShowForm(false); setEditId(null); }} className="rounded-full p-2 hover:bg-gray-100 transition">
+            <button onClick={() => { setShowForm(false); setEditId(null); }} aria-label="Fermer" className="rounded-full p-2 hover:bg-gray-100 transition">
               <X className="h-5 w-5 text-gray-400" />
             </button>
           </div>
@@ -172,36 +172,15 @@ function SellerListingsContent() {
                   placeholder="Ex: Villa 4 pièces vue mer"
                 />
               </div>
-              <div className="relative">
-                <label className="mb-1 block text-sm font-semibold text-gray-700">Type *</label>
-                <div 
-                  onClick={() => setOpenSelect(openSelect === 'type' ? null : 'type')}
-                  className="w-full rounded-xl border border-gray-200 px-4 py-2.5 outline-none bg-white cursor-pointer flex items-center justify-between transition focus-within:border-emerald-500 shadow-sm"
+              <div>
+                {/* Native <select>: the previous clickable <div> could not be reached or used with a keyboard */}
+                <label htmlFor="sale-type" className="mb-1 block text-sm font-semibold text-gray-700">Type *</label>
+                <select
+                  id="sale-type" required value={form.type} onChange={(e) => set('type', e.target.value)}
+                  className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 font-serif font-bold text-slate-800 outline-none shadow-sm transition focus:border-emerald-500"
                 >
-                  <span className="font-serif font-bold text-slate-800">{form.type || 'Sélectionner...'}</span>
-                  <ChevronDown className={`h-4 w-4 text-gray-500 transition-transform ${openSelect === 'type' ? 'rotate-180' : ''}`} />
-                </div>
-                {openSelect === 'type' && (
-                  <div className="absolute left-0 right-0 top-full mt-2 z-30 max-h-60 overflow-y-auto rounded-xl bg-white py-1.5 shadow-xl border border-gray-100">
-                    {PROPERTY_TYPES.map((t) => (
-                      <button
-                        key={t}
-                        type="button"
-                        onClick={() => {
-                          set('type', t);
-                          setOpenSelect(null);
-                        }}
-                        className={`w-full text-left px-5 py-2.5 text-sm font-serif font-bold transition-all border-l-2 ${
-                          form.type === t
-                            ? 'text-teal-600 border-teal-500 bg-teal-50/30'
-                            : 'text-slate-800 border-transparent hover:bg-slate-50/50 hover:text-teal-600'
-                        }`}
-                      >
-                        {t}
-                      </button>
-                    ))}
-                  </div>
-                )}
+                  {PROPERTY_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                </select>
               </div>
             </div>
 
@@ -215,48 +194,24 @@ function SellerListingsContent() {
             </div>
 
             <div className="grid gap-4 md:grid-cols-3">
-              <div className="relative">
-                <label className="mb-1 block text-sm font-semibold text-gray-700">Wilaya *</label>
-                <div 
-                  onClick={() => setOpenSelect(openSelect === 'wilaya' ? null : 'wilaya')}
-                  className={`w-full rounded-xl border px-4 py-2.5 outline-none bg-white cursor-pointer flex items-center justify-between transition shadow-sm ${
-                    !form.wilaya ? 'border-red-300' : 'border-gray-200 focus-within:border-emerald-500'
-                  }`}
+              <div>
+                <label htmlFor="sale-wilaya" className="mb-1 block text-sm font-semibold text-gray-700">Wilaya *</label>
+                <select
+                  id="sale-wilaya" required value={form.wilaya} onChange={(e) => set('wilaya', e.target.value)}
+                  className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 font-serif font-bold text-slate-800 outline-none shadow-sm transition focus:border-emerald-500"
                 >
-                  <span className={`font-serif font-bold ${form.wilaya ? 'text-slate-800' : 'text-gray-400'}`}>
-                    {form.wilaya || 'Sélectionner...'}
-                  </span>
-                  <ChevronDown className={`h-4 w-4 text-gray-500 transition-transform ${openSelect === 'wilaya' ? 'rotate-180' : ''}`} />
-                </div>
-                {openSelect === 'wilaya' && (
-                  <div className="absolute left-0 right-0 top-full mt-2 z-30 max-h-60 overflow-y-auto rounded-xl bg-white py-1.5 shadow-xl border border-gray-100">
-                    {wilayas?.map((w) => (
-                      <button
-                        key={w}
-                        type="button"
-                        onClick={() => {
-                          set('wilaya', w);
-                          setOpenSelect(null);
-                        }}
-                        className={`w-full text-left px-5 py-2.5 text-sm font-serif font-bold transition-all border-l-2 ${
-                          form.wilaya === w
-                            ? 'text-teal-600 border-teal-500 bg-teal-50/30'
-                            : 'text-slate-800 border-transparent hover:bg-slate-50/50 hover:text-teal-600'
-                        }`}
-                      >
-                        {w}
-                      </button>
-                    ))}
-                  </div>
-                )}
+                  <option value="">Sélectionner...</option>
+                  {wilayas?.map((w) => <option key={w} value={w}>{w}</option>)}
+                </select>
               </div>
               <div>
-                <label className="mb-1 block text-sm font-semibold text-gray-700">Ville *</label>
+                <label htmlFor="sale-city" className="mb-1 block text-sm font-semibold text-gray-700">Ville *</label>
                 <input
-                  required value={form.city} onChange={(e) => set('city', e.target.value)}
+                  id="sale-city" required value={form.city} onChange={(e) => set('city', e.target.value)} list="sale-communes" autoComplete="off"
                   className="w-full rounded-xl border border-gray-200 px-4 py-2.5 outline-none focus:border-emerald-500 transition"
-                  placeholder="Ex: Hydra"
+                  placeholder="Choisissez ou saisissez une commune"
                 />
+                <CommuneDatalist id="sale-communes" wilaya={form.wilaya} />
               </div>
               <div>
                 <label className="mb-1 block text-sm font-semibold text-gray-700">Adresse</label>

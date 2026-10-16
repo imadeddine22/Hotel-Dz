@@ -1,5 +1,6 @@
 'use client';
 
+import { statusLabel } from '@/lib/statusLabels';
 import { useEffect, useState } from 'react';
 import DashboardShell from '@/components/DashboardShell';
 import api from '@/lib/api';
@@ -60,7 +61,7 @@ export default function OwnerBookingsPage() {
                   </td>
                   <td className="p-4 font-semibold text-brand-600">{formatDZD(b.totalPrice)}</td>
                   <td className="p-4">
-                    <span className={`rounded-full px-3 py-1 text-xs font-semibold capitalize ${STATUS[b.status]}`}>{b.status}</span>
+                    <span className={`rounded-full px-3 py-1 text-xs font-semibold capitalize ${STATUS[b.status]}`}>{statusLabel(b.status)}</span>
                   </td>
                 </tr>
               ))}

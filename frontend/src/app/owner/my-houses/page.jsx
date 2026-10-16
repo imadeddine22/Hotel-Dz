@@ -1,5 +1,6 @@
 'use client';
 
+import { statusLabel } from '@/lib/statusLabels';
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Plus, MapPin, Trash2, BedDouble, Bath, Users, X, Home, Pencil } from 'lucide-react';
@@ -7,6 +8,7 @@ import DashboardShell from '@/components/DashboardShell';
 import MapPicker from '@/components/MapPicker';
 import ImageUploader from '@/components/ImageUploader';
 import { useWilayas } from '@/hooks/useWilayas';
+import CommuneDatalist from '@/components/CommuneDatalist';
 import api from '@/lib/api';
 
 import { getServerURL } from '@/lib/api';
@@ -178,7 +180,7 @@ function MyHousesContent() {
                   </div>
                 )}
                 <span className={`absolute right-3 top-3 rounded-full px-3 py-1 text-xs font-semibold capitalize ${STATUS[h.status]}`}>
-                  {h.status}
+                  {statusLabel(h.status)}
                 </span>
                 <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-xs font-bold text-brand-500">
                   {h.type}
@@ -199,7 +201,7 @@ function MyHousesContent() {
                   <div className="mt-3 rounded-xl bg-red-50 p-3 text-xs text-red-700 border border-red-200">
                     <span className="font-bold block text-red-800">⚠️ Maison rejetée par l'administration :</span>
                     <p className="mt-1 text-red-600 font-medium italic">
-                      "{h.rejectionReason || 'Aucun motif spécifié. Veuillez vérifier les 정보를.'}"
+                      "{h.rejectionReason || 'Aucun motif spécifié. Veuillez vérifier les informations.'}"
                     </p>
                   </div>
                 )}
@@ -294,8 +296,9 @@ function MyHousesContent() {
                 </div>
                 <div>
                   <label style={labelStyle}>Ville *</label>
-                  <input required style={inputStyle} placeholder="ex: Alger Centre" value={form.city}
+                  <input required style={inputStyle} placeholder="Choisissez ou saisissez une commune" value={form.city} list="house-communes" autoComplete="off"
                     onChange={(e) => setForm({ ...form, city: e.target.value })} />
+                  <CommuneDatalist id="house-communes" wilaya={form.wilaya} />
                 </div>
                 <div>
                   <label style={labelStyle}>Prix/nuit (DZD) *</label>

@@ -402,7 +402,7 @@ export default function PricingPage() {
               Prêt à publier vos biens et garder 100% de vos gains ?
             </h2>
             <p className="mx-auto mt-4 max-w-lg text-slate-400 text-xs md:text-sm font-medium">
-              Inscrivez-vous dès aujourd'hui sur HotelsDZ. Choisissez le plan d'abonnement idéal et touchez des clients dans les 58 wilayas d'Algérie.
+              Inscrivez-vous dès aujourd'hui sur HotelsDZ. Choisissez le plan d'abonnement idéal et touchez des clients dans les 69 wilayas d'Algérie.
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-4">
               <Link

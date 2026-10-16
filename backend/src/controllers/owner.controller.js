@@ -22,7 +22,10 @@ export const getOwnerStats = async (req, res, next) => {
     });
 
     const totalBookings = bookings.length;
-    const totalRevenue = bookings.reduce((sum, b) => sum + (b.totalPrice || 0), 0);
+    // Unpaid (pending) bookings are not revenue yet
+    const totalRevenue = bookings
+      .filter((b) => b.paymentStatus === 'paid')
+      .reduce((sum, b) => sum + (b.totalPrice || 0), 0);
 
     res.status(200).json({
       success: true,

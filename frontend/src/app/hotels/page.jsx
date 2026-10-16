@@ -7,7 +7,6 @@ import Footer from '@/components/Footer';
 import HotelCard from '@/components/HotelCard';
 import api from '@/lib/api';
 import { useWilayas } from '@/hooks/useWilayas';
-import { HOTELS as MOCK_HOTELS } from '@/lib/data';
 
 import HotelsMap from '@/components/HotelsMap';
 
@@ -29,11 +28,7 @@ export default function HotelsPage() {
       setHotels(data.hotels);
       setUsingMock(false);
     } catch {
-      let list = MOCK_HOTELS;
-      if (filters.type) list = list.filter((h) => h.type === filters.type);
-      if (filters.q) list = list.filter((h) => h.name.toLowerCase().includes(filters.q.toLowerCase()));
-      if (filters.minStars) list = list.filter((h) => h.stars >= Number(filters.minStars));
-      setHotels(list);
+      setHotels([]);
       setUsingMock(true);
     } finally {
       setLoading(false);
@@ -120,7 +115,7 @@ export default function HotelsPage() {
           <div className="p-4 sm:p-6 bg-gray-50/30 flex-1">
             {usingMock && (
               <p className="mb-4 rounded-lg bg-amber-50 px-4 py-2 text-sm text-amber-700 border border-amber-100">
-                API hors ligne — affichage de données de démonstration.
+                Impossible de charger les hôtels pour le moment. Vérifiez votre connexion et réessayez.
               </p>
             )}
 

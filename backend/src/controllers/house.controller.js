@@ -2,6 +2,11 @@ import House from '../models/House.js';
 import { uploadMany, destroyImage } from '../utils/cloudinaryUpload.js';
 import { parseCoordinates } from '../utils/parseCoordinates.js';
 import { searchRegex, wilayaRegex } from '../utils/searchRegex.js';
+import { canView } from '../middlewares/auth.middleware.js';
+
+// Fields an owner may set. Status, ratings and owner are server-controlled.
+const EDITABLE = ['name', 'description', 'wilaya', 'city', 'address', 'type', 'starRating', 'rooms', 'bathrooms', 'capacity', 'pricePerNight'];
+const pick = (body, keys) => Object.fromEntries(keys.filter((k) => body[k] !== undefined).map((k) => [k, body[k]]));
 
 // GET /houses — public list of APPROVED houses with filters
 export const getHouses = async (req, res, next) => {
@@ -52,7 +57,8 @@ export const getHouses = async (req, res, next) => {
 export const getHouse = async (req, res, next) => {
   try {
     const house = await House.findById(req.params.id).populate('owner', 'fullName email phone');
-    if (!house) return res.status(404).json({ success: false, message: 'House not found' });
+    // Pending/rejected houses are only visible to their owner and admins
+    if (!house || !canView(req, house)) return res.status(404).json({ success: false, message: 'House not found' });
     res.json({ success: true, house });
   } catch (err) {
     next(err);
@@ -79,7 +85,7 @@ export const createHouse = async (req, res, next) => {
 
     const coordinates = parseCoordinates(req.body);
     const house = await House.create({
-      ...req.body,
+      ...pick(req.body, EDITABLE),
       amenities: parseArray(req.body.amenities),
       suitableFor: parseArray(req.body.suitableFor),
       ...(coordinates && { coordinates }),
@@ -103,8 +109,7 @@ export const updateHouse = async (req, res, next) => {
       return res.status(403).json({ success: false, message: 'Not your house' });
     }
 
-    const fields = ['name', 'description', 'wilaya', 'city', 'address', 'type', 'rooms', 'bathrooms', 'capacity', 'pricePerNight'];
-    fields.forEach((f) => {
+    EDITABLE.forEach((f) => {
       if (req.body[f] !== undefined) house[f] = req.body[f];
     });
     if (req.body.amenities !== undefined) house.amenities = parseArray(req.body.amenities);

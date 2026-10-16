@@ -1,5 +1,6 @@
 import User from '../models/User.js';
 import Hotel from '../models/Hotel.js';
+import Room from '../models/Room.js';
 import House from '../models/House.js';
 import HouseForSale from '../models/HouseForSale.js';
 import Booking from '../models/Booking.js';
@@ -289,6 +290,8 @@ export const deleteHotel = async (req, res, next) => {
   try {
     const hotel = await Hotel.findByIdAndDelete(req.params.id);
     if (!hotel) return res.status(404).json({ success: false, message: 'Hotel not found' });
+    // Orphan rooms would still be bookable and crash on room.hotel.status
+    await Room.deleteMany({ hotel: hotel._id });
     res.json({ success: true, message: 'Hotel deleted successfully' });
   } catch (err) {
     next(err);

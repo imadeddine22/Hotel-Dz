@@ -27,9 +27,18 @@ export const searchRegex = (value) => {
  */
 export const wilayaRegex = (value) => {
   if (value === undefined || value === null || String(value).trim() === '') return undefined;
-  const pattern = escapeRegex(String(value).trim()).replace(/[-\s]+/g, '[\\s-]+');
+  const pattern = escapeRegex(stripAccents(String(value).trim()))
+    .replace(/[-\s]+/g, '[\\s-]+')
+    .replace(/['’]/g, "['’]?")
+    .replace(/[aeiouycn]/gi, (ch) => ACCENT_CLASS[ch.toLowerCase()]);
   return new RegExp(pattern, 'i');
 };
+
+// "Bejaia", "béjaïa" and "Béjaïa" must all match the stored "Béjaïa".
+const ACCENT_CLASS = {
+  a: '[aàâäáã]', e: '[eéèêë]', i: '[iîïí]', o: '[oôöó]', u: '[uùûüú]', y: '[yÿ]', c: '[cç]', n: '[nñ]',
+};
+const stripAccents = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '');
 
 /** Exact (anchored) case-insensitive match — for uniqueness checks. */
 export const exactRegex = (value) => new RegExp(`^${escapeRegex(String(value).trim())}$`, 'i');

@@ -1,9 +1,24 @@
 'use client';
 
-import { useState, useMemo, Suspense } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { LayoutGrid, List, SlidersHorizontal, Check } from 'lucide-react';
-import { CATEGORIES, HOTELS } from '@/lib/data';
+import { CATEGORIES } from '@/lib/data';
+import api from '@/lib/api';
+
+// Shape API hotels for HotelCard
+const normalize = (h) => ({
+  id: h._id,
+  name: h.name,
+  city: h.city,
+  type: h.type,
+  stars: h.starRating ?? 3,
+  rating: h.avgRating ?? 0,
+  reviews: h.reviewsCount ?? 0,
+  price: h.price ?? 0,
+  img: h.images?.[0]?.url,
+  amenities: h.amenities || [],
+});
 import HotelCard from './HotelCard';
 
 function HotelsListContent({ selectedCity, onSelectCity }) {
@@ -14,15 +29,21 @@ function HotelsListContent({ selectedCity, onSelectCity }) {
   const [active, setActive] = useState('Tous');
   const [view, setView] = useState('grid');
 
-  const hotels = useMemo(() => {
-    let list = HOTELS;
-    if (active !== 'Tous') {
-      list = list.filter((h) => h.type === active);
-    }
-    if (wilaya) {
-      list = list.filter((h) => h.city.toLowerCase().includes(wilaya.toLowerCase()));
-    }
-    return list;
+  const [hotels, setHotels] = useState([]);
+
+  // Real approved hotels, filtered server-side (previously hard-coded demo data)
+  useEffect(() => {
+    let alive = true;
+    const params = { limit: 12 };
+    if (active !== 'Tous') params.type = active;
+    if (wilaya) params.wilaya = wilaya;
+    api
+      .get('/hotels', { params })
+      .then(({ data }) => alive && setHotels((data.hotels || []).map(normalize)))
+      .catch(() => alive && setHotels([]));
+    return () => {
+      alive = false;
+    };
   }, [active, wilaya]);
 
   return (

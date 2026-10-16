@@ -7,10 +7,12 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import api from '@/lib/api';
 import { formatDZD } from '@/lib/data';
+import { useAuthStore } from '@/store/authStore';
 
 const todayStr = () => new Date().toISOString().split('T')[0];
 const MS_DAY   = 86400000;
-const COMMISSION = 0.10;
+// Must match COMMISSION in backend/src/controllers/payment.controller.js (the server computes the real amount)
+const COMMISSION = 0;
 
 export default function BookingPage() {
   const { roomId } = useParams();
@@ -20,6 +22,9 @@ export default function BookingPage() {
   const [form, setForm]           = useState({ checkIn: todayStr(), checkOut: '', guests: 1 });
   const [error, setError]         = useState('');
   const [submitting, setSubmitting] = useState(false);
+  // Booking already created for these exact dates/guests — reused if payment has to be retried,
+  // otherwise every retry would create (and hold) another booking
+  const [created, setCreated] = useState(null);
   const [loading, setLoading]     = useState(true);
 
   useEffect(() => {
@@ -46,17 +51,26 @@ export default function BookingPage() {
     e.preventDefault();
     setError('');
     if (nights < 1) return setError('Sélectionnez des dates valides.');
+    // Visitors must log in first; come back to this page afterwards instead of showing a 401 error
+    if (!useAuthStore.getState().user && !localStorage.getItem('token')) {
+      router.push(`/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`);
+      return;
+    }
     setSubmitting(true);
     try {
-      const { data: bookingRes } = await api.post('/bookings', {
-        roomId,
-        checkIn:  form.checkIn,
-        checkOut: form.checkOut,
-        guests:   Number(form.guests),
-      });
-      const { data: payRes } = await api.post('/payments/checkout', {
-        bookingId: bookingRes.booking._id,
-      });
+      const key = JSON.stringify([form.checkIn, form.checkOut, Number(form.guests)]);
+      let bookingId = created?.key === key ? created.id : null;
+      if (!bookingId) {
+        const { data: bookingRes } = await api.post('/bookings', {
+          roomId,
+          checkIn:  form.checkIn,
+          checkOut: form.checkOut,
+          guests:   Number(form.guests),
+        });
+        bookingId = bookingRes.booking._id;
+        setCreated({ key, id: bookingId });
+      }
+      const { data: payRes } = await api.post('/payments/checkout', { bookingId });
       window.location.href = payRes.url;
     } catch (err) {
       setError(err.response?.data?.message || err.message);
@@ -101,10 +115,11 @@ export default function BookingPage() {
               )}
 
               {/* Check-in */}
-              <label className="mb-1.5 block text-sm font-medium text-gray-700">Date d&apos;arrivée</label>
+              <label htmlFor="bk-checkin" className="mb-1.5 block text-sm font-medium text-gray-700">Date d&apos;arrivée</label>
               <div className="mb-4 flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-3 focus-within:border-brand-400 focus-within:ring-2 focus-within:ring-brand-100 transition">
                 <Calendar className="h-4 w-4 text-gray-400" />
                 <input
+                  id="bk-checkin"
                   type="date" min={todayStr()} required value={form.checkIn}
                   onChange={(e) => setForm({ ...form, checkIn: e.target.value })}
                   className="w-full bg-transparent py-3 outline-none text-sm"
@@ -112,10 +127,11 @@ export default function BookingPage() {
               </div>
 
               {/* Check-out */}
-              <label className="mb-1.5 block text-sm font-medium text-gray-700">Date de départ</label>
+              <label htmlFor="bk-checkout" className="mb-1.5 block text-sm font-medium text-gray-700">Date de départ</label>
               <div className="mb-4 flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-3 focus-within:border-brand-400 focus-within:ring-2 focus-within:ring-brand-100 transition">
                 <Calendar className="h-4 w-4 text-gray-400" />
                 <input
+                  id="bk-checkout"
                   type="date" min={form.checkIn || todayStr()} required value={form.checkOut}
                   onChange={(e) => setForm({ ...form, checkOut: e.target.value })}
                   className="w-full bg-transparent py-3 outline-none text-sm"
@@ -123,10 +139,11 @@ export default function BookingPage() {
               </div>
 
               {/* Guests */}
-              <label className="mb-1.5 block text-sm font-medium text-gray-700">Voyageurs</label>
+              <label htmlFor="bk-guests" className="mb-1.5 block text-sm font-medium text-gray-700">Voyageurs</label>
               <div className="mb-6 flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-3 focus-within:border-brand-400 focus-within:ring-2 focus-within:ring-brand-100 transition">
                 <Users className="h-4 w-4 text-gray-400" />
                 <input
+                  id="bk-guests"
                   type="number" min={1} max={room.capacity} required value={form.guests}
                   onChange={(e) => setForm({ ...form, guests: e.target.value })}
                   className="w-full bg-transparent py-3 outline-none text-sm"
@@ -173,12 +190,14 @@ export default function BookingPage() {
               <div className="my-4 border-t border-dashed border-gray-100" />
 
               <Row label="Sous-total"     value={nights > 0 ? formatDZD(baseAmount) : '—'} />
+              {COMMISSION > 0 && (
               <div className="flex items-center justify-between py-1.5 text-sm">
-                <span className="text-amber-600 font-medium">Frais de service (10%)</span>
+                <span className="text-amber-600 font-medium">Frais de service ({Math.round(COMMISSION * 100)}%)</span>
                 <span className="font-semibold text-amber-600">
                   {nights > 0 ? `+ ${formatDZD(platformFee)}` : '—'}
                 </span>
               </div>
+              )}
 
               <div className="my-4 border-t border-gray-200" />
 
@@ -189,7 +208,7 @@ export default function BookingPage() {
                 </span>
               </div>
 
-              {nights > 0 && (
+              {nights > 0 && platformFee > 0 && (
                 <p className="mt-2 text-center text-[11px] text-gray-400">
                   dont {formatDZD(platformFee)} de frais de service HotelsDZ
                 </p>

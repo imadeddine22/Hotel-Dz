@@ -82,6 +82,10 @@ export default function MyBookingsPage() {
             {bookings.map((b) => {
               const isHouse = b.propertyType === 'house';
               const property = isHouse ? b.house : b.hotel;
+              // Statuses are only updated by payments/cancellations, so derive what the stay looks like today
+              const started = new Date(b.checkIn) <= new Date();
+              const ended = new Date(b.checkOut) < new Date();
+              const shownStatus = b.status === 'confirmed' && ended ? 'completed' : b.status === 'pending' && b.paymentStatus !== 'paid' && started ? 'expired' : b.status;
               const rawUrl = property?.images?.[0]?.url;
               const imgUrl = rawUrl ? getImageUrl(rawUrl) : 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&q=80';
 
@@ -104,8 +108,8 @@ export default function MyBookingsPage() {
                         </p>
                       </div>
                       <div className="flex flex-col gap-1.5 items-end">
-                        <span className={`rounded-full px-3 py-1 text-xs font-semibold capitalize ${STATUS_STYLES[b.status]}`}>
-                          {b.status === 'pending' ? 'En attente' : b.status === 'confirmed' ? 'Confirmée' : b.status === 'cancelled' ? 'Annulée' : 'Terminée'}
+                        <span className={`rounded-full px-3 py-1 text-xs font-semibold capitalize ${STATUS_STYLES[shownStatus] || STATUS_STYLES.cancelled}`}>
+                          {{ pending: 'En attente', confirmed: 'Confirmée', cancelled: 'Annulée', completed: 'Terminée', expired: 'Expirée' }[shownStatus]}
                         </span>
                         <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-medium capitalize ${PAYMENT_STATUS_STYLES[b.paymentStatus || 'unpaid']}`}>
                           {b.paymentStatus === 'paid' ? 'Payé' : b.paymentStatus === 'refunded' ? 'Remboursé' : 'Non payé'}
@@ -118,7 +122,7 @@ export default function MyBookingsPage() {
                         <span className="ml-2 font-bold text-brand-600">{formatDZD(b.totalPrice)}</span>
                       </p>
                       <div className="flex items-center gap-3">
-                        {b.status === 'pending' && b.paymentStatus === 'unpaid' && (
+                        {b.status === 'pending' && b.paymentStatus === 'unpaid' && !started && (
                           <button
                             disabled={retryingId === b._id}
                             onClick={() => retryPayment(b._id)}
@@ -127,7 +131,7 @@ export default function MyBookingsPage() {
                             {retryingId === b._id ? 'Redirection...' : 'Payer maintenant'}
                           </button>
                         )}
-                        {['pending', 'confirmed'].includes(b.status) && (
+                        {['pending', 'confirmed'].includes(b.status) && !started && (
                           <button onClick={() => cancel(b._id)} className="text-sm font-medium text-red-600 hover:underline">
                             Annuler
                           </button>

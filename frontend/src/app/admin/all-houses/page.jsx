@@ -7,6 +7,9 @@ import ImageUploader from '@/components/ImageUploader';
 import { useWilayas } from '@/hooks/useWilayas';
 import api, { getImageUrl, resolveImg } from '@/lib/api';
 
+// Was referenced but never defined → the page crashed on render. Same list as the House model enum.
+const HOUSE_TYPES = ['Villa', 'Appartement', 'Maison', 'Chalet', 'Studio', 'Duplex', 'Riad', 'Ferme'];
+
 const emptyForm = {
   name: '', description: '', wilaya: '', city: '', address: '',
   type: 'Maison', starRating: 3, rooms: 1, bathrooms: 1, capacity: 2,

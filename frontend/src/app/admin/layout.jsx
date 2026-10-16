@@ -2,7 +2,8 @@ import './admin.css';
 import AdminLayout from '@/components/AdminLayout';
 
 export const metadata = {
-  title: 'Admin — HotelsDZ',
+  title: 'Admin',
+  robots: { index: false, follow: false },
   description: 'Panneau d\'administration HotelsDZ',
 };
 

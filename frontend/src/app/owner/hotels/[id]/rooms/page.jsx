@@ -1,20 +1,23 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { Plus, Trash2, Users, BedDouble, Image as ImageIcon, X } from 'lucide-react';
+import { Plus, Trash2, Pencil, Users, BedDouble, Image as ImageIcon, X } from 'lucide-react';
 import DashboardShell from '@/components/DashboardShell';
 import ImageUploader from '@/components/ImageUploader';
 import api, { getImageUrl } from '@/lib/api';
 import { formatDZD } from '@/lib/data';
 
 const ROOM_TYPES = ['single', 'double', 'suite', 'family'];
+const ROOM_TYPE_LABELS = { single: 'Simple', double: 'Double', suite: 'Suite', family: 'Familiale' };
+const EMPTY_ROOM = { type: 'double', title: '', pricePerNight: '', capacity: 2, bedsCount: 1, quantity: 1, amenities: '' };
 
 export default function ManageRoomsPage() {
   const { id } = useParams();
   const [rooms, setRooms] = useState([]);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ type: 'double', title: '', pricePerNight: '', capacity: 2, bedsCount: 1, quantity: 1, amenities: '' });
+  const [form, setForm] = useState(EMPTY_ROOM);
+  const [editingId, setEditingId] = useState(null); // room being edited; null = adding a new one
   const [files, setFiles] = useState([]);
   const [error, setError] = useState('');
 
@@ -23,17 +26,35 @@ export default function ManageRoomsPage() {
   };
   useEffect(() => { load(); }, [id]);
 
-  const addRoom = async (e) => {
+  const closeForm = () => {
+    setShowForm(false);
+    setEditingId(null);
+    setForm(EMPTY_ROOM);
+    setFiles([]);
+  };
+
+  const startEdit = (r) => {
+    setEditingId(r._id);
+    setForm({
+      type: r.type, title: r.title, pricePerNight: r.pricePerNight, capacity: r.capacity,
+      bedsCount: r.bedsCount ?? 1, quantity: r.quantity, amenities: (r.amenities || []).join(', '),
+    });
+    setFiles([]);
+    setShowForm(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const saveRoom = async (e) => {
     e.preventDefault();
     setError('');
     try {
       const fd = new FormData();
       Object.entries(form).forEach(([k, v]) => fd.append(k, v));
       files.forEach((f) => fd.append('images', f));
-      await api.post(`/hotels/${id}/rooms`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
-      setShowForm(false);
-      setForm({ type: 'double', title: '', pricePerNight: '', capacity: 2, bedsCount: 1, quantity: 1, amenities: '' });
-      setFiles([]);
+      const opts = { headers: { 'Content-Type': 'multipart/form-data' } };
+      if (editingId) await api.put(`/rooms/${editingId}`, fd, opts);
+      else await api.post(`/hotels/${id}/rooms`, fd, opts);
+      closeForm();
       load();
     } catch (err) { setError(err.message); }
   };
@@ -48,7 +69,7 @@ export default function ManageRoomsPage() {
   return (
     <DashboardShell role="owner" title="Gérer les chambres">
       <div className="mb-6 flex justify-end">
-        <button onClick={() => setShowForm((s) => !s)} className="flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600">
+        <button onClick={() => (showForm ? closeForm() : setShowForm(true))} className="flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600">
           <Plus className="h-4 w-4" /> {showForm ? 'Fermer' : 'Ajouter une chambre'}
         </button>
       </div>
@@ -56,19 +77,20 @@ export default function ManageRoomsPage() {
       {error && <p className="mb-4 rounded-lg bg-red-50 px-4 py-2 text-sm text-red-600">{error}</p>}
 
       {showForm && (
-        <form onSubmit={addRoom} className="mb-6 grid gap-4 rounded-2xl bg-white p-6 shadow-sm border border-gray-100 sm:grid-cols-2">
+        <form onSubmit={saveRoom} className="mb-6 grid gap-4 rounded-2xl bg-white p-6 shadow-sm border border-gray-100 sm:grid-cols-2">
+          <h2 className="sm:col-span-2 text-lg font-bold text-gray-900">{editingId ? 'Modifier la chambre' : 'Nouvelle chambre'}</h2>
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Type</label>
-            <select value={form.type} onChange={(e) => set('type', e.target.value)} className="w-full rounded-lg border border-gray-200 px-3 py-2.5 capitalize outline-none focus:border-brand-500">
-              {ROOM_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+            <label htmlFor="room-type" className="mb-1 block text-sm font-medium text-gray-700">Type</label>
+            <select id="room-type" value={form.type} onChange={(e) => set('type', e.target.value)} className="w-full rounded-lg border border-gray-200 px-3 py-2.5 outline-none focus:border-brand-500">
+              {ROOM_TYPES.map((t) => <option key={t} value={t}>{ROOM_TYPE_LABELS[t]}</option>)}
             </select>
           </div>
           <Field label="Titre" value={form.title} onChange={(v) => set('title', v)} />
           <Field label="Prix / nuit (DZD)" type="number" value={form.pricePerNight} onChange={(v) => set('pricePerNight', v)} />
           <Field label="Capacité" type="number" value={form.capacity} onChange={(v) => set('capacity', v)} />
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Nombre de lits</label>
-            <select value={form.bedsCount} onChange={(e) => set('bedsCount', e.target.value)}
+            <label htmlFor="room-beds" className="mb-1 block text-sm font-medium text-gray-700">Nombre de lits</label>
+            <select id="room-beds" value={form.bedsCount} onChange={(e) => set('bedsCount', e.target.value)}
               className="w-full rounded-lg border border-gray-200 px-3 py-2.5 outline-none focus:border-brand-500">
               <option value={1}>1 lit</option>
               <option value={2}>2 lits</option>
@@ -83,7 +105,9 @@ export default function ManageRoomsPage() {
 
           {/* Photo de la chambre */}
           <div className="sm:col-span-2">
-            <label className="mb-1 block text-sm font-medium text-gray-700">Photos de la chambre (la première sera principale)</label>
+            <label className="mb-1 block text-sm font-medium text-gray-700">
+              {editingId ? 'Ajouter des photos' : 'Photos de la chambre (la première sera principale)'}
+            </label>
             <ImageUploader 
               onChange={(selectedFiles) => setFiles(Array.from(selectedFiles))} 
               maxFiles={6} 
@@ -91,7 +115,9 @@ export default function ManageRoomsPage() {
           </div>
 
           <div className="sm:col-span-2">
-            <button className="rounded-lg bg-brand-500 px-6 py-2.5 font-semibold text-white hover:bg-brand-600">Enregistrer</button>
+            <button className="rounded-lg bg-brand-500 px-6 py-2.5 font-semibold text-white hover:bg-brand-600">
+              {editingId ? 'Enregistrer les modifications' : 'Ajouter la chambre'}
+            </button>
           </div>
         </form>
       )}
@@ -108,6 +134,7 @@ export default function ManageRoomsPage() {
             )}
             <div className="p-4">
               <h3 className="font-bold text-gray-900">{r.title}</h3>
+              <p className="text-xs text-gray-400">{ROOM_TYPE_LABELS[r.type] || r.type}</p>
               <p className="flex items-center gap-3 text-sm text-gray-500">
                 <span className="flex items-center gap-1"><Users className="h-4 w-4" />{r.capacity}</span>
                 <span className="flex items-center gap-1"><BedDouble className="h-4 w-4" />{r.bedsCount}</span>
@@ -115,9 +142,16 @@ export default function ManageRoomsPage() {
               </p>
               <div className="mt-2 flex items-center justify-between">
                 <span className="font-bold text-brand-600">{formatDZD(r.pricePerNight)}</span>
-                <button onClick={() => remove(r._id)} className="grid h-8 w-8 place-items-center rounded-lg bg-red-50 text-red-500 hover:bg-red-100 transition">
-                  <Trash2 className="h-4 w-4" />
-                </button>
+                <div className="flex gap-2">
+                  <button onClick={() => startEdit(r)} aria-label={`Modifier ${r.title}`} title="Modifier"
+                    className="grid h-9 w-9 place-items-center rounded-lg bg-gray-50 text-gray-600 hover:bg-gray-100 transition">
+                    <Pencil className="h-4 w-4" />
+                  </button>
+                  <button onClick={() => remove(r._id)} aria-label={`Supprimer ${r.title}`} title="Supprimer"
+                    className="grid h-9 w-9 place-items-center rounded-lg bg-red-50 text-red-500 hover:bg-red-100 transition">
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -129,10 +163,11 @@ export default function ManageRoomsPage() {
 }
 
 function Field({ label, value, onChange, type = 'text', required = true }) {
+  const id = useId();
   return (
     <div>
-      <label className="mb-1 block text-sm font-medium text-gray-700">{label}</label>
-      <input type={type} required={required} value={value} onChange={(e) => onChange(e.target.value)}
+      <label htmlFor={id} className="mb-1 block text-sm font-medium text-gray-700">{label}</label>
+      <input id={id} type={type} required={required} min={type === 'number' ? 0 : undefined} value={value} onChange={(e) => onChange(e.target.value)}
         className="w-full rounded-lg border border-gray-200 px-4 py-2.5 outline-none focus:border-brand-500" />
     </div>
   );
