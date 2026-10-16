@@ -4,7 +4,6 @@ import Room from '../models/Room.js';
 import House from '../models/House.js';
 import HouseForSale from '../models/HouseForSale.js';
 import Booking from '../models/Booking.js';
-import Payment from '../models/Payment.js';
 import Review from '../models/Review.js';
 import { uploadMany } from '../utils/cloudinaryUpload.js';
 import { parseCoordinates } from '../utils/parseCoordinates.js';
@@ -94,9 +93,10 @@ export const getStats = async (req, res, next) => {
       Hotel.countDocuments({ status: 'approved' }),
       Hotel.countDocuments({ status: 'pending' }),
       Booking.countDocuments(),
-      Payment.aggregate([
-        { $match: { status: 'paid' } },
-        { $group: { _id: null, total: { $sum: '$amount' } } },
+      // Revenue = bookings the owners marked as paid on site
+      Booking.aggregate([
+        { $match: { paymentStatus: 'paid' } },
+        { $group: { _id: null, total: { $sum: '$totalPrice' } } },
       ]),
       Review.countDocuments(),
       House.countDocuments({ status: 'approved' }),
@@ -111,12 +111,15 @@ export const getStats = async (req, res, next) => {
     sixMonthsAgo.setDate(1);
     sixMonthsAgo.setHours(0, 0, 0, 0);
 
-    const monthlyRevenue = await Payment.aggregate([
-      { $match: { status: 'paid', createdAt: { $gte: sixMonthsAgo } } },
+    // Grouped by payment date (older paid bookings have no paidAt → fall back to updatedAt)
+    const monthlyRevenue = await Booking.aggregate([
+      { $match: { paymentStatus: 'paid' } },
+      { $addFields: { paidOn: { $ifNull: ['$paidAt', '$updatedAt'] } } },
+      { $match: { paidOn: { $gte: sixMonthsAgo } } },
       {
         $group: {
-          _id: { year: { $year: '$createdAt' }, month: { $month: '$createdAt' } },
-          total: { $sum: '$amount' },
+          _id: { year: { $year: '$paidOn' }, month: { $month: '$paidOn' } },
+          total: { $sum: '$totalPrice' },
           count: { $sum: 1 },
         },
       },

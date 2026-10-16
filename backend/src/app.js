@@ -15,7 +15,6 @@ import hotelRoutes from './routes/hotel.routes.js';
 import houseRoutes from './routes/house.routes.js';
 import roomRoutes from './routes/room.routes.js';
 import bookingRoutes from './routes/booking.routes.js';
-import paymentRoutes from './routes/payment.routes.js';
 import reviewRoutes from './routes/review.routes.js';
 import adminRoutes from './routes/admin.routes.js';
 import messageRoutes from './routes/message.routes.js';
@@ -57,10 +56,6 @@ const limiter = rateLimit({
 });
 app.use('/api', limiter);
 
-// The Chargily webhook needs the raw body to verify its signature, so it is
-// mounted BEFORE the JSON parser with express.raw().
-app.use('/api/v1/payments/webhook', express.raw({ type: '*/*' }));
-
 // Body parsing
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -84,7 +79,6 @@ app.use('/api/v1/hotels', hotelRoutes);
 app.use('/api/v1/houses', houseRoutes);
 app.use('/api/v1/rooms', roomRoutes);
 app.use('/api/v1/bookings', bookingRoutes);
-app.use('/api/v1/payments', paymentRoutes);
 app.use('/api/v1/reviews', reviewRoutes);
 app.use('/api/v1/admin', adminRoutes);
 app.use('/api/v1/messages', messageRoutes);

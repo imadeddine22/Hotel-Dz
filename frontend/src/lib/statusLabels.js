@@ -9,3 +9,6 @@ export const STATUS_LABELS = {
 };
 
 export const statusLabel = (status) => STATUS_LABELS[status] || status;
+
+// Room.type enum → French label
+export const ROOM_TYPE_LABELS = { single: 'Simple', double: 'Double', suite: 'Suite', family: 'Familiale' };

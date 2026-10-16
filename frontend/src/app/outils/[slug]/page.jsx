@@ -92,8 +92,8 @@ const CONTENT = {
         a: 'Un séjour de 5 nuits couvre 6 jours, du jour d’arrivée au jour de départ. Le calculateur compte donc les repas sur nuits + 1 jours.',
       },
       {
-        q: 'Puis-je payer mon hébergement en dinars ?',
-        a: 'Oui, les réservations sur HotelsDZ se paient en dinars algériens par carte CIB ou EDAHABIA.',
+        q: 'Comment se paie un hébergement réservé sur HotelsDZ ?',
+        a: 'La réservation est gratuite : l’établissement confirme votre demande, puis vous payez en dinars directement sur place à votre arrivée.',
       },
     ],
   },

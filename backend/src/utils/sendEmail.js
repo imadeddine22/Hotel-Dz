@@ -2,7 +2,7 @@ import nodemailer from 'nodemailer';
 
 /**
  * Send an email via SMTP. If SMTP is not configured, logs to console
- * instead of throwing so flows (e.g. payment webhook) don't break in dev.
+ * instead of throwing so flows (e.g. booking notifications) don't break in dev.
  */
 export const sendEmail = async ({ to, subject, html, text }) => {
   if (!process.env.SMTP_HOST) {

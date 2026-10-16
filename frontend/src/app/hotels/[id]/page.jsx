@@ -10,6 +10,7 @@ import Footer from '@/components/Footer';
 import FavoriteButton from '@/components/FavoriteButton';
 import LocationMap from '@/components/LocationMap';
 import api, { getImageUrl, resolveImg } from '@/lib/api';
+import { ROOM_TYPE_LABELS } from '@/lib/statusLabels';
 import { formatDZD } from '@/lib/data';
 
 export default function HotelDetailPage() {
@@ -177,7 +178,7 @@ export default function HotelDetailPage() {
                         <BedDouble className="h-3.5 w-3.5" /> {room.bedsCount} lit{room.bedsCount > 1 ? 's' : ''}
                       </span>
                       <span className="flex items-center gap-1"><Users className="h-4 w-4" /> {room.capacity} pers.</span>
-                      <span className="capitalize">{room.type}</span>
+                      <span>{ROOM_TYPE_LABELS[room.type] || room.type}</span>
                     </p>
                     {room.amenities?.length > 0 && (
                       <div className="mt-2 flex flex-wrap gap-1.5">

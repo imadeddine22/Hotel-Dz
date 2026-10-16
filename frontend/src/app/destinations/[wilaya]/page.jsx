@@ -37,7 +37,7 @@ function buildFaqs(name, info, s) {
     {
       q: `Combien d'hôtels sont disponibles à ${name} sur HotelsDZ ?`,
       a: s.hotels
-        ? `HotelsDZ référence actuellement ${s.hotels} hôtel${s.hotels > 1 ? 's' : ''} vérifié${s.hotels > 1 ? 's' : ''} dans la wilaya de ${name}, réservables en ligne avec paiement en dinars (CIB ou EDAHABIA).`
+        ? `HotelsDZ référence actuellement ${s.hotels} hôtel${s.hotels > 1 ? 's' : ''} vérifié${s.hotels > 1 ? 's' : ''} dans la wilaya de ${name}, réservables en ligne gratuitement, avec paiement sur place à l'arrivée.`
         : `Aucun hôtel n'est encore publié à ${name}. Les hôteliers de la wilaya peuvent inscrire leur établissement gratuitement sur HotelsDZ.`,
     },
     {
@@ -77,8 +77,8 @@ export async function generateMetadata({ params }) {
   return {
     title: `Hôtels, locations et maisons à vendre à ${displayName}`,
     description: parts.length
-      ? `${parts.join(', ')} à ${displayName}. Comparez les prix, lisez les avis et réservez en ligne avec paiement CIB / EDAHABIA sur HotelsDZ.`
-      : `Trouvez un hôtel, une maison à louer ou un bien à acheter à ${displayName}. Réservation en ligne et paiement en dinars sur HotelsDZ.`,
+      ? `${parts.join(', ')} à ${displayName}. Comparez les prix, lisez les avis et réservez gratuitement en ligne, paiement sur place, sur HotelsDZ.`
+      : `Trouvez un hôtel, une maison à louer ou un bien à acheter à ${displayName}. Réservation en ligne gratuite et paiement sur place sur HotelsDZ.`,
     alternates: { canonical: wilayaPath(displayName) },
     // Unknown wilaya, or no listings and no editorial content: keep it out of the index.
     robots: !info || (s.reachable && total === 0 && !info.highlights.length) ? { index: false, follow: true } : undefined,

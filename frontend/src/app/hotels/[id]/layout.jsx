@@ -12,7 +12,7 @@ export async function generateMetadata({ params }) {
   const title = `${hotel.name}${stars} à ${hotel.city} — Réservation`;
   const description =
     truncate(hotel.description, 155) ||
-    `Réservez ${hotel.name} à ${hotel.city} (${hotel.wilaya}). Chambres, prix, avis clients et paiement CIB / EDAHABIA.`;
+    `Réservez ${hotel.name} à ${hotel.city} (${hotel.wilaya}). Chambres, prix, avis clients. Réservation gratuite, paiement sur place.`;
   const images = (hotel.images || []).slice(0, 1).map(absoluteImage);
 
   return {

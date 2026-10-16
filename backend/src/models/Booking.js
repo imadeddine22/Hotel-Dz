@@ -30,11 +30,15 @@ const bookingSchema = new mongoose.Schema(
       default: 'pending',
       index: true,
     },
+    // Payment happens on site at arrival; the owner marks the booking as paid.
     paymentStatus: {
       type: String,
       enum: ['unpaid', 'paid', 'refunded'],
       default: 'unpaid',
     },
+    paidAt: { type: Date },
+    // Set when the owner refuses a booking request
+    rejectionReason: { type: String, default: '' },
   },
   { timestamps: true }
 );

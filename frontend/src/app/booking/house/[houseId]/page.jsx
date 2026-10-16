@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Calendar, Users, ShieldCheck, CreditCard, AlertCircle } from 'lucide-react';
+import { Calendar, Users, Send, Info, AlertCircle } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import api from '@/lib/api';
@@ -11,8 +11,6 @@ import { useAuthStore } from '@/store/authStore';
 
 const todayStr = () => new Date().toISOString().split('T')[0];
 const MS_DAY   = 86400000;
-// Must match COMMISSION in backend/src/controllers/payment.controller.js (the server computes the real amount)
-const COMMISSION = 0;
 
 export default function HouseBookingPage() {
   const { houseId } = useParams();
@@ -22,9 +20,6 @@ export default function HouseBookingPage() {
   const [form, setForm]           = useState({ checkIn: todayStr(), checkOut: '', guests: 1 });
   const [error, setError]         = useState('');
   const [submitting, setSubmitting] = useState(false);
-  // Booking already created for these exact dates/guests — reused if payment has to be retried,
-  // otherwise every retry would create (and hold) another booking
-  const [created, setCreated] = useState(null);
   const [loading, setLoading]     = useState(true);
 
   useEffect(() => {
@@ -44,11 +39,10 @@ export default function HouseBookingPage() {
   const nights     = form.checkIn && form.checkOut
     ? Math.max(0, Math.round((new Date(form.checkOut) - new Date(form.checkIn)) / MS_DAY))
     : 0;
-  const baseAmount  = house ? nights * house.pricePerNight : 0;
-  const platformFee = Math.round(baseAmount * COMMISSION);
-  const totalAmount = baseAmount + platformFee;
+  // No online payment: the guest pays this amount on site, once the owner has accepted the request
+  const totalAmount = house ? nights * house.pricePerNight : 0;
 
-  const pay = async (e) => {
+  const sendRequest = async (e) => {
     e.preventDefault();
     setError('');
     if (nights < 1) return setError('Sélectionnez des dates valides.');
@@ -59,20 +53,13 @@ export default function HouseBookingPage() {
     }
     setSubmitting(true);
     try {
-      const key = JSON.stringify([form.checkIn, form.checkOut, Number(form.guests)]);
-      let bookingId = created?.key === key ? created.id : null;
-      if (!bookingId) {
-        const { data: bookingRes } = await api.post('/bookings/house', {
-          houseId,
-          checkIn:  form.checkIn,
-          checkOut: form.checkOut,
-          guests:   Number(form.guests),
-        });
-        bookingId = bookingRes.booking._id;
-        setCreated({ key, id: bookingId });
-      }
-      const { data: payRes } = await api.post('/payments/checkout', { bookingId });
-      window.location.href = payRes.url;
+      await api.post('/bookings/house', {
+        houseId,
+        checkIn:  form.checkIn,
+        checkOut: form.checkOut,
+        guests:   Number(form.guests),
+      });
+      router.push('/my-bookings?requested=1');
     } catch (err) {
       setError(err.response?.data?.message || err.message);
       setSubmitting(false);
@@ -87,7 +74,7 @@ export default function HouseBookingPage() {
       <section className="bg-gradient-to-r from-brand-600 to-cyan-500 py-10 text-white">
         <div className="mx-auto max-w-3xl px-4 sm:px-6">
           <h1 className="text-3xl font-extrabold">Réserver la maison</h1>
-          <p className="mt-1 text-brand-50 text-sm">Paiement sécurisé via Chargily Pay</p>
+          <p className="mt-1 text-brand-50 text-sm">Demande de réservation · paiement sur place à l&apos;arrivée</p>
         </div>
       </section>
 
@@ -105,7 +92,7 @@ export default function HouseBookingPage() {
           <div className="grid gap-6 md:grid-cols-5">
 
             {/* ── Form (3/5) ── */}
-            <form onSubmit={pay} className="md:col-span-3 rounded-3xl bg-white p-7 shadow-card">
+            <form onSubmit={sendRequest} className="md:col-span-3 rounded-3xl bg-white p-7 shadow-card">
               <h2 className="mb-1 text-lg font-bold text-ink">{house.name}</h2>
               <p className="mb-6 text-sm text-gray-400">{house.type} · jusqu&apos;à {house.capacity} pers.</p>
 
@@ -151,7 +138,7 @@ export default function HouseBookingPage() {
                 />
               </div>
 
-              {/* Pay button */}
+              {/* Submit request */}
               <button
                 disabled={submitting || nights < 1}
                 className="relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-brand-500 to-cyan-400 py-3.5 font-bold text-white shadow-md transition hover:shadow-lg disabled:opacity-60"
@@ -159,24 +146,23 @@ export default function HouseBookingPage() {
                 {submitting ? (
                   <span className="flex items-center justify-center gap-2">
                     <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
-                    Redirection vers Chargily…
+                    Envoi de la demande…
                   </span>
                 ) : (
                   <span className="flex items-center justify-center gap-2">
-                    <CreditCard className="h-5 w-5" />
-                    Payer {nights > 0 ? formatDZD(totalAmount) : ''} via Chargily
+                    <Send className="h-5 w-5" />
+                    Envoyer la demande de réservation
                   </span>
                 )}
               </button>
 
-              {/* Payment badges */}
-              <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
-                <span className="flex items-center gap-1.5 rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600">
-                  <ShieldCheck className="h-3.5 w-3.5 text-green-500" /> Paiement sécurisé
-                </span>
-                <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700">💳 CIB</span>
-                <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-bold text-green-700">📱 EDAHABIA</span>
-                <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-500">🔒 Chargily Pay</span>
+              {/* How it works */}
+              <div className="mt-4 flex gap-2 rounded-xl bg-brand-50 px-4 py-3 text-xs leading-relaxed text-gray-600">
+                <Info className="mt-0.5 h-4 w-4 shrink-0 text-brand-500" aria-hidden="true" />
+                <p>
+                  Aucun paiement en ligne. Le propriétaire accepte ou refuse votre demande (sous 48 h au plus),
+                  puis vous réglez {nights > 0 ? formatDZD(totalAmount) : 'le séjour'} directement sur place à l&apos;arrivée.
+                </p>
               </div>
             </form>
 
@@ -190,30 +176,15 @@ export default function HouseBookingPage() {
 
               <div className="my-4 border-t border-dashed border-gray-100" />
 
-              <Row label="Sous-total"     value={nights > 0 ? formatDZD(baseAmount) : '—'} />
-              {COMMISSION > 0 && (
-              <div className="flex items-center justify-between py-1.5 text-sm">
-                <span className="text-amber-600 font-medium">Frais de service ({Math.round(COMMISSION * 100)}%)</span>
-                <span className="font-semibold text-amber-600">
-                  {nights > 0 ? `+ ${formatDZD(platformFee)}` : '—'}
-                </span>
-              </div>
-              )}
-
               <div className="my-4 border-t border-gray-200" />
 
               <div className="flex items-center justify-between">
-                <span className="font-bold text-ink">Total à payer</span>
+                <span className="font-bold text-ink">Total à régler sur place</span>
                 <span className="text-xl font-extrabold text-brand-600">
                   {nights > 0 ? formatDZD(totalAmount) : '—'}
                 </span>
               </div>
 
-              {nights > 0 && platformFee > 0 && (
-                <p className="mt-2 text-center text-[11px] text-gray-400">
-                  dont {formatDZD(platformFee)} de frais de service HotelsDZ
-                </p>
-              )}
             </div>
           </div>
         )}

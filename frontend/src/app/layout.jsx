@@ -3,7 +3,7 @@ import AuthInit from '@/components/AuthInit';
 import { JsonLd, SITE_NAME, SITE_URL } from '@/lib/seo';
 
 const DESCRIPTION =
-  "Réservez un hôtel, louez une maison ou achetez un bien immobilier dans les 69 wilayas d'Algérie. Annonces vérifiées, paiement en DZD via CIB / EDAHABIA.";
+  "Réservez un hôtel, louez une maison ou achetez un bien immobilier dans les 69 wilayas d'Algérie. Annonces vérifiées, réservation gratuite et paiement sur place.";
 
 export const metadata = {
   metadataBase: new URL(SITE_URL),

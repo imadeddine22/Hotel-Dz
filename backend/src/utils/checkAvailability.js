@@ -1,25 +1,22 @@
 import Booking from '../models/Booking.js';
 
 /**
- * How long an unpaid booking holds inventory while the customer goes through checkout.
- * Without a limit, abandoned checkouts would block rooms/houses forever.
+ * How long a booking request waits for the owner's answer while holding the dates.
+ * Without a limit, requests the owner never answers would block rooms/houses forever.
  */
-export const UNPAID_HOLD_MS = 30 * 60 * 1000;
+export const REQUEST_HOLD_MS = 48 * 60 * 60 * 1000;
 
-/** Bookings that currently hold inventory: confirmed, paid, or unpaid but still within the hold window. */
+/** Bookings that currently hold inventory: confirmed, or pending and still within the hold window. */
 export const holdingInventory = () => ({
   $or: [
     { status: 'confirmed' },
-    { status: 'pending', paymentStatus: 'paid' },
-    { status: 'pending', createdAt: { $gt: new Date(Date.now() - UNPAID_HOLD_MS) } },
+    { status: 'pending', createdAt: { $gt: new Date(Date.now() - REQUEST_HOLD_MS) } },
   ],
 });
 
-/** True when an unpaid pending booking's hold has run out (its dates may have been re-sold). */
-export const holdExpired = (booking) =>
-  booking.status === 'pending' &&
-  booking.paymentStatus !== 'paid' &&
-  Date.now() - new Date(booking.createdAt).getTime() > UNPAID_HOLD_MS;
+/** True when a pending request was left unanswered past the hold window (its dates may have been taken). */
+export const requestExpired = (booking) =>
+  booking.status === 'pending' && Date.now() - new Date(booking.createdAt).getTime() > REQUEST_HOLD_MS;
 
 /**
  * Count bookings for a room that overlap the [checkIn, checkOut) range.

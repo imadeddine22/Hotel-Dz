@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Building2, ShieldCheck, CreditCard, MapPin, Star, Users } from 'lucide-react';
+import { Building2, ShieldCheck, Banknote, MapPin, Star, Users } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
@@ -7,7 +7,7 @@ export const metadata = {
   title: 'À propos',
   alternates: { canonical: '/about' },
   description:
-    "HotelsDZ connecte les hôteliers algériens aux voyageurs : réservation simple, paiement en DZD, hôtels vérifiés dans les 69 wilayas.",
+    "HotelsDZ connecte les hôteliers algériens aux voyageurs : réservation simple et gratuite, paiement sur place, hôtels vérifiés dans les 69 wilayas.",
 };
 
 const VALUES = [
@@ -17,9 +17,9 @@ const VALUES = [
     text: "Chaque établissement est examiné et approuvé par notre équipe avant d'être publié sur la plateforme.",
   },
   {
-    icon: CreditCard,
-    title: 'Paiement en DZD',
-    text: 'Payez en toute sécurité avec votre carte CIB ou EDAHABIA via Chargily Pay — sans devise étrangère.',
+    icon: Banknote,
+    title: 'Paiement sur place',
+    text: 'Aucun paiement en ligne : l’établissement confirme votre demande et vous réglez en dinars à votre arrivée.',
   },
   {
     icon: MapPin,
@@ -61,7 +61,7 @@ export default function AboutPage() {
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-lg text-gray-200">
             HotelsDZ connecte les hôteliers d&apos;Algérie aux voyageurs qui cherchent
-            une adresse de confiance — réservation en ligne, paiement en dinar, avis vérifiés.
+            une adresse de confiance — réservation en ligne, paiement sur place, avis vérifiés.
           </p>
         </div>
       </section>

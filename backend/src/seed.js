@@ -13,7 +13,6 @@ import Hotel from './models/Hotel.js';
 import House from './models/House.js';
 import Room from './models/Room.js';
 import Booking from './models/Booking.js';
-import Payment from './models/Payment.js';
 import Review from './models/Review.js';
 import Message from './models/Message.js';
 
@@ -64,7 +63,7 @@ export const seedDatabase = async () => {
   // Wipe
   await Promise.all([
     User.deleteMany({}), Hotel.deleteMany({}), House.deleteMany({}), Room.deleteMany({}),
-    Booking.deleteMany({}), Payment.deleteMany({}), Review.deleteMany({}), Message.deleteMany({}),
+    Booking.deleteMany({}), Review.deleteMany({}), Message.deleteMany({}),
   ]);
 
   // --- Users ---
@@ -137,7 +136,7 @@ export const seedDatabase = async () => {
   await fav.save();
   console.log(`❤️  Favorites: ${fav.favoriteHotels.length} hotels + ${fav.favoriteHouses.length} houses for ${fav.email}`);
 
-  // --- Bookings + Payments spread over the last 6 months ---
+  // --- Bookings spread over the last 6 months ---
   const statuses = ['confirmed', 'confirmed', 'confirmed', 'completed', 'pending', 'cancelled'];
   let bookingCount = 0;
   for (let m = 5; m >= 0; m--) {
@@ -158,27 +157,23 @@ export const seedDatabase = async () => {
       const checkOut = new Date(checkIn); checkOut.setDate(checkOut.getDate() + nights);
       const status = rand(statuses);
       const totalPrice = nights * room.pricePerNight;
+      // Paid on site: only stays that are confirmed/completed are marked paid by the owner
       const paid = status === 'confirmed' || status === 'completed';
 
       const booking = await Booking.create({
         customer: customer._id, hotel: hotel._id, room: room._id,
         checkIn, checkOut, nights, guests: 1 + Math.floor(Math.random() * 2),
         totalPrice, status, paymentStatus: paid ? 'paid' : 'unpaid',
-      });
-      const payment = await Payment.create({
-        booking: booking._id, customer: customer._id, amount: totalPrice,
-        currency: 'dzd', method: rand(['cib', 'edahabia']),
-        status: paid ? 'paid' : 'pending',
+        ...(paid && { paidAt: created }),
       });
       // Force the historical createdAt via the raw driver — Mongoose marks
       // the timestamps `createdAt` as immutable, so $set through the model
       // is dropped. The native collection bypasses that, so the charts populate.
       await Booking.collection.updateOne({ _id: booking._id }, { $set: { createdAt: created } });
-      await Payment.collection.updateOne({ _id: payment._id }, { $set: { createdAt: created } });
       bookingCount++;
     }
   }
-  console.log(`📅 Bookings + payments: ${bookingCount}`);
+  console.log(`📅 Bookings: ${bookingCount}`);
 
   console.log('\n✅ Seed complete!\n');
   console.log('   Admin   →  admin@hotelsdz.dz  /  admin123');

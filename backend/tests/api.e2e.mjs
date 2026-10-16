@@ -5,7 +5,6 @@
  *   SMTP_HOST= npm run dev:local        # terminal 1
  *   node tests/api.e2e.mjs              # terminal 2   (API_URL defaults to http://localhost:5000/api/v1)
  *
- * Set CHARGILY_E2E=1 to also create a real Chargily *test-mode* checkout.
  */
 const API = process.env.API_URL || 'http://localhost:5000/api/v1';
 if (/onrender\.com|vercel\.app/.test(API)) {
@@ -178,9 +177,9 @@ let hotelBookingId;
   check("other customer can't see it", !other.data.bookings?.some((x) => x._id === hotelBookingId));
 
   expectStatus("other customer can't cancel it", await req('PUT', `/bookings/${hotelBookingId}/cancel`, { token: customer2.token }), 403);
-  expectStatus("other customer can't pay it", await req('POST', '/payments/checkout', { token: customer2.token, body: { bookingId: hotelBookingId } }), 403);
-  expectStatus("other customer can't retry its payment", await req('POST', `/payments/retry/${hotelBookingId}`, { token: customer2.token }), 403);
-  expectStatus("other customer can't read its payment", await req('GET', `/payments/${hotelBookingId}`, { token: customer2.token }), [403, 404].includes((await req('GET', `/payments/${hotelBookingId}`, { token: customer2.token })).status) ? (await req('GET', `/payments/${hotelBookingId}`, { token: customer2.token })).status : 403);
+  expectStatus('customer cannot confirm a booking', await req('PUT', `/bookings/${hotelBookingId}/confirm`, { token: customer.token }), 403);
+  expectStatus('customer cannot mark a booking paid', await req('PUT', `/bookings/${hotelBookingId}/paid`, { token: customer.token }), 403);
+  expectStatus('online payment API is gone', await req('POST', '/payments/checkout', { token: customer.token, body: { bookingId: hotelBookingId } }), 404);
 
   // Unpaid booking must not allow a review
   const rev = await req('POST', `/hotels/${approvedHotel._id}/reviews`, { token: customer.token, body: { bookingId: hotelBookingId, rating: 5, comment: 'Top' } });
@@ -198,7 +197,7 @@ let hotelBookingId;
   const cancel = await req('PUT', `/bookings/${hotelBookingId}/cancel`, { token: customer.token });
   check('cancel own booking', cancel.data.booking?.status === 'cancelled');
   expectStatus('cancel twice → 400', await req('PUT', `/bookings/${hotelBookingId}/cancel`, { token: customer.token }), 400);
-  expectStatus('cannot pay a cancelled booking', await req('POST', '/payments/checkout', { token: customer.token, body: { bookingId: hotelBookingId } }), 400);
+  expectStatus('owner cannot confirm a cancelled booking', await req('PUT', `/bookings/${hotelBookingId}/confirm`, { token: ownerToken }), 400);
 
   // Seeded customer has stays in the past: those can no longer be cancelled (and marked refunded)
   const saraBookings = (await req('GET', '/bookings/my', { token: sara })).data.bookings || [];
@@ -286,6 +285,28 @@ let newHotelId;
 
   const editH = await req('PUT', `/hotels/${newHotelId}`, { token: owner2.token, form: { description: 'Nouvelle description' } });
   check('edit own hotel', editH.data.hotel?.description === 'Nouvelle description');
+
+  // Booking requests: the property owner accepts/refuses them and records on-site payment
+  const reqA = await req('POST', '/bookings', { token: customer.token, body: { roomId: room._id, checkIn: day(80), checkOut: day(82) } });
+  const idA = reqA.data.booking?._id;
+  expectStatus("another owner can't confirm the request", await req('PUT', `/bookings/${idA}/confirm`, { token: owner2.token }), 403);
+  expectStatus("another owner can't refuse the request", await req('PUT', `/bookings/${idA}/reject`, { token: owner2.token, body: { reason: 'x' } }), 403);
+  expectStatus('cannot mark a pending request as paid', await req('PUT', `/bookings/${idA}/paid`, { token: ownerToken }), 400);
+  const rej = await req('PUT', `/bookings/${idA}/reject`, { token: ownerToken, body: { reason: 'Complet à ces dates' } });
+  check('owner refuses a request with a reason', rej.data.booking?.status === 'cancelled' && rej.data.booking?.rejectionReason === 'Complet à ces dates');
+  check('customer sees the refusal reason', (await req('GET', '/bookings/my', { token: customer.token })).data.bookings?.find((x) => x._id === idA)?.rejectionReason === 'Complet à ces dates');
+
+  const reqB = await req('POST', '/bookings', { token: customer.token, body: { roomId: room._id, checkIn: day(84), checkOut: day(86) } });
+  const idB = reqB.data.booking?._id;
+  const conf = await req('PUT', `/bookings/${idB}/confirm`, { token: ownerToken });
+  check('owner accepts a request', conf.data.booking?.status === 'confirmed' && conf.data.booking?.paymentStatus === 'unpaid');
+  expectStatus('cannot accept twice', await req('PUT', `/bookings/${idB}/confirm`, { token: ownerToken }), 400);
+  expectStatus('cannot refuse an accepted booking', await req('PUT', `/bookings/${idB}/reject`, { token: ownerToken, body: { reason: 'x' } }), 400);
+  const paid = await req('PUT', `/bookings/${idB}/paid`, { token: ownerToken });
+  check('owner marks the stay as paid on site', paid.data.booking?.paymentStatus === 'paid' && Boolean(paid.data.booking?.paidAt));
+  expectStatus('cannot mark paid twice', await req('PUT', `/bookings/${idB}/paid`, { token: ownerToken }), 400);
+  expectStatus('paid stay unlocks a review', await req('POST', `/hotels/${approvedHotel._id}/reviews`, { token: customer.token, body: { bookingId: idB, rating: 4, comment: 'Très bien' } }), 201);
+  expectStatus('admin can also confirm requests', await req('PUT', `/bookings/${(await req('POST', '/bookings', { token: customer.token, body: { roomId: room._id, checkIn: day(88), checkOut: day(89) } })).data.booking?._id}/confirm`, { token: adminToken }), 200);
 
   // Demo owner: stats & bookings
   const stats = await req('GET', '/owner/stats', { token: ownerToken });
@@ -414,21 +435,10 @@ describe('Admin');
   expectStatus('admin deletes user', await req('DELETE', `/admin/users/${customer2.user._id}`, { token: adminToken }), 200);
 }
 
-// ───────────────────────────────────────────────────────────────
-if (process.env.CHARGILY_E2E) {
-  describe('Payment (Chargily test mode)');
-  const house = (await req('GET', '/houses?limit=50')).data.houses.at(-1);
-  const b = await req('POST', '/bookings/house', { token: customer.token, body: { houseId: house._id, checkIn: day(90), checkOut: day(92) } });
-  const co = await req('POST', '/payments/checkout', { token: customer.token, body: { bookingId: b.data.booking?._id } });
-  check('checkout URL returned', typeof co.data.url === 'string', co.data.message);
-  const st = await req('GET', `/payments/${b.data.booking?._id}`, { token: customer.token });
-  check('payment is pending', st.data.payment?.status === 'pending');
-}
-
-describe('Webhook security');
+describe('No online payment');
 {
-  const r = await fetch(`${API}/payments/webhook`, { method: 'POST', headers: { signature: 'bad' }, body: JSON.stringify({ type: 'checkout.paid', data: {} }) });
-  check('webhook with bad signature rejected', r.status === 403);
+  const r = await fetch(`${API}/payments/webhook`, { method: 'POST', body: '{}' });
+  check('payment webhook endpoint removed', r.status === 404);
 }
 
 console.log(`\n${passed} passed, ${failures.length} failed`);

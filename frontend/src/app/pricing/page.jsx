@@ -10,7 +10,7 @@ import api from '@/lib/api';
 const FAQS = [
   {
     q: "Quels sont les modes de paiement acceptés ?",
-    a: "Nous acceptons les paiements sécurisés par carte CIB et Edahabia pour tous les abonnements. Vous pouvez également payer par virement ou versement CCP si nécessaire."
+    a: "Les abonnements se règlent par virement bancaire ou versement CCP. Contactez-nous depuis la page Contact pour recevoir les coordonnées de paiement."
   },
   {
     q: "Puis-je changer de plan ou annuler mon abonnement à tout moment ?",

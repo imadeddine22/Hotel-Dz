@@ -31,8 +31,11 @@ Page complète : ${SITE_URL}/pricing
 - Photos par annonce : illimitées
 - Inclus : tout Growth + badge de profil vérifié, statistiques Pro avec export, accès API et synchronisation iCal
 
-## Paiement
-- Moyens acceptés : carte CIB et EDAHABIA (via Chargily)
+## Paiement des abonnements
+- Par virement bancaire ou versement CCP (coordonnées sur demande via ${SITE_URL}/contact)
+
+## Réservations des voyageurs
+- Gratuites : le voyageur envoie une demande, l'établissement l'accepte, le paiement se fait sur place à l'arrivée
 `;
   return new Response(body, { headers: { 'Content-Type': 'text/markdown; charset=utf-8' } });
 }
