@@ -14,7 +14,7 @@ const TESTIMONIALS = [
     avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&h=150&q=80"
   },
   {
-    text: "Excellent service ! L'équipe de HotelsDZ a géré notre dossier d'enregistrement de A à Z avec brio. Aucun frais caché et beaucoup de sérieux.",
+    text: "Excellent service ! L'équipe de Meskan dz a géré notre dossier d'enregistrement de A à Z avec brio. Aucun frais caché et beaucoup de sérieux.",
     rating: '4.9/5.0',
     stars: 5,
     name: "Faris Benkaci",
@@ -61,7 +61,7 @@ export default function HomeDetailsSection() {
         <div className="relative mt-12 rounded-3xl overflow-hidden shadow-lg aspect-[16/9] max-h-[460px] w-full">
           <img
             src="https://images.unsplash.com/photo-1556761175-b413da4baf72?w=1200&q=80"
-            alt="HotelsDZ Team"
+            alt="Meskan dz Team"
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-slate-900/10"></div>

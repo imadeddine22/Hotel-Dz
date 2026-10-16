@@ -9,7 +9,7 @@ export default function robots() {
   return {
     rules: [
       { userAgent: '*', allow: '/', disallow: PRIVATE },
-      // AI search / answer engines: allowed so HotelsDZ can be cited in AI answers.
+      // AI search / answer engines: allowed so Meskan dz can be cited in AI answers.
       {
         userAgent: ['GPTBot', 'ChatGPT-User', 'OAI-SearchBot', 'PerplexityBot', 'ClaudeBot', 'Claude-SearchBot', 'anthropic-ai', 'Google-Extended', 'Bingbot'],
         allow: '/',

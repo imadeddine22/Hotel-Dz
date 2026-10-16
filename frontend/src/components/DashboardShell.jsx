@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import Link from 'next/link';
+import BrandLogo from '@/components/BrandLogo';
 import { usePathname, useRouter } from 'next/navigation';
 import { LayoutDashboard, Hotel, CalendarCheck, Users, CheckSquare, LogOut, Home, Mail, Globe, Tag } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
@@ -53,11 +54,8 @@ export default function DashboardShell({ role, title, children }) {
     <div className="flex min-h-screen bg-[#f3f4f8] font-sans text-gray-800">
       {/* Sidebar */}
       <aside className="hidden w-64 shrink-0 flex-col bg-white px-5 py-6 md:flex border-r border-gray-100">
-        <Link href="/" className="mb-10 flex items-center gap-3 px-2">
-          <div className="grid h-9 w-9 place-items-center rounded-xl bg-indigo-600 text-white shadow-md shadow-indigo-200">
-            <Hotel className="h-5 w-5" />
-          </div>
-          <span className="text-xl font-bold text-gray-900 tracking-tight">hotels<span className="text-indigo-600">dz</span></span>
+        <Link href="/" className="mb-10 flex items-center px-2">
+          <BrandLogo className="h-10" />
         </Link>
 
         <p className="px-3 text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Menu</p>

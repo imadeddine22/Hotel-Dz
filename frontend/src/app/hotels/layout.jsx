@@ -1,5 +1,5 @@
 export const metadata = {
-  title: { default: 'Hôtels en Algérie — Réservez dans les 69 wilayas', template: '%s | HotelsDZ' },
+  title: { default: 'Hôtels en Algérie — Réservez dans les 69 wilayas', template: '%s | Meskan dz' },
   description: "Comparez les hôtels vérifiés d'Alger, Oran, Constantine, Béjaïa et de toute l'Algérie. Avis clients, prix en dinars, réservation gratuite et paiement sur place.",
   alternates: { canonical: '/hotels' },
 };

@@ -35,22 +35,22 @@ async function getWilayaStats(name) {
 function buildFaqs(name, info, s) {
   const faqs = [
     {
-      q: `Combien d'hôtels sont disponibles à ${name} sur HotelsDZ ?`,
+      q: `Combien d'hôtels sont disponibles à ${name} sur Meskan dz ?`,
       a: s.hotels
-        ? `HotelsDZ référence actuellement ${s.hotels} hôtel${s.hotels > 1 ? 's' : ''} vérifié${s.hotels > 1 ? 's' : ''} dans la wilaya de ${name}, réservables en ligne gratuitement, avec paiement sur place à l'arrivée.`
-        : `Aucun hôtel n'est encore publié à ${name}. Les hôteliers de la wilaya peuvent inscrire leur établissement gratuitement sur HotelsDZ.`,
+        ? `Meskan dz référence actuellement ${s.hotels} hôtel${s.hotels > 1 ? 's' : ''} vérifié${s.hotels > 1 ? 's' : ''} dans la wilaya de ${name}, réservables en ligne gratuitement, avec paiement sur place à l'arrivée.`
+        : `Aucun hôtel n'est encore publié à ${name}. Les hôteliers de la wilaya peuvent inscrire leur établissement gratuitement sur Meskan dz.`,
     },
     {
       q: `Quel est le prix d'une location de maison à ${name} ?`,
       a: s.medianNight
-        ? `Le prix médian d'une maison ou d'un appartement en location à ${name} est de ${formatDZD(s.medianNight)} par nuit, calculé sur les ${s.houses} annonces publiées sur HotelsDZ.`
+        ? `Le prix médian d'une maison ou d'un appartement en location à ${name} est de ${formatDZD(s.medianNight)} par nuit, calculé sur les ${s.houses} annonces publiées sur Meskan dz.`
         : `Il n'y a pas encore assez d'annonces de location à ${name} pour calculer un prix moyen. Consultez la page régulièrement : de nouvelles maisons sont ajoutées chaque semaine.`,
     },
     {
-      q: `Peut-on acheter un bien immobilier à ${name} via HotelsDZ ?`,
+      q: `Peut-on acheter un bien immobilier à ${name} via Meskan dz ?`,
       a: s.sales
         ? `Oui, ${s.sales} bien${s.sales > 1 ? 's' : ''} à vendre ${s.sales > 1 ? 'sont' : 'est'} publié${s.sales > 1 ? 's' : ''} à ${name}${s.medianSale ? `, pour un prix médian de ${formatDZD(s.medianSale)}` : ''}. Chaque annonce est validée par notre équipe et le vendeur est contactable directement.`
-        : `Aucun bien n'est actuellement en vente à ${name}. Les vendeurs peuvent publier une annonce après inscription sur HotelsDZ.`,
+        : `Aucun bien n'est actuellement en vente à ${name}. Les vendeurs peuvent publier une annonce après inscription sur Meskan dz.`,
     },
   ];
   if (info) {
@@ -77,8 +77,8 @@ export async function generateMetadata({ params }) {
   return {
     title: `Hôtels, locations et maisons à vendre à ${displayName}`,
     description: parts.length
-      ? `${parts.join(', ')} à ${displayName}. Comparez les prix, lisez les avis et réservez gratuitement en ligne, paiement sur place, sur HotelsDZ.`
-      : `Trouvez un hôtel, une maison à louer ou un bien à acheter à ${displayName}. Réservation en ligne gratuite et paiement sur place sur HotelsDZ.`,
+      ? `${parts.join(', ')} à ${displayName}. Comparez les prix, lisez les avis et réservez gratuitement en ligne, paiement sur place, sur Meskan dz.`
+      : `Trouvez un hôtel, une maison à louer ou un bien à acheter à ${displayName}. Réservation en ligne gratuite et paiement sur place sur Meskan dz.`,
     alternates: { canonical: wilayaPath(displayName) },
     // Unknown wilaya, or no listings and no editorial content: keep it out of the index.
     robots: !info || (s.reachable && total === 0 && !info.highlights.length) ? { index: false, follow: true } : undefined,
@@ -123,8 +123,8 @@ export default async function WilayaPage({ params }) {
         <p className="mt-3 max-w-3xl leading-relaxed">
           {info ? `${displayName} est la wilaya n°${info.code} d'Algérie, dans la région ${info.region.label}. ` : ''}
           {s.hotels + s.houses + s.sales > 0
-            ? `Sur HotelsDZ, vous y trouvez ${s.hotels} hôtel${s.hotels > 1 ? 's' : ''}, ${s.houses} maison${s.houses > 1 ? 's' : ''} à louer et ${s.sales} bien${s.sales > 1 ? 's' : ''} à vendre, tous vérifiés par notre équipe.`
-            : `Les premières annonces de ${displayName} arrivent bientôt sur HotelsDZ. Hôteliers, propriétaires et vendeurs de la wilaya peuvent publier leur annonce dès maintenant.`}
+            ? `Sur Meskan dz, vous y trouvez ${s.hotels} hôtel${s.hotels > 1 ? 's' : ''}, ${s.houses} maison${s.houses > 1 ? 's' : ''} à louer et ${s.sales} bien${s.sales > 1 ? 's' : ''} à vendre, tous vérifiés par notre équipe.`
+            : `Les premières annonces de ${displayName} arrivent bientôt sur Meskan dz. Hôteliers, propriétaires et vendeurs de la wilaya peuvent publier leur annonce dès maintenant.`}
           {s.cities.length > 0 && ` Annonces disponibles notamment à ${s.cities.join(', ')}.`}
         </p>
 

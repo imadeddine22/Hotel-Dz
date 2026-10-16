@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import BrandLogo from '@/components/BrandLogo';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
@@ -77,12 +78,7 @@ export default function AdminLayout({ children }) {
       <aside className={`admin-sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="admin-sidebar-header">
           <Link href="/" className="admin-logo">
-            <span className="admin-logo-icon">
-              <Hotel className="w-5 h-5" />
-            </span>
-            <span className="admin-logo-text">
-              hotels<span className="admin-logo-accent">dz</span>
-            </span>
+            <BrandLogo className="h-9" />
           </Link>
           <button className="admin-sidebar-close" onClick={() => setSidebarOpen(false)}>
             <X className="w-5 h-5" />

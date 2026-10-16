@@ -64,7 +64,7 @@ const CONTENT = {
         a: "Restez prudent : un logement de vacances est rarement loué toute l'année. Sur le littoral, la demande se concentre en été ; dans le Sud, d'octobre à avril. Testez plusieurs hypothèses, par exemple 30 %, 40 % et 60 %.",
       },
       {
-        q: 'HotelsDZ prend-il une commission sur les locations ?',
+        q: 'Meskan dz prend-il une commission sur les locations ?',
         a: 'Consultez la page Tarifs pour connaître les formules en vigueur pour les propriétaires. Si une commission s’applique, ajoutez-la à vos charges mensuelles dans le calculateur.',
       },
     ],
@@ -92,7 +92,7 @@ const CONTENT = {
         a: 'Un séjour de 5 nuits couvre 6 jours, du jour d’arrivée au jour de départ. Le calculateur compte donc les repas sur nuits + 1 jours.',
       },
       {
-        q: 'Comment se paie un hébergement réservé sur HotelsDZ ?',
+        q: 'Comment se paie un hébergement réservé sur Meskan dz ?',
         a: 'La réservation est gratuite : l’établissement confirme votre demande, puis vous payez en dinars directement sur place à votre arrivée.',
       },
     ],

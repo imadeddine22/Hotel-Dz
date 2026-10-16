@@ -10,7 +10,7 @@ export async function generateMetadata({ params }) {
   const title = `${house.type || 'Maison'} à louer à ${house.city} — ${house.name}`;
   const description =
     truncate(house.description, 155) ||
-    `${house.name} à ${house.city} (${house.wilaya}) : ${house.rooms} chambre(s), jusqu'à ${house.capacity} personnes, ${formatDZD(house.pricePerNight)} / nuit. Réservez sur HotelsDZ.`;
+    `${house.name} à ${house.city} (${house.wilaya}) : ${house.rooms} chambre(s), jusqu'à ${house.capacity} personnes, ${formatDZD(house.pricePerNight)} / nuit. Réservez sur Meskan dz.`;
   const images = (house.images || []).slice(0, 1).map(absoluteImage);
 
   return {

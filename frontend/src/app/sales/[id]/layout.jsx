@@ -11,7 +11,7 @@ export async function generateMetadata({ params }) {
   const title = `${listing.type}${area} à vendre à ${listing.city} — ${formatDZD(listing.price)}`;
   const description =
     truncate(listing.description, 155) ||
-    `${listing.title} à ${listing.city} (${listing.wilaya}) : ${listing.rooms} pièce(s), ${formatDZD(listing.price)}. Réf. ${listing.reference}. Contactez le vendeur sur HotelsDZ.`;
+    `${listing.title} à ${listing.city} (${listing.wilaya}) : ${listing.rooms} pièce(s), ${formatDZD(listing.price)}. Réf. ${listing.reference}. Contactez le vendeur sur Meskan dz.`;
   const images = (listing.images || []).slice(0, 1).map(absoluteImage);
 
   return {

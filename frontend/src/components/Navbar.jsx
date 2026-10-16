@@ -3,10 +3,12 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ChevronDown, Menu, X, Heart, Building2, User, Globe } from 'lucide-react';
+import { ChevronDown, Menu, X, Heart, User, Globe } from 'lucide-react';
 import { useAuthStore, useLangStore } from '@/store/authStore';
 import { useFavoritesStore } from '@/store/favoritesStore';
 import { TRANSLATIONS } from '@/lib/data';
+import BrandLogo from '@/components/BrandLogo';
+import { SITE_NAME } from '@/lib/brand';
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
@@ -86,18 +88,8 @@ export default function Navbar() {
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         
         {/* Left: Brand Logo */}
-        <Link href="/" className="flex items-center gap-3 shrink-0 group">
-          <span className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-br from-sky-400 to-brand-600 text-white shadow-md shadow-brand-500/20 group-hover:scale-105 transition-transform duration-300">
-            <Building2 className="h-6 w-6" />
-          </span>
-          <div className="flex flex-col">
-            <span className="text-2xl font-extrabold tracking-tight text-gray-900 leading-none">
-              hotels<span className="text-brand-500">dz</span>
-            </span>
-            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] leading-none mt-1">
-              {t.tagline}
-            </span>
-          </div>
+        <Link href="/" className="flex items-center shrink-0 group" aria-label={`${SITE_NAME} — ${t.tagline}`}>
+          <BrandLogo className="h-10 sm:h-11 transition-transform duration-300 group-hover:scale-[1.03]" alt="" priority />
         </Link>
 
         {/* Center: Navigation Links */}

@@ -37,7 +37,7 @@ const start = async () => {
 
   const app = (await import('./src/app.js')).default;
   app.listen(PORT, () => {
-    console.log(`🚀 DzHotels API (LOCAL in-memory DB) on port ${PORT}`);
+    console.log(`🚀 Meskan dz API (LOCAL in-memory DB) on port ${PORT}`);
     console.log('   Login → admin@hotelsdz.dz / admin123');
   });
 

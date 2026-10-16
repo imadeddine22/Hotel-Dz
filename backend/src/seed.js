@@ -68,7 +68,7 @@ export const seedDatabase = async () => {
 
   // --- Users ---
   const admin = await User.create({
-    fullName: 'Admin HotelsDZ', email: 'admin@hotelsdz.dz', password: 'admin123',
+    fullName: 'Admin Meskan dz', email: 'admin@hotelsdz.dz', password: 'admin123',
     phone: '0550000000', role: 'admin', isVerified: true,
   });
   const owner = await User.create({

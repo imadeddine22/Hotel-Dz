@@ -7,7 +7,7 @@ export const metadata = {
   title: 'À propos',
   alternates: { canonical: '/about' },
   description:
-    "HotelsDZ connecte les hôteliers algériens aux voyageurs : réservation simple et gratuite, paiement sur place, hôtels vérifiés dans les 69 wilayas.",
+    "Meskan dz connecte les hôteliers algériens aux voyageurs : réservation simple et gratuite, paiement sur place, hôtels vérifiés dans les 69 wilayas.",
 };
 
 const VALUES = [
@@ -60,7 +60,7 @@ export default function AboutPage() {
             Le séjour algérien, <span className="text-brand-400">simplifié</span>
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-lg text-gray-200">
-            HotelsDZ connecte les hôteliers d&apos;Algérie aux voyageurs qui cherchent
+            Meskan dz connecte les hôteliers d&apos;Algérie aux voyageurs qui cherchent
             une adresse de confiance — réservation en ligne, paiement sur place, avis vérifiés.
           </p>
         </div>
@@ -86,7 +86,7 @@ export default function AboutPage() {
             <p className="mt-4 leading-relaxed text-gray-600">
               Le tourisme algérien mérite des outils modernes. Trop d&apos;hôtels
               n&apos;existent pas en ligne, et trop de voyageurs réservent encore
-              par téléphone, sans garantie. HotelsDZ change cela : une vitrine
+              par téléphone, sans garantie. Meskan dz change cela : une vitrine
               professionnelle pour chaque hôtelier, et une réservation transparente
               pour chaque client.
             </p>
@@ -126,7 +126,7 @@ export default function AboutPage() {
             <Building2 className="h-6 w-6" />
           </span>
           <div>
-            <h2 className="text-2xl font-extrabold text-ink">Pourquoi HotelsDZ ?</h2>
+            <h2 className="text-2xl font-extrabold text-ink">Pourquoi Meskan dz ?</h2>
             <p className="text-sm text-gray-500">Ce qui nous rend différents</p>
           </div>
         </div>
@@ -149,7 +149,7 @@ export default function AboutPage() {
           <Users className="h-10 w-10" />
           <h2 className="text-3xl font-extrabold">Rejoignez l&apos;aventure</h2>
           <p className="max-w-xl text-brand-50">
-            Que vous soyez voyageur ou hôtelier, HotelsDZ est fait pour vous.
+            Que vous soyez voyageur ou hôtelier, Meskan dz est fait pour vous.
             Créez votre compte en moins d&apos;une minute.
           </p>
           <Link

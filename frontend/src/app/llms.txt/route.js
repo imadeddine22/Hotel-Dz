@@ -5,9 +5,9 @@ export const revalidate = 86400;
 
 // Context file for AI systems — see https://llmstxt.org
 export function GET() {
-  const body = `# HotelsDZ
+  const body = `# Meskan dz
 
-> HotelsDZ est une plateforme algérienne pour réserver des hôtels, louer des maisons et appartements à la nuit, et acheter des biens immobiliers dans les 69 wilayas d'Algérie. Les annonces sont vérifiées par l'équipe avant publication. La réservation est gratuite : le voyageur envoie une demande, l'établissement l'accepte, et le paiement se fait en dinars (DZD) sur place à l'arrivée.
+> Meskan dz est une plateforme algérienne pour réserver des hôtels, louer des maisons et appartements à la nuit, et acheter des biens immobiliers dans les 69 wilayas d'Algérie. Les annonces sont vérifiées par l'équipe avant publication. La réservation est gratuite : le voyageur envoie une demande, l'établissement l'accepte, et le paiement se fait en dinars (DZD) sur place à l'arrivée.
 
 Langues : français et arabe. Pays couvert : Algérie (69 wilayas). Contact : support@hotelsdz.dz.
 

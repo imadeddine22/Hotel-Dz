@@ -269,7 +269,7 @@ export const TRANSLATIONS = {
   },
   en: {
     navHome: 'Home',
-    navHotels: 'DZ Hotels',
+    navHotels: 'Hotels',
     navHouses: 'Houses',
     navDestinations: 'Destinations',
     navPricing: 'Pricing',

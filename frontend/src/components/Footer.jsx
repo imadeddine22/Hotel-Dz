@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import BrandLogo from '@/components/BrandLogo';
 import { Mail, Phone, MapPin } from 'lucide-react';
 import { TRANSLATIONS } from '@/lib/data';
 import { useLangStore } from '@/store/authStore';
@@ -20,7 +21,7 @@ export default function Footer() {
       
       <div className="relative z-10 max-w-7xl mx-auto px-4 text-center pb-16">
         <h3 className="text-3xl md:text-5xl font-black font-serif text-white tracking-tight leading-tight">
-          {lang === 'ar' ? 'دع HotelsDZ يدير إقامتك' : 'Laissez HotelsDZ gérer vos séjours.'} <br />
+          {lang === 'ar' ? 'دع Meskan dz يدير إقامتك' : 'Laissez Meskan dz gérer vos séjours.'} <br />
           {lang === 'ar' ? 'ابدأ اليوم مجاناً وسهّل عملياتك' : 'Simplifiez vos réservations dès aujourd\'hui.'}
         </h3>
         <p className="text-slate-400 text-xs md:text-sm font-medium mt-4 max-w-md mx-auto leading-relaxed">
@@ -120,21 +121,13 @@ export default function Footer() {
         </nav>
 
         {/* ─── Massive Branding Watermark Logo at the Bottom ─── */}
-        <div className="mt-16 text-center select-none opacity-[0.04] hover:opacity-[0.08] transition duration-700">
-          <div aria-hidden="true" className="text-[5rem] md:text-[11rem] font-black font-serif tracking-tighter text-white flex items-center justify-center leading-none">
-            Hotels
-            <span className="inline-block mx-4 transform scale-75 md:scale-100">
-              <svg className="h-16 md:h-32 w-24 md:w-48 text-teal-400" viewBox="0 0 48 32" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round">
-                <path d="M16 8 C6 8, 6 24, 16 24 C22 24, 26 8, 32 8 C42 8, 42 24, 32 24 C26 24, 22 8, 16 8 Z" />
-              </svg>
-            </span>
-            DZ
-          </div>
+        <div aria-hidden="true" className="mt-16 flex justify-center select-none opacity-[0.06] transition duration-700 hover:opacity-[0.1]">
+          <BrandLogo variant="light" alt="" className="h-24 md:h-48" />
         </div>
 
         {/* Mini Bottom Bar */}
         <div className="border-t border-slate-900/60 py-6 text-center text-[10px] font-black uppercase tracking-widest text-slate-500">
-          © {new Date().getFullYear()} HotelsDZ. {t.copyright}
+          © {new Date().getFullYear()} Meskan dz. {t.copyright}
         </div>
 
       </div>

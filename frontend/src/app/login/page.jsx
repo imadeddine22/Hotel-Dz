@@ -3,6 +3,7 @@
 import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import BrandLogo from '@/components/BrandLogo';
 import { useAuthStore } from '@/store/authStore';
 
 export default function LoginPage() {
@@ -46,8 +47,8 @@ function LoginForm() {
   return (
     <div className="grid min-h-screen place-items-center bg-[var(--bg)] px-4">
       <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-card">
-        <Link href="/" className="mb-6 block text-center text-2xl font-extrabold text-ink">
-          hotels<span className="text-brand-500">dz</span>
+        <Link href="/" className="mb-6 flex justify-center">
+          <BrandLogo className="h-12" />
         </Link>
         <h1 className="mb-1 text-2xl font-bold text-ink">Connexion</h1>
         <p className="mb-6 text-sm text-gray-500">Accédez à votre compte</p>

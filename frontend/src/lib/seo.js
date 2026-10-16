@@ -5,7 +5,7 @@ export const SITE_URL = (
   process.env.NEXT_PUBLIC_SITE_URL || 'https://hotel-dz-three.vercel.app'
 ).replace(/\/$/, '');
 
-export const SITE_NAME = 'HotelsDZ';
+export { SITE_NAME } from './brand';
 
 const PRODUCTION_API = 'https://backend-yikc.onrender.com/api/v1';
 const PRODUCTION_SERVER = 'https://backend-yikc.onrender.com';
@@ -56,7 +56,7 @@ export const formatDZD = (n) =>
 
 /** Metadata for private / transactional pages that must never be indexed. */
 export const noIndex = (title) => ({
-  title: { default: title, template: '%s | HotelsDZ' },
+  title: { default: title, template: '%s | Meskan dz' },
   robots: { index: false, follow: false },
 });
 

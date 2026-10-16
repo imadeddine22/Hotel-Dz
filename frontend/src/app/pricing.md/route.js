@@ -8,7 +8,7 @@ export async function GET() {
     growthMonthlyPrice: 2900, growthYearlyPrice: 29000, proMonthlyPrice: 6900, proYearlyPrice: 69000,
   };
 
-  const body = `# Tarifs — HotelsDZ (propriétaires et vendeurs)
+  const body = `# Tarifs — Meskan dz (propriétaires et vendeurs)
 
 Les voyageurs réservent gratuitement ; les formules ci-dessous concernent les hôteliers, propriétaires et vendeurs qui publient des annonces. Prix en dinars algériens (DZD).
 Page complète : ${SITE_URL}/pricing

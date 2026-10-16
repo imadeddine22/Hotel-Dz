@@ -70,7 +70,7 @@ app.use('/uploads', (req, res, next) => {
 
 // --- Health check ---
 app.get('/api/v1/health', (req, res) => {
-  res.json({ success: true, message: 'DzHotels API is running', timestamp: new Date().toISOString() });
+  res.json({ success: true, message: 'Meskan dz API is running', timestamp: new Date().toISOString() });
 });
 
 // --- Routes ---
