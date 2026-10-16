@@ -1,7 +1,7 @@
 import House from '../models/House.js';
 import { uploadMany, destroyImage } from '../utils/cloudinaryUpload.js';
 import { parseCoordinates } from '../utils/parseCoordinates.js';
-import { searchRegex, wilayaRegex } from '../utils/searchRegex.js';
+import { searchRegex, wilayaRegex, placeFilter } from '../utils/searchRegex.js';
 import { canView } from '../middlewares/auth.middleware.js';
 
 // Fields an owner may set. Status, ratings and owner are server-controlled.
@@ -11,10 +11,12 @@ const pick = (body, keys) => Object.fromEntries(keys.filter((k) => body[k] !== u
 // GET /houses — public list of APPROVED houses with filters
 export const getHouses = async (req, res, next) => {
   try {
-    const { wilaya, city, type, minPrice, maxPrice, q, sort, page = 1, limit = 12 } = req.query;
+    const { wilaya, city, place, type, minPrice, maxPrice, q, sort, page = 1, limit = 12 } = req.query;
 
     const filter = { status: 'approved' };
     if (wilaya) filter.wilaya = wilayaRegex(wilaya);
+    const where = place && placeFilter(place); // undefined for blank input
+    if (where) (filter.$and = filter.$and || []).push(where);
     if (city) filter.city = searchRegex(city);
     if (type) filter.type = type;
     if (q) filter.name = searchRegex(q);

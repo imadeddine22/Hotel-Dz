@@ -42,3 +42,12 @@ const stripAccents = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '');
 
 /** Exact (anchored) case-insensitive match — for uniqueness checks. */
 export const exactRegex = (value) => new RegExp(`^${escapeRegex(String(value).trim())}$`, 'i');
+
+/**
+ * "Where?" search from the home page: the text may be a wilaya ("Béjaïa") or a
+ * commune/city ("Tichy", "Hydra"), so match either field, accent-insensitively.
+ */
+export const placeFilter = (value) => {
+  const rx = wilayaRegex(value);
+  return rx ? { $or: [{ wilaya: rx }, { city: rx }] } : undefined;
+};

@@ -1,24 +1,59 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Search, MapPin } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Search, MapPin, X } from 'lucide-react';
 import { QUICK_AREAS, TRANSLATIONS } from '@/lib/data';
 import { useLangStore } from '@/store/authStore';
+import { WILAYAS } from '@/lib/wilayas';
 
-export default function Hero() {
-  const router = useRouter();
+const SEARCH_DELAY_MS = 350;
+
+/**
+ * Home search. Filters the hotels / houses / sales sections of the home page
+ * in place (by wilaya or commune) while the user types, via `onSearch(place)`.
+ */
+export default function Hero({ value = '', onSearch }) {
   const { lang } = useLangStore();
   const t = TRANSLATIONS[lang] || TRANSLATIONS.fr;
 
-  const [wilaya, setWilaya] = useState('');
+  const [text, setText] = useState(value);
+  const timer = useRef(null);
+  const lastSent = useRef(value);
 
-  const handleSearch = (e) => {
+  const send = (next) => {
+    lastSent.current = next;
+    onSearch?.(next);
+  };
+
+  // Keep the input in sync when the place changes elsewhere (city cards, "clear", wilaya spelling fix),
+  // but not when it is just the echo of what we sent: that would erase letters typed since.
+  useEffect(() => {
+    if (value !== lastSent.current) setText(value);
+    lastSent.current = value;
+  }, [value]);
+  useEffect(() => () => clearTimeout(timer.current), []);
+
+  const scrollToResults = () =>
+    requestAnimationFrame(() => document.getElementById('search-results')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+
+  const apply = (next, { scroll = false } = {}) => {
+    clearTimeout(timer.current);
+    send(next.trim());
+    if (scroll && next.trim()) scrollToResults();
+  };
+
+  const onType = (next) => {
+    setText(next);
+    clearTimeout(timer.current);
+    // Live results: wait for a short pause, and ignore single letters
+    if (next.trim().length === 0 || next.trim().length >= 2) {
+      timer.current = setTimeout(() => send(next.trim()), SEARCH_DELAY_MS);
+    }
+  };
+
+  const handleSubmit = (e) => {
     e.preventDefault();
-    const params = new URLSearchParams();
-    if (wilaya.trim()) params.set('wilaya', wilaya.trim());
-
-    router.push(`/hotels?${params.toString()}`);
+    apply(text, { scroll: true });
   };
 
   return (
@@ -36,24 +71,41 @@ export default function Hero() {
 
         {/* Search Box */}
         <form
-          onSubmit={handleSearch}
+          onSubmit={handleSubmit}
+          role="search"
           className="mx-auto mt-8 max-w-4xl rounded-3xl bg-white p-4 shadow-xl ring-1 ring-gray-100 sm:p-6"
         >
           <div className="flex gap-4">
             {/* Wilaya / City */}
             <div className="flex-1">
-              <label className="mb-1 block text-xs font-bold text-gray-500">
+              <label htmlFor="hero-place" className="mb-1 block text-xs font-bold text-gray-500">
                 {t.searchDestination}
               </label>
               <div className="relative flex items-center">
-                <MapPin className="pointer-events-none absolute left-3 rtl:left-auto rtl:right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <MapPin className="pointer-events-none absolute left-3 rtl:left-auto rtl:right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" aria-hidden="true" />
                 <input
-                  type="text"
-                  value={wilaya}
-                  onChange={(e) => setWilaya(e.target.value)}
+                  id="hero-place"
+                  type="search"
+                  list="hero-wilayas"
+                  autoComplete="off"
+                  value={text}
+                  onChange={(e) => onType(e.target.value)}
                   placeholder={t.searchWilayaPlaceholder}
-                  className="w-full rounded-xl border border-gray-200 py-3 text-sm font-semibold outline-none focus:border-brand-500 rtl:pr-10 ltr:pl-10"
+                  className="w-full rounded-xl border border-gray-200 py-3 text-sm font-semibold outline-none focus:border-brand-500 rtl:pr-10 rtl:pl-10 ltr:pl-10 ltr:pr-10"
                 />
+                <datalist id="hero-wilayas">
+                  {WILAYAS.map((w) => <option key={w} value={w} />)}
+                </datalist>
+                {text && (
+                  <button
+                    type="button"
+                    onClick={() => { setText(''); apply(''); }}
+                    aria-label="Effacer la recherche"
+                    className="absolute right-2 rtl:right-auto rtl:left-2 grid h-8 w-8 place-items-center rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
               </div>
             </div>
 
@@ -75,8 +127,13 @@ export default function Hero() {
               <button
                 key={area}
                 type="button"
-                onClick={() => setWilaya(area)}
-                className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs font-semibold text-gray-600 hover:bg-brand-50 hover:text-brand-600 transition"
+                aria-pressed={value === area}
+                onClick={() => { setText(area); apply(area, { scroll: true }); }}
+                className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
+                  value === area
+                    ? 'border-brand-500 bg-brand-50 text-brand-600'
+                    : 'border-gray-200 bg-gray-50 text-gray-600 hover:bg-brand-50 hover:text-brand-600'
+                }`}
               >
                 {area}
               </button>

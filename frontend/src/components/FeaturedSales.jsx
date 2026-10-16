@@ -19,7 +19,7 @@ export default function FeaturedSales({ selectedCity }) {
   // Newest approved sale listings, filtered by the selected wilaya on the server
   useEffect(() => {
     const params = { limit: 6, sort: 'newest' };
-    if (selectedCity) params.wilaya = selectedCity;
+    if (selectedCity) params.place = selectedCity; // wilaya or commune
     api.get('/sales', { params })
       .then(({ data }) => setSales(data.listings || []))
       .catch(() => setSales([]))
@@ -49,7 +49,7 @@ export default function FeaturedSales({ selectedCity }) {
           </span>
           <div>
             <h2 style={{ fontSize: 22, fontWeight: 800, color: '#1e293b', margin: 0 }}>
-              {t.featuredSales || 'Biens à Vendre'}
+              {selectedCity && lang !== 'ar' ? `Biens à vendre · ${selectedCity}` : (t.featuredSales || 'Biens à Vendre')}
             </h2>
             <p style={{ fontSize: 13, color: '#94a3b8', margin: '2px 0 0' }}>
               {t.featuredSalesSubtitle || 'Achetez votre futur logement en Algérie'}
@@ -157,7 +157,7 @@ export default function FeaturedSales({ selectedCity }) {
             })
           ) : (
             <p style={{ padding: '40px 0', color: '#94a3b8', fontSize: 14 }}>
-              {t.noHousesCity || 'Aucun bien à vendre dans cette ville.'}
+              {`Aucun bien à vendre pour « ${selectedCity} » pour le moment.`}
             </p>
           )}
         </div>

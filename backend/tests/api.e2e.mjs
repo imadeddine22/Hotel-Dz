@@ -108,6 +108,15 @@ describe('Visitor (public pages)');
   const accented = await req('GET', `/hotels?wilaya=${encodeURIComponent('Béjaïa')}`);
   check('wilaya filter ignores accents', accent.data.total === accented.data.total);
 
+  // Home search "place" = wilaya OR commune, accent-insensitive
+  const byWilaya = await req('GET', `/houses?place=${encodeURIComponent('bejaia')}`);
+  check('place search matches a wilaya without accents', byWilaya.data.total >= 1 && byWilaya.data.houses.every((h) => h.wilaya === 'Béjaïa' || /b[eé]ja[iï]a/i.test(h.city)));
+  const anyHouse = (await req('GET', '/houses?limit=1')).data.houses[0];
+  const byCity = await req('GET', `/houses?place=${encodeURIComponent(anyHouse.city)}`);
+  check('place search matches a commune/city', byCity.data.houses.some((h) => h._id === anyHouse._id));
+  expectStatus('blank place is ignored', await req('GET', '/hotels?place=%20%20'), 200);
+  expectStatus('regex characters in place do not crash', await req('GET', `/hotels?place=${encodeURIComponent('(*[')}`), 200);
+
   expectStatus('pricing settings are public', await req('GET', '/pricing/prices'), 200);
   expectStatus('invalid hotel id → 404/400, not 500', { status: [400, 404].includes((await req('GET', '/hotels/not-an-id')).status) ? 404 : 500, data: {} }, 404);
   expectStatus('regex metacharacters in search do not crash', await req('GET', `/hotels?q=${encodeURIComponent('(*[')}`), 200);

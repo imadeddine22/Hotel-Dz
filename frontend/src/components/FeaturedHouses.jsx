@@ -30,7 +30,7 @@ export default function FeaturedHouses({ selectedCity }) {
   // Newest approved houses, filtered by the selected wilaya on the server
   useEffect(() => {
     const params = { limit: 6, sort: 'newest' };
-    if (selectedCity) params.wilaya = selectedCity;
+    if (selectedCity) params.place = selectedCity; // wilaya or commune
     api.get('/houses', { params })
       .then(({ data }) => setHouses(data.houses || []))
       .catch(() => setHouses([]))
@@ -59,7 +59,7 @@ export default function FeaturedHouses({ selectedCity }) {
             <Home size={22} />
           </span>
           <div>
-            <h2 style={{ fontSize: 22, fontWeight: 800, color: '#1e293b', margin: 0 }}>{t.featuredHouses}</h2>
+            <h2 style={{ fontSize: 22, fontWeight: 800, color: '#1e293b', margin: 0 }}>{selectedCity && lang !== 'ar' ? `Maisons à louer · ${selectedCity}` : t.featuredHouses}</h2>
             <p style={{ fontSize: 13, color: '#94a3b8', margin: '2px 0 0' }}>{t.featuredHousesSubtitle}</p>
           </div>
         </div>
@@ -163,7 +163,7 @@ export default function FeaturedHouses({ selectedCity }) {
               );
             })
           ) : (
-            <p style={{ padding: '40px 0', color: '#94a3b8', fontSize: 14 }}>Aucune maison disponible dans cette ville.</p>
+            <p style={{ padding: '40px 0', color: '#94a3b8', fontSize: 14 }}>Aucune maison à louer pour « {selectedCity} » pour le moment.</p>
           )}
         </div>
 

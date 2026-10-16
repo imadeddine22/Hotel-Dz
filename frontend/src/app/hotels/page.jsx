@@ -35,6 +35,12 @@ export default function HotelsPage() {
     }
   };
 
+  // Honour /hotels?wilaya=… links (the home search and wilaya pages used to link here and were ignored)
+  useEffect(() => {
+    const w = new URLSearchParams(window.location.search).get('wilaya');
+    if (w) setFilters((f) => ({ ...f, wilaya: w }));
+  }, []);
+
   useEffect(() => {
     fetchHotels();
     // eslint-disable-next-line react-hooks/exhaustive-deps

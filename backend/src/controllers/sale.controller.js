@@ -1,14 +1,16 @@
 import HouseForSale from '../models/HouseForSale.js';
-import { searchRegex, wilayaRegex } from '../utils/searchRegex.js';
+import { searchRegex, wilayaRegex, placeFilter } from '../utils/searchRegex.js';
 import { canView } from '../middlewares/auth.middleware.js';
 
 // GET /sales — public list of APPROVED sale listings with filters
 export const getListings = async (req, res, next) => {
   try {
-    const { wilaya, city, type, minPrice, maxPrice, priceRanges, reference, q, sort, order = 'desc', page = 1, limit = 12 } = req.query;
+    const { wilaya, city, place, type, minPrice, maxPrice, priceRanges, reference, q, sort, order = 'desc', page = 1, limit = 12 } = req.query;
 
     const filter = { status: 'approved' };
     if (wilaya) filter.wilaya = wilayaRegex(wilaya);
+    const where = place && placeFilter(place); // undefined for blank input
+    if (where) (filter.$and = filter.$and || []).push(where);
     if (city) filter.city = searchRegex(city);
     if (type && type !== 'Tous') filter.type = type;
     if (reference) filter.reference = searchRegex(reference);

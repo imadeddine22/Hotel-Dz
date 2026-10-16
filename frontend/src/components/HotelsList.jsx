@@ -36,7 +36,7 @@ function HotelsListContent({ selectedCity, onSelectCity }) {
     let alive = true;
     const params = { limit: 12 };
     if (active !== 'Tous') params.type = active;
-    if (wilaya) params.wilaya = wilaya;
+    if (wilaya) params.place = wilaya; // wilaya or commune
     api
       .get('/hotels', { params })
       .then(({ data }) => alive && setHotels((data.hotels || []).map(normalize)))
@@ -143,7 +143,7 @@ function HotelsListContent({ selectedCity, onSelectCity }) {
       )}
 
       {hotels.length === 0 && (
-        <p className="py-10 text-center text-gray-400">Aucun hôtel dans cette catégorie.</p>
+        <p className="py-10 text-center text-gray-400">{wilaya ? `Aucun hôtel pour « ${wilaya} » ${active !== 'Tous' ? 'dans cette catégorie ' : ''}pour le moment.` : 'Aucun hôtel dans cette catégorie.'}</p>
       )}
     </section>
   );
