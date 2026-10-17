@@ -54,6 +54,8 @@ export default function ProfilePage() {
       if (form.password) payload.password = form.password;
 
       const { data } = await api.put('/auth/update-profile', payload);
+      // changing the password revokes old tokens; the answer carries a fresh one
+      if (data.token) localStorage.setItem('token', data.token);
       useAuthStore.setState({ user: data.user });
       setForm((f) => ({ ...f, password: '', confirm: '' }));
       setSaved(true);

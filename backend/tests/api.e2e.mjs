@@ -715,6 +715,42 @@ describe('Rooms listed when adding a hotel');
   expectStatus('hotel without rooms still works', await req('POST', '/hotels', { token: hotelier.token, form: { ...base, name: `Sans chambres ${uid}` } }), 201);
 }
 
+describe('Forgot password and Google sign-in');
+{
+  const u = await register('customer');
+  const generic = 'If an account exists for this email, a reset link has been sent';
+  const unknown = await req('POST', '/auth/forgot-password', { body: { email: `nobody.${uid}@test.dz` } });
+  check('unknown email gets the same answer (no account discovery)', unknown.status === 200 && unknown.data.message === generic && !unknown.data.devResetUrl);
+
+  const fp = await req('POST', '/auth/forgot-password', { body: { email: u.email, lang: 'ar' } });
+  const link = fp.data.devResetUrl || '';
+  const token = new URL(link || 'http://x').searchParams.get('token') || '';
+  check('reset link created (dev: returned when SMTP is off)', fp.status === 200 && /\/reset-password\?token=[a-f0-9]{64}&lang=ar$/.test(link), link);
+  check('reset token never exposed on the user', !JSON.stringify(fp.data).includes('resetPassword'));
+
+  expectStatus('wrong reset token rejected', await req('POST', '/auth/reset-password', { body: { token: 'a'.repeat(64), password: 'nouveau123' } }), 400);
+  expectStatus('too short new password rejected', await req('POST', '/auth/reset-password', { body: { token, password: '123' } }), 400);
+
+  await new Promise((r) => setTimeout(r, 1100)); // JWT times are in seconds: the old token must be strictly older
+  const rp = await req('POST', '/auth/reset-password', { body: { token, password: 'nouveau123' } });
+  expectStatus('password reset with the emailed token', rp, 200);
+  check('reset logs the user in', Boolean(rp.data.token) && rp.data.user?.email === u.email);
+  check('new password works', Boolean(await login(u.email, 'nouveau123')));
+  check('old password no longer works', !(await login(u.email, 'secret123')));
+  expectStatus('sessions from before the reset are logged out', await req('GET', '/auth/me', { token: u.token }), 401);
+  expectStatus('new session works', await req('GET', '/auth/me', { token: rp.data.token }), 200);
+  expectStatus('reset link is single-use', await req('POST', '/auth/reset-password', { body: { token, password: 'encore123' } }), 400);
+
+  await new Promise((r) => setTimeout(r, 1100));
+  const up = await req('PUT', '/auth/update-profile', { token: rp.data.token, body: { password: 'profil123' } });
+  check('changing the password in the profile returns a fresh session', up.status === 200 && Boolean(up.data.token));
+  expectStatus('…which keeps working', await req('GET', '/auth/me', { token: up.data.token }), 200);
+
+  expectStatus('Google sign-in needs a credential', await req('POST', '/auth/google', { body: {} }), 400);
+  const g = await req('POST', '/auth/google', { body: { credential: 'not-a-real-token' } });
+  check('Google sign-in: 503 when not configured, 401 for a bad token', g.status === 503 || g.status === 401, String(g.status));
+}
+
 describe('No online payment');
 {
   const r = await fetch(`${API}/payments/webhook`, { method: 'POST', body: '{}' });

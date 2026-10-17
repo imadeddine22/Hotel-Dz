@@ -74,7 +74,9 @@ api.interceptors.response.use(
   (error) => {
     const message =
       error.response?.data?.message || error.message || 'Une erreur est survenue';
-    return Promise.reject(new Error(typeof window === 'undefined' ? message : translateMessage(currentLang(), message)));
+    const err = new Error(typeof window === 'undefined' ? message : translateMessage(currentLang(), message));
+    err.status = error.response?.status; // HTTP status, for callers that react to a specific error
+    return Promise.reject(err);
   }
 );
 

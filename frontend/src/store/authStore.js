@@ -33,6 +33,24 @@ export const useAuthStore = create((set, get) => ({
     return data.user;
   },
 
+  /** "Sign in with Google" (credential = Google ID token); role only applies to a new account. */
+  loginWithGoogle: async (credential, role) => {
+    const { data } = await api.post('/auth/google', { credential, role });
+    if (data.token) localStorage.setItem('token', data.token);
+    set({ user: data.user });
+    useFavoritesStore.getState().load();
+    return data.user;
+  },
+
+  /** New password from the emailed link; logs the user in. */
+  resetPassword: async (token, password) => {
+    const { data } = await api.post('/auth/reset-password', { token, password });
+    if (data.token) localStorage.setItem('token', data.token);
+    set({ user: data.user });
+    useFavoritesStore.getState().load();
+    return data.user;
+  },
+
   logout: async () => {
     try {
       await api.post('/auth/logout');

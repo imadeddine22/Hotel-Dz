@@ -30,6 +30,13 @@ const userSchema = new mongoose.Schema(
     },
     isVerified: { type: Boolean, default: false },
     isBlocked: { type: Boolean, default: false },
+    // Google sign-in ("sub" of the Google ID token)
+    googleId: { type: String, index: true, sparse: true, select: false },
+    // Password reset: SHA-256 of the emailed token, valid until resetPasswordExpire
+    resetPasswordToken: { type: String, select: false },
+    resetPasswordExpire: { type: Date, select: false },
+    // Tokens (JWT) issued before this date are rejected
+    passwordChangedAt: { type: Date, select: false },
     favoriteHotels: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Hotel' }],
     favoriteHouses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'House' }],
   },
@@ -41,12 +48,19 @@ userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
+  if (!this.isNew) this.passwordChangedAt = new Date();
   next();
 });
 
 // Compare a plain password with the hash
 userSchema.methods.matchPassword = function (entered) {
   return bcrypt.compare(entered, this.password);
+};
+
+/** True when the JWT (iat in seconds) was issued before the last password change. */
+userSchema.methods.changedPasswordAfter = function (iat) {
+  // JWT times are whole seconds: a token from the same second as the change (the new one) stays valid
+  return Boolean(this.passwordChangedAt && iat < Math.floor(this.passwordChangedAt.getTime() / 1000));
 };
 
 const User = mongoose.model('User', userSchema);

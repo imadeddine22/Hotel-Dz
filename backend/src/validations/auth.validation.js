@@ -19,3 +19,18 @@ export const updateProfileSchema = Joi.object({
   phone: Joi.string().allow('').max(20),
   password: Joi.string().min(6).max(128),
 }).min(1);
+
+export const forgotPasswordSchema = Joi.object({
+  email: Joi.string().email().required(),
+  lang: Joi.string().valid('fr', 'ar', 'en').default('fr'),
+});
+
+export const resetPasswordSchema = Joi.object({
+  token: Joi.string().hex().length(64).required(),
+  password: Joi.string().min(6).max(128).required(),
+});
+
+export const googleAuthSchema = Joi.object({
+  credential: Joi.string().max(4096).required(),
+  role: Joi.string().valid('customer', 'owner', 'seller').default('customer'),
+});

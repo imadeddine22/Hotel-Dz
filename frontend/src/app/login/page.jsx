@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from '@/components/LocaleLink';
 import BrandLogo from '@/components/BrandLogo';
 import { useAuthStore } from '@/store/authStore';
+import GoogleSignIn from '@/components/GoogleSignIn';
 
 import { useT } from '@/lib/i18n/useT';
 export default function LoginPage() {
@@ -29,17 +30,20 @@ function LoginForm() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const goOn = (user) => {
+    if (redirect) router.push(redirect);
+    else if (user.role === 'admin') router.push('/admin');
+    else if (user.role === 'owner') router.push('/owner/dashboard');
+    else if (user.role === 'seller') router.push('/seller/dashboard');
+    else router.push('/');
+  };
+
   const submit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
     try {
-      const user = await login(form.email, form.password);
-      if (redirect) router.push(redirect);
-      else if (user.role === 'admin') router.push('/admin');
-      else if (user.role === 'owner') router.push('/owner/dashboard');
-      else if (user.role === 'seller') router.push('/seller/dashboard');
-      else router.push('/');
+      goOn(await login(form.email, form.password));
     } catch (err) {
       setError(err.message);
     } finally {
@@ -60,6 +64,8 @@ function LoginForm() {
           <div className="mb-4 rounded-lg bg-red-50 px-4 py-2 text-sm text-red-600">{error}</div>
         )}
 
+        <GoogleSignIn onSuccess={goOn} onError={setError} />
+
         <form onSubmit={submit} className="space-y-4">
           <div>
             <label htmlFor="login-email" className="mb-1 block text-sm font-medium text-gray-700">{t('Email')}</label>
@@ -75,7 +81,12 @@ function LoginForm() {
             />
           </div>
           <div>
-            <label htmlFor="login-password" className="mb-1 block text-sm font-medium text-gray-700">{t('Mot de passe')}</label>
+            <div className="mb-1 flex items-center justify-between gap-2">
+              <label htmlFor="login-password" className="block text-sm font-medium text-gray-700">{t('Mot de passe')}</label>
+              <Link href={form.email ? `/forgot-password?email=${encodeURIComponent(form.email)}` : '/forgot-password'} className="text-xs font-semibold text-brand-600 hover:underline">
+                {t('Mot de passe oublié ?')}
+              </Link>
+            </div>
             <input
               id="login-password"
               type="password"

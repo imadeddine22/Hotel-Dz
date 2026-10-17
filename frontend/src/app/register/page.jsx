@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from '@/components/LocaleLink';
 import BrandLogo from '@/components/BrandLogo';
 import { useAuthStore } from '@/store/authStore';
+import GoogleSignIn from '@/components/GoogleSignIn';
 
 import { useT } from '@/lib/i18n/useT';
 export default function RegisterPage() {
@@ -29,15 +30,19 @@ export default function RegisterPage() {
     if (['customer', 'owner', 'seller'].includes(role)) setForm((f) => ({ ...f, role }));
   }, []);
 
+  const goOn = (user) => {
+    if (user.role === 'admin') router.push('/admin');
+    else if (user.role === 'owner') router.push('/owner/dashboard');
+    else if (user.role === 'seller') router.push('/seller/dashboard');
+    else router.push('/');
+  };
+
   const submit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
     try {
-      const user = await register(form);
-      if (user.role === 'owner') router.push('/owner/dashboard');
-      else if (user.role === 'seller') router.push('/seller/dashboard');
-      else router.push('/');
+      goOn(await register(form));
     } catch (err) {
       setError(err.message);
     } finally {
@@ -82,6 +87,8 @@ export default function RegisterPage() {
             </button>
           ))}
         </div>
+
+        <GoogleSignIn role={form.role} onSuccess={goOn} onError={setError} />
 
         <form onSubmit={submit} className="space-y-4">
           <Field label={t('Nom complet')} value={form.fullName} onChange={(v) => setForm({ ...form, fullName: v })} />

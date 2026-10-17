@@ -1,6 +1,12 @@
 // Translations of the API's error/success messages (sent in English, sometimes French).
 // Exact messages are dictionary entries; messages with numbers or statuses go through PATTERNS.
 export const MESSAGES = {
+  'If an account exists for this email, a reset link has been sent': { fr: "Si un compte existe pour cet email, un lien de réinitialisation a été envoyé.", ar: "إذا كان هناك حساب بهذا البريد، فقد أُرسل رابط إعادة التعيين." },
+  'This reset link is invalid or has expired': { fr: "Ce lien de réinitialisation est invalide ou a expiré.", ar: "رابط إعادة التعيين غير صالح أو انتهت صلاحيته." },
+  'Too many attempts, please try again later': { fr: "Trop de tentatives, réessayez plus tard.", ar: "محاولات كثيرة، أعد المحاولة لاحقًا." },
+  'Google sign-in is not configured': { fr: "La connexion avec Google n’est pas encore activée.", ar: "الدخول عبر Google غير مفعّل بعد." },
+  'Google sign-in failed': { fr: "La connexion avec Google a échoué.", ar: "فشل الدخول عبر Google." },
+  'Password changed, please log in again': { fr: "Mot de passe modifié : reconnectez-vous.", ar: "تم تغيير كلمة السر، سجّل الدخول من جديد." },
   'All fields are required': { fr: 'Tous les champs sont obligatoires.', ar: 'كل الحقول إجبارية.' },
   'Booking already paid': { fr: 'Réservation déjà payée.', ar: 'الحجز مدفوع مسبقاً.' },
   'Booking not found': { fr: 'Réservation introuvable.', ar: 'الحجز غير موجود.' },
