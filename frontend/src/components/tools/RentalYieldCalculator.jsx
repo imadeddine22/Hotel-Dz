@@ -3,7 +3,9 @@
 import { useMemo, useState } from 'react';
 import { fmt, fmtPct, NumberField, ResultCard, ToolLayout } from './ToolUI';
 
+import { useT } from '@/lib/i18n/useT';
 export default function RentalYieldCalculator() {
+  const { t } = useT();
   const [price, setPrice] = useState(15000000);
   const [fees, setFees] = useState(7);
   const [works, setWorks] = useState(800000);
@@ -31,46 +33,46 @@ export default function RentalYieldCalculator() {
     <ToolLayout
       inputs={
         <>
-          <NumberField label="Prix d'achat" unit="DA" value={price} onChange={setPrice} step={100000} />
+          <NumberField label={t('Prix d\'achat')} unit="DA" value={price} onChange={setPrice} step={100000} />
           <NumberField
-            label="Frais d'acquisition"
+            label={t('Frais d\'acquisition')}
             unit="%"
             value={fees}
             onChange={setFees}
             step={0.5}
-            help="Notaire, enregistrement et publicité foncière : faites confirmer le montant par votre notaire."
+            help={t('Notaire, enregistrement et publicité foncière : faites confirmer le montant par votre notaire.')}
           />
-          <NumberField label="Travaux et ameublement" unit="DA" value={works} onChange={setWorks} step={50000} />
-          <NumberField label="Prix de location par nuit" unit="DA" value={night} onChange={setNight} step={500} />
+          <NumberField label={t('Travaux et ameublement')} unit="DA" value={works} onChange={setWorks} step={50000} />
+          <NumberField label={t('Prix de location par nuit')} unit="DA" value={night} onChange={setNight} step={500} />
           <NumberField
-            label="Taux d'occupation"
+            label={t('Taux d\'occupation')}
             unit="%"
             value={occupancy}
             onChange={setOccupancy}
             max={100}
-            help="Part des nuits louées sur l'année. Plus élevé en été sur le littoral, en hiver dans le Sud."
+            help={t("Part des nuits louées sur l'année. Plus élevé en été sur le littoral, en hiver dans le Sud.")}
           />
           <NumberField
-            label="Charges mensuelles"
+            label={t('Charges mensuelles')}
             unit="DA"
             value={charges}
             onChange={setCharges}
             step={1000}
-            help="Électricité, eau, gaz, internet, ménage, entretien."
+            help={t('Électricité, eau, gaz, internet, ménage, entretien.')}
           />
         </>
       }
       results={
         <>
-          <ResultCard highlight label="Rendement net annuel" value={fmtPct(r.netYield)} unit="" />
-          <ResultCard label="Rendement brut annuel" value={fmtPct(r.gross)} unit="" />
-          <ResultCard label="Revenu locatif annuel" value={fmt(r.revenue)} />
-          <ResultCard label="Bénéfice net annuel" value={fmt(r.net)} />
-          <ResultCard label="Investissement total" value={fmt(r.invest)} />
+          <ResultCard highlight label={t('Rendement net annuel')} value={fmtPct(r.netYield)} unit="" />
+          <ResultCard label={t('Rendement brut annuel')} value={fmtPct(r.gross)} unit="" />
+          <ResultCard label={t('Revenu locatif annuel')} value={fmt(r.revenue)} />
+          <ResultCard label={t('Bénéfice net annuel')} value={fmt(r.net)} />
+          <ResultCard label={t('Investissement total')} value={fmt(r.invest)} />
           <ResultCard
-            label="Durée d'amortissement"
+            label={t('Durée d\'amortissement')}
             value={Number.isFinite(r.payback) ? r.payback.toFixed(1).replace('.', ',') : '—'}
-            unit="ans"
+            unit={t('ans')}
           />
         </>
       }

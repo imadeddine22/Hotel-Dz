@@ -7,6 +7,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { LayoutDashboard, Hotel, CalendarCheck, Users, CheckSquare, LogOut, Home, Mail, Globe, Tag } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 
+import { useT } from '@/lib/i18n/useT';
 const MENUS = {
   owner: [
     { href: '/owner/dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
@@ -34,6 +35,7 @@ const MENUS = {
 };
 
 export default function DashboardShell({ role, title, children }) {
+  const { t } = useT();
   const router = useRouter();
   const pathname = usePathname();
   const { user, loading, logout } = useAuthStore();
@@ -45,7 +47,7 @@ export default function DashboardShell({ role, title, children }) {
   }, [user, loading, role, router, pathname]);
 
   if (loading || !user) {
-    return <div className="grid min-h-screen place-items-center text-gray-400 bg-[#f8f9fc]">Loading...</div>;
+    return <div className="grid min-h-screen place-items-center text-gray-400 bg-[#f8f9fc]">{t('Loading...')}</div>;
   }
 
   const menu = MENUS[role] || [];
@@ -58,7 +60,7 @@ export default function DashboardShell({ role, title, children }) {
           <BrandLogo className="h-10" />
         </Link>
 
-        <p className="px-3 text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Menu</p>
+        <p className="px-3 text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">{t('Menu')}</p>
         
         <nav className="flex flex-1 flex-col gap-2">
           {menu.map((m) => {
@@ -75,7 +77,7 @@ export default function DashboardShell({ role, title, children }) {
                 }`}
               >
                 <Icon className={`h-5 w-5 ${active ? 'text-white' : 'text-gray-400'}`} /> 
-                {m.label}
+                {t(m.label)}
               </Link>
             );
           })}
@@ -87,7 +89,7 @@ export default function DashboardShell({ role, title, children }) {
               onClick={async () => { await logout(); router.push('/'); }}
               className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-red-500 hover:bg-red-50 transition-all"
             >
-              <LogOut className="h-5 w-5 text-red-400" /> Déconnexion
+              <LogOut className="h-5 w-5 text-red-400" /> {t('Déconnexion')}
             </button>
           </div>
         </div>
@@ -108,7 +110,7 @@ export default function DashboardShell({ role, title, children }) {
               </div>
               <div className="hidden md:block">
                 <p className="text-sm font-bold text-gray-800 leading-tight">{user.fullName}</p>
-                <p className="text-xs font-medium text-gray-400 capitalize leading-tight">{user.role}</p>
+                <p className="text-xs font-medium text-gray-400 capitalize leading-tight">{t(user.role)}</p>
               </div>
             </div>
           </div>

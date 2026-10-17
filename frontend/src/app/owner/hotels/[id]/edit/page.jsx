@@ -9,9 +9,11 @@ import { useWilayas } from '@/hooks/useWilayas';
 import CommuneDatalist from '@/components/CommuneDatalist';
 import api from '@/lib/api';
 
+import { useT } from '@/lib/i18n/useT';
 const TYPES = ['Luxe', 'Affaires', 'Balnéaire', 'Riad', 'Boutique', 'Montagne', 'Désert', 'Appart-hôtel', 'Économique'];
 
 export default function EditHotelPage() {
+  const { t } = useT();
   const router = useRouter();
   const { id } = useParams();
   const { wilayas } = useWilayas();
@@ -24,7 +26,8 @@ export default function EditHotelPage() {
   useEffect(() => {
     const loadHotel = async () => {
       try {
-        const { data } = await api.get(`/hotels/${id}`);
+        // localize: false → the form must edit the original text, not its translation
+        const { data } = await api.get(`/hotels/${id}`, { localize: false });
         const h = data.hotel;
         setForm({
           name: h.name, description: h.description || '', wilaya: h.wilaya,
@@ -66,18 +69,18 @@ export default function EditHotelPage() {
     }
   };
 
-  if (loading) return <DashboardShell role="owner" title="Modifier l'hôtel"><p className="text-gray-500">Chargement...</p></DashboardShell>;
-  if (!form) return <DashboardShell role="owner" title="Modifier l'hôtel"><p className="rounded-lg bg-red-50 px-4 py-3 text-red-600 border border-red-100">{error}</p></DashboardShell>;
+  if (loading) return <DashboardShell role="owner" title={t('Modifier l\'hôtel')}><p className="text-gray-500">{t('Chargement...')}</p></DashboardShell>;
+  if (!form) return <DashboardShell role="owner" title={t('Modifier l\'hôtel')}><p className="rounded-lg bg-red-50 px-4 py-3 text-red-600 border border-red-100">{error}</p></DashboardShell>;
 
   return (
-    <DashboardShell role="owner" title="Modifier l'hôtel">
+    <DashboardShell role="owner" title={t('Modifier l\'hôtel')}>
       <form onSubmit={submit} className="max-w-2xl space-y-4 rounded-2xl bg-white border border-gray-100 p-6 shadow-sm">
         {error && <div className="rounded-lg bg-red-50 px-4 py-2 text-sm text-red-600">{error}</div>}
 
-        <Input label="Nom de l'hôtel" value={form.name} onChange={(v) => set('name', v)} />
+        <Input label={t('Nom de l\'hôtel')} value={form.name} onChange={(v) => set('name', v)} />
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">Description</label>
+          <label className="mb-1 block text-sm font-medium text-gray-700">{t('Description')}</label>
           <textarea
             value={form.description} onChange={(e) => set('description', e.target.value)} rows={3}
             className="w-full rounded-lg border border-gray-200 px-4 py-2.5 outline-none focus:border-brand-500"
@@ -86,28 +89,28 @@ export default function EditHotelPage() {
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Wilaya</label>
+            <label className="mb-1 block text-sm font-medium text-gray-700">{t('Wilaya')}</label>
             <select value={form.wilaya} onChange={(e) => set('wilaya', e.target.value)}
               className="w-full rounded-lg border border-gray-200 px-3 py-2.5 outline-none focus:border-brand-500">
               {wilayas.map((w) => <option key={w} value={w}>{w}</option>)}
             </select>
           </div>
-          <Input label="Ville / Commune" value={form.city} onChange={(v) => set('city', v)} list="hotel-communes" placeholder="Choisissez ou saisissez une commune" />
+          <Input label={t('Ville / Commune')} value={form.city} onChange={(v) => set('city', v)} list="hotel-communes" placeholder={t('Choisissez ou saisissez une commune')} />
           <CommuneDatalist id="hotel-communes" wilaya={form.wilaya} />
         </div>
 
-        <Input label="Adresse" value={form.address} onChange={(v) => set('address', v)} required={false} />
+        <Input label={t('Adresse')} value={form.address} onChange={(v) => set('address', v)} required={false} />
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Type</label>
+            <label className="mb-1 block text-sm font-medium text-gray-700">{t('Type')}</label>
             <select value={form.type} onChange={(e) => set('type', e.target.value)}
               className="w-full rounded-lg border border-gray-200 px-3 py-2.5 outline-none focus:border-brand-500">
-              {TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+              {TYPES.map((item) => <option key={item} value={item}>{t(item)}</option>)}
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Étoiles</label>
+            <label className="mb-1 block text-sm font-medium text-gray-700">{t('Étoiles')}</label>
             <select value={form.starRating} onChange={(e) => set('starRating', e.target.value)}
               className="w-full rounded-lg border border-gray-200 px-3 py-2.5 outline-none focus:border-brand-500">
               {[1, 2, 3, 4, 5].map((s) => <option key={s} value={s}>{s} ★</option>)}
@@ -115,11 +118,11 @@ export default function EditHotelPage() {
           </div>
         </div>
 
-        <Input label="Équipements (séparés par des virgules)" value={form.amenities}
-          onChange={(v) => set('amenities', v)} required={false} placeholder="Wifi, Parking, Piscine" />
+        <Input label={t('Équipements (séparés par des virgules)')} value={form.amenities}
+          onChange={(v) => set('amenities', v)} required={false} placeholder={t('Wifi, Parking, Piscine')} />
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">Idéal pour (Cochez les options applicables)</label>
+          <label className="mb-1 block text-sm font-medium text-gray-700">{t('Idéal pour (Cochez les options applicables)')}</label>
           <div className="flex flex-wrap gap-4 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
             {['Familles', 'Amis', 'Couples', 'Solo', 'Affaires'].map(opt => (
               <label key={opt} className="flex cursor-pointer items-center gap-2 text-sm text-gray-700">
@@ -135,7 +138,7 @@ export default function EditHotelPage() {
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">Localisation sur la carte</label>
+          <label className="mb-1 block text-sm font-medium text-gray-700">{t('Localisation sur la carte')}</label>
           <MapPicker
             value={{ lat: form.lat, lng: form.lng }}
             onChange={(lat, lng) => setForm((f) => ({ ...f, lat: lat ?? '', lng: lng ?? '' }))}
@@ -144,7 +147,7 @@ export default function EditHotelPage() {
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">Photos (la première sera la photo principale)</label>
+          <label className="mb-1 block text-sm font-medium text-gray-700">{t('Photos (la première sera la photo principale)')}</label>
           <ImageUploader 
             onChange={(selectedFiles) => setFiles(Array.from(selectedFiles))} 
             maxFiles={6}
@@ -154,7 +157,7 @@ export default function EditHotelPage() {
 
         <button disabled={saving}
           className="w-full rounded-lg bg-brand-500 py-3 font-semibold text-white hover:bg-brand-600 disabled:opacity-60">
-          {saving ? 'Enregistrement...' : 'Mettre à jour l\'hôtel'}
+          {saving ? t('Enregistrement...') : t('Mettre à jour l\'hôtel')}
         </button>
       </form>
     </DashboardShell>

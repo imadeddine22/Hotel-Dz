@@ -6,7 +6,9 @@ import Link from 'next/link';
 import BrandLogo from '@/components/BrandLogo';
 import { useAuthStore } from '@/store/authStore';
 
+import { useT } from '@/lib/i18n/useT';
 export default function RegisterPage() {
+  const { t } = useT();
   const router = useRouter();
   const register = useAuthStore((s) => s.register);
 
@@ -49,8 +51,8 @@ export default function RegisterPage() {
         <Link href="/" className="mb-6 flex justify-center">
           <BrandLogo className="h-12" />
         </Link>
-        <h1 className="mb-1 text-2xl font-bold text-ink">Créer un compte</h1>
-        <p className="mb-6 text-sm text-gray-500">Rejoignez Meskan dz</p>
+        <h1 className="mb-1 text-2xl font-bold text-ink">{t('Créer un compte')}</h1>
+        <p className="mb-6 text-sm text-gray-500">{t('Rejoignez Meskan dz')}</p>
 
         {error && (
           <div className="mb-4 rounded-lg bg-red-50 px-4 py-2 text-sm text-red-600">{error}</div>
@@ -75,29 +77,29 @@ export default function RegisterPage() {
               }`}
             >
               <span className="text-xl" aria-hidden="true">{r.icon}</span>
-              <span className="text-xs font-bold leading-tight">{r.label}</span>
-              <span className="text-[10px] font-medium leading-tight opacity-70">{r.desc}</span>
+              <span className="text-xs font-bold leading-tight">{t(r.label)}</span>
+              <span className="text-[10px] font-medium leading-tight opacity-70">{t(r.desc)}</span>
             </button>
           ))}
         </div>
 
         <form onSubmit={submit} className="space-y-4">
-          <Field label="Nom complet" value={form.fullName} onChange={(v) => setForm({ ...form, fullName: v })} />
-          <Field label="Email" type="email" value={form.email} onChange={(v) => setForm({ ...form, email: v })} />
-          <Field label="Téléphone" type="tel" value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} required={false} />
-          <Field label="Mot de passe" type="password" value={form.password} onChange={(v) => setForm({ ...form, password: v })} />
+          <Field label={t('Nom complet')} value={form.fullName} onChange={(v) => setForm({ ...form, fullName: v })} />
+          <Field label={t('Email')} type="email" value={form.email} onChange={(v) => setForm({ ...form, email: v })} />
+          <Field label={t('Téléphone')} type="tel" value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} required={false} />
+          <Field label={t('Mot de passe')} type="password" value={form.password} onChange={(v) => setForm({ ...form, password: v })} />
           <button
             disabled={loading}
             className="w-full rounded-lg bg-brand-500 py-2.5 font-semibold text-white transition hover:bg-brand-600 disabled:opacity-60"
           >
-            {loading ? 'Création...' : 'Créer mon compte'}
+            {loading ? t('Création...') : t('Créer mon compte')}
           </button>
         </form>
 
         <p className="mt-6 text-center text-sm text-gray-500">
-          Déjà inscrit ?{' '}
+          {t('Déjà inscrit ?')}{' '}
           <Link href="/login" className="font-semibold text-brand-600">
-            Se connecter
+            {t('Se connecter')}
           </Link>
         </p>
       </div>

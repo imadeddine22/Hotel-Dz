@@ -3,7 +3,9 @@
 import { useMemo, useState } from 'react';
 import { fmt, NumberField, ResultCard, ToolLayout } from './ToolUI';
 
+import { useT } from '@/lib/i18n/useT';
 export default function TripBudgetCalculator() {
+  const { t } = useT();
   const [nights, setNights] = useState(5);
   const [people, setPeople] = useState(2);
   const [lodging, setLodging] = useState(8000);
@@ -25,35 +27,35 @@ export default function TripBudgetCalculator() {
     <ToolLayout
       inputs={
         <>
-          <NumberField label="Nombre de nuits" unit="nuits" value={nights} onChange={setNights} min={1} max={90} />
-          <NumberField label="Nombre de voyageurs" unit="pers." value={people} onChange={setPeople} min={1} max={30} />
+          <NumberField label={t('Nombre de nuits')} unit={t('nuits')} value={nights} onChange={setNights} min={1} max={90} />
+          <NumberField label={t('Nombre de voyageurs')} unit={t('pers.')} value={people} onChange={setPeople} min={1} max={30} />
           <NumberField
-            label="Hébergement par nuit"
+            label={t('Hébergement par nuit')}
             unit="DA"
             value={lodging}
             onChange={setLodging}
             step={500}
-            help="Prix total de la chambre ou de la maison, pour tout le groupe."
+            help={t('Prix total de la chambre ou de la maison, pour tout le groupe.')}
           />
-          <NumberField label="Repas par jour et par personne" unit="DA" value={food} onChange={setFood} step={250} />
+          <NumberField label={t('Repas par jour et par personne')} unit="DA" value={food} onChange={setFood} step={250} />
           <NumberField
-            label="Transport aller-retour (total)"
+            label={t('Transport aller-retour (total)')}
             unit="DA"
             value={transport}
             onChange={setTransport}
             step={1000}
-            help="Billets d'avion, de train ou de bus, ou carburant et péages."
+            help={t("Billets d'avion, de train ou de bus, ou carburant et péages.")}
           />
-          <NumberField label="Activités et visites (total)" unit="DA" value={activities} onChange={setActivities} step={1000} />
+          <NumberField label={t('Activités et visites (total)')} unit="DA" value={activities} onChange={setActivities} step={1000} />
         </>
       }
       results={
         <>
-          <ResultCard highlight label="Budget total du séjour" value={fmt(r.total)} />
-          <ResultCard label="Par personne" value={fmt(r.perPerson)} />
-          <ResultCard label="Par jour" value={fmt(r.perDay)} />
-          <ResultCard label="Dont hébergement" value={fmt(r.stay)} />
-          <ResultCard label="Dont repas" value={fmt(r.meals)} />
+          <ResultCard highlight label={t('Budget total du séjour')} value={fmt(r.total)} />
+          <ResultCard label={t('Par personne')} value={fmt(r.perPerson)} />
+          <ResultCard label={t('Par jour')} value={fmt(r.perDay)} />
+          <ResultCard label={t('Dont hébergement')} value={fmt(r.stay)} />
+          <ResultCard label={t('Dont repas')} value={fmt(r.meals)} />
         </>
       }
     />

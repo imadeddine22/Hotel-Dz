@@ -9,7 +9,9 @@ import Footer from '@/components/Footer';
 import api, { getImageUrl } from '@/lib/api';
 import { formatDZD } from '@/lib/data';
 
+import { useT } from '@/lib/i18n/useT';
 export default function SaleDetailPage() {
+  const { t } = useT();
   const { id } = useParams();
   const router = useRouter();
   const [listing, setListing] = useState(null);
@@ -34,7 +36,7 @@ export default function SaleDetailPage() {
     return (
       <>
         <Navbar />
-        <div className="min-h-screen flex items-center justify-center text-gray-400">Chargement...</div>
+        <div className="min-h-screen flex items-center justify-center text-gray-400">{t('Chargement...')}</div>
       </>
     );
   }
@@ -54,7 +56,7 @@ export default function SaleDetailPage() {
             onClick={() => router.back()}
             className="inline-flex items-center gap-2 text-sm font-semibold text-gray-500 hover:text-gray-700 transition mb-6"
           >
-            <ArrowLeft className="h-4 w-4" /> Retour
+            <ArrowLeft className="h-4 w-4" /> {t('Retour')}
           </button>
         </div>
 
@@ -68,7 +70,7 @@ export default function SaleDetailPage() {
                   <>
                     <img
                       src={getImageUrl(images[imgIdx]?.url)}
-                      alt={listing.title}
+                      alt={t(listing.title)}
                       className="h-full w-full object-cover"
                     />
                     {images.length > 1 && (
@@ -126,18 +128,18 @@ export default function SaleDetailPage() {
                 <div className="flex items-start justify-between mb-4">
                   <div>
                     <div className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-600 mb-3">
-                      <Tag className="h-3 w-3" /> {listing.type} · À vendre
+                      <Tag className="h-3 w-3" /> {t(listing.type)} {t('· À vendre')}
                     </div>
-                    <h1 className="text-2xl font-extrabold text-gray-900 mb-2">{listing.title}</h1>
+                    <h1 className="text-2xl font-extrabold text-gray-900 mb-2">{t(listing.title)}</h1>
                     <p className="text-sm text-gray-500 flex items-center gap-1">
                       <MapPin className="h-4 w-4 text-emerald-500" />
-                      {listing.address && `${listing.address}, `}{listing.city}, {listing.wilaya}
+                      {listing.address && `${listing.address}, `}{t(listing.city)}, {t(listing.wilaya)}
                     </p>
                   </div>
                   <div className="text-right">
                     <p className="text-2xl font-extrabold text-emerald-600">{formatDZD(listing.price)}</p>
                     <p className="text-xs text-gray-400 flex items-center justify-end gap-1 mt-1">
-                      <Eye className="h-3 w-3" /> {listing.views} vues
+                      <Eye className="h-3 w-3" /> {listing.views} {t('vues')}
                     </p>
                   </div>
                 </div>
@@ -147,31 +149,31 @@ export default function SaleDetailPage() {
                   {listing.area > 0 && (
                     <div className="rounded-xl bg-gray-50 p-3 text-center">
                       <Ruler className="h-5 w-5 text-emerald-500 mx-auto mb-1" />
-                      <p className="text-sm font-bold text-gray-900">{listing.area} m²</p>
-                      <p className="text-[10px] text-gray-400">Surface</p>
+                      <p className="text-sm font-bold text-gray-900">{listing.area} {t('m²')}</p>
+                      <p className="text-[10px] text-gray-400">{t('Surface')}</p>
                     </div>
                   )}
                   <div className="rounded-xl bg-gray-50 p-3 text-center">
                     <DoorOpen className="h-5 w-5 text-emerald-500 mx-auto mb-1" />
                     <p className="text-sm font-bold text-gray-900">{listing.rooms}</p>
-                    <p className="text-[10px] text-gray-400">Pièces</p>
+                    <p className="text-[10px] text-gray-400">{t('Pièces')}</p>
                   </div>
                   <div className="rounded-xl bg-gray-50 p-3 text-center">
                     <Bath className="h-5 w-5 text-emerald-500 mx-auto mb-1" />
                     <p className="text-sm font-bold text-gray-900">{listing.bathrooms}</p>
-                    <p className="text-[10px] text-gray-400">Salles de bain</p>
+                    <p className="text-[10px] text-gray-400">{t('Salles de bain')}</p>
                   </div>
                   <div className="rounded-xl bg-gray-50 p-3 text-center">
                     <Home className="h-5 w-5 text-emerald-500 mx-auto mb-1" />
-                    <p className="text-sm font-bold text-gray-900">{listing.type}</p>
-                    <p className="text-[10px] text-gray-400">Type</p>
+                    <p className="text-sm font-bold text-gray-900">{t(listing.type)}</p>
+                    <p className="text-[10px] text-gray-400">{t('Type')}</p>
                   </div>
                 </div>
 
                 {/* Description */}
                 {listing.description && (
                   <div className="mb-6">
-                    <h3 className="font-bold text-gray-900 mb-2">Description</h3>
+                    <h3 className="font-bold text-gray-900 mb-2">{t('Description')}</h3>
                     <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">{listing.description}</p>
                   </div>
                 )}
@@ -179,7 +181,7 @@ export default function SaleDetailPage() {
                 {/* Amenities */}
                 {listing.amenities?.length > 0 && (
                   <div>
-                    <h3 className="font-bold text-gray-900 mb-3">Équipements</h3>
+                    <h3 className="font-bold text-gray-900 mb-3">{t('Équipements')}</h3>
                     <div className="flex flex-wrap gap-2">
                       {listing.amenities.map((a, i) => (
                         <span key={i} className="rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700">
@@ -195,16 +197,16 @@ export default function SaleDetailPage() {
             {/* Right: Contact Card */}
             <div className="space-y-6">
               <div className="rounded-2xl bg-white p-6 shadow-sm border border-gray-100 sticky top-24">
-                <h3 className="font-bold text-gray-900 mb-4">Contacter le vendeur</h3>
+                <h3 className="font-bold text-gray-900 mb-4">{t('Contacter le vendeur')}</h3>
                 
                 {/* Seller Info */}
                 <div className="flex items-center gap-3 mb-6 p-3 rounded-xl bg-gray-50">
                   <div className="grid h-12 w-12 place-items-center rounded-full bg-gradient-to-tr from-emerald-500 to-teal-500 text-white font-bold">
-                    {seller.fullName?.charAt(0)?.toUpperCase() || 'V'}
+                    {seller.fullName?.charAt(0)?.toUpperCase() || t('V')}
                   </div>
                   <div>
-                    <p className="font-bold text-gray-900">{seller.fullName || 'Vendeur'}</p>
-                    <p className="text-xs text-gray-400">Vendeur vérifié</p>
+                    <p className="font-bold text-gray-900">{seller.fullName || t('Vendeur')}</p>
+                    <p className="text-xs text-gray-400">{t('Vendeur vérifié')}</p>
                   </div>
                 </div>
 
@@ -231,7 +233,7 @@ export default function SaleDetailPage() {
 
                 <div className="mt-6 p-4 rounded-xl bg-amber-50 border border-amber-100">
                   <p className="text-xs text-amber-700 font-medium">
-                    💡 Conseil : Vérifiez toujours le bien en personne avant tout engagement financier.
+                    {t('💡 Conseil : Vérifiez toujours le bien en personne avant tout engagement financier.')}
                   </p>
                 </div>
               </div>

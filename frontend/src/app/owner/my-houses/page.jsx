@@ -13,6 +13,7 @@ import api from '@/lib/api';
 
 import { getServerURL } from '@/lib/api';
 
+import { useT } from '@/lib/i18n/useT';
 const SERVER = getServerURL();
 function resolveImg(url) {
   if (!url) return null;
@@ -38,6 +39,7 @@ const labelStyle = { display: 'block', fontSize: 12, fontWeight: 700, color: '#6
 const inputStyle = { width: '100%', padding: '10px 14px', borderRadius: 12, border: '1px solid #e2e8f0', fontSize: 14, color: '#1e293b', outline: 'none' };
 
 function MyHousesContent() {
+  const { t } = useT();
   const { wilayas, addWilaya } = useWilayas();
   const [houses, setHouses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -90,7 +92,7 @@ function MyHousesContent() {
   useEffect(() => { load(); }, [typeFilter]);
 
   const remove = async (id) => {
-    if (!confirm('Supprimer cette maison ?')) return;
+    if (!confirm(t('Supprimer cette maison ?'))) return;
     try { await api.delete(`/houses/${id}`); load(); } catch (e) { alert(e.message); }
   };
 
@@ -131,22 +133,22 @@ function MyHousesContent() {
   };
 
   return (
-    <DashboardShell role="owner" title="Mes maisons">
+    <DashboardShell role="owner" title={t('Mes maisons')}>
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="no-scrollbar flex items-center gap-2 overflow-x-auto pb-1" style={{ maxWidth: '100%' }}>
           <button
             onClick={() => setTypeFilter('')}
             className={`shrink-0 rounded-full px-4 py-1.5 text-sm ${!typeFilter ? 'bg-brand-500 text-white' : 'border border-gray-200 text-gray-600 bg-white'}`}
           >
-            Tous les types
+            {t('Tous les types')}
           </button>
-          {HOUSE_TYPES.map((t) => (
+          {HOUSE_TYPES.map((item) => (
             <button
-              key={t}
-              onClick={() => setTypeFilter(t)}
-              className={`shrink-0 rounded-full px-4 py-1.5 text-sm ${typeFilter === t ? 'bg-brand-500 text-white' : 'border border-gray-200 text-gray-600 bg-white'}`}
+              key={item}
+              onClick={() => setTypeFilter(item)}
+              className={`shrink-0 rounded-full px-4 py-1.5 text-sm ${typeFilter === item ? 'bg-brand-500 text-white' : 'border border-gray-200 text-gray-600 bg-white'}`}
             >
-              {t}
+              {t(item)}
             </button>
           ))}
         </div>
@@ -154,18 +156,18 @@ function MyHousesContent() {
           onClick={() => { setEditingId(null); setForm(emptyForm); setShowModal(true); }}
           className="shrink-0 flex items-center gap-2 rounded-lg bg-brand-500 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-600"
         >
-          <Plus className="h-4 w-4" /> Ajouter une maison
+          <Plus className="h-4 w-4" /> {t('Ajouter une maison')}
         </button>
       </div>
 
       {loading ? (
-        <p className="text-gray-500">Chargement...</p>
+        <p className="text-gray-500">{t('Chargement...')}</p>
       ) : error ? (
         <p className="rounded-lg bg-red-50 px-4 py-3 text-red-600 border border-red-100">{error}</p>
       ) : houses.length === 0 ? (
         <div className="rounded-2xl bg-white border border-gray-100 p-12 text-center shadow-sm">
           <Home className="mx-auto mb-4 h-12 w-12 text-gray-300" />
-          <p className="text-gray-500 font-medium">Aucune maison. Ajoutez votre première maison.</p>
+          <p className="text-gray-500 font-medium">{t('Aucune maison. Ajoutez votre première maison.')}</p>
         </div>
       ) : (
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -180,34 +182,34 @@ function MyHousesContent() {
                   </div>
                 )}
                 <span className={`absolute right-3 top-3 rounded-full px-3 py-1 text-xs font-semibold capitalize ${STATUS[h.status]}`}>
-                  {statusLabel(h.status)}
+                  {t(statusLabel(h.status))}
                 </span>
                 <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-xs font-bold text-brand-500">
-                  {h.type}
+                  {t(h.type)}
                 </span>
               </div>
               <div className="p-4">
                 <h3 className="font-bold text-gray-900">{h.name}</h3>
                 <p className="flex items-center gap-1 text-sm text-gray-500">
-                  <MapPin className="h-4 w-4 text-brand-500" /> {h.city}, {h.wilaya}
+                  <MapPin className="h-4 w-4 text-brand-500" /> {t(h.city)}, {t(h.wilaya)}
                 </p>
                 <div className="mt-2 flex gap-3 text-xs text-gray-500 font-medium">
-                  <span className="flex items-center gap-1"><BedDouble className="h-3.5 w-3.5" /> {h.rooms} ch.</span>
-                  <span className="flex items-center gap-1"><Bath className="h-3.5 w-3.5" /> {h.bathrooms} SDB</span>
-                  <span className="flex items-center gap-1"><Users className="h-3.5 w-3.5" /> {h.capacity} pers.</span>
+                  <span className="flex items-center gap-1"><BedDouble className="h-3.5 w-3.5" /> {h.rooms} {t('ch.')}</span>
+                  <span className="flex items-center gap-1"><Bath className="h-3.5 w-3.5" /> {h.bathrooms} {t('SDB')}</span>
+                  <span className="flex items-center gap-1"><Users className="h-3.5 w-3.5" /> {h.capacity} {t('pers.')}</span>
                 </div>
 
                 {h.status === 'rejected' && (
                   <div className="mt-3 rounded-xl bg-red-50 p-3 text-xs text-red-700 border border-red-200">
-                    <span className="font-bold block text-red-800">⚠️ Maison rejetée par l'administration :</span>
+                    <span className="font-bold block text-red-800">{t('⚠️ Maison rejetée par l\'administration :')}</span>
                     <p className="mt-1 text-red-600 font-medium italic">
-                      "{h.rejectionReason || 'Aucun motif spécifié. Veuillez vérifier les informations.'}"
+                      "{h.rejectionReason || t('Aucun motif spécifié. Veuillez vérifier les informations.')}"
                     </p>
                   </div>
                 )}
                 {h.pricePerNight > 0 && (
                   <p className="mt-2 font-bold text-brand-500">
-                    {h.pricePerNight.toLocaleString('fr-DZ')} DZD<span className="text-xs font-normal text-gray-400">/nuit</span>
+                    {h.pricePerNight.toLocaleString('fr-DZ')} {t('DZD')}<span className="text-xs font-normal text-gray-400">{t('/nuit')}</span>
                   </p>
                 )}
                 <div className="mt-3 flex gap-2">
@@ -240,9 +242,9 @@ function MyHousesContent() {
             }}>
               <div>
                 <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: '#1e293b' }}>
-                  {editingId ? 'Modifier la maison' : 'Ajouter une maison'}
+                  {editingId ? t('Modifier la maison') : t('Ajouter une maison')}
                 </h2>
-                <p style={{ margin: '2px 0 0', fontSize: 13, color: '#94a3b8' }}>Votre maison sera soumise pour approbation</p>
+                <p style={{ margin: '2px 0 0', fontSize: 13, color: '#94a3b8' }}>{t('Votre maison sera soumise pour approbation')}</p>
               </div>
               <button onClick={() => { setShowModal(false); setFormError(''); setForm(emptyForm); setFiles(null); setEditingId(null); }}
                 style={{ background: '#f1f5f9', border: 'none', borderRadius: 10, padding: 8, cursor: 'pointer', color: '#64748b' }}>
@@ -259,19 +261,19 @@ function MyHousesContent() {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
                 <div style={{ gridColumn: '1/-1' }}>
-                  <label style={labelStyle}>Nom *</label>
-                  <input required style={inputStyle} placeholder="ex: Villa Yasmine" value={form.name}
+                  <label style={labelStyle}>{t('Nom *')}</label>
+                  <input required style={inputStyle} placeholder={t('ex: Villa Yasmine')} value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })} />
                 </div>
                 <div>
-                  <label style={labelStyle}>Type *</label>
+                  <label style={labelStyle}>{t('Type *')}</label>
                   <select required style={inputStyle} value={form.type}
                     onChange={(e) => setForm({ ...form, type: e.target.value })}>
-                    {HOUSE_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                    {HOUSE_TYPES.map(item => <option key={item} value={item}>{t(item)}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label style={labelStyle}>Étoiles *</label>
+                  <label style={labelStyle}>{t('Étoiles *')}</label>
                   <select required style={inputStyle} value={form.starRating}
                     onChange={(e) => setForm({ ...form, starRating: e.target.value })}>
                     {[1, 2, 3, 4, 5].map(s => <option key={s} value={s}>{s} ★</option>)}
@@ -279,65 +281,65 @@ function MyHousesContent() {
                 </div>
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <label style={labelStyle}>Wilaya *</label>
+                    <label style={labelStyle}>{t('Wilaya *')}</label>
                     <button
                       type="button"
                       onClick={() => setShowWilayaModal(true)}
                       style={{ fontSize: 11, color: '#7c3aed', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700 }}
                     >
-                      + Ajouter une wilaya
+                      {t('+ Ajouter une wilaya')}
                     </button>
                   </div>
                   <select required style={inputStyle} value={form.wilaya}
                     onChange={(e) => setForm({ ...form, wilaya: e.target.value })}>
-                    <option value="">Choisir une wilaya</option>
+                    <option value="">{t('Choisir une wilaya')}</option>
                     {wilayas.map(w => <option key={w} value={w}>{w}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label style={labelStyle}>Ville *</label>
-                  <input required style={inputStyle} placeholder="Choisissez ou saisissez une commune" value={form.city} list="house-communes" autoComplete="off"
+                  <label style={labelStyle}>{t('Ville *')}</label>
+                  <input required style={inputStyle} placeholder={t('Choisissez ou saisissez une commune')} value={form.city} list="house-communes" autoComplete="off"
                     onChange={(e) => setForm({ ...form, city: e.target.value })} />
                   <CommuneDatalist id="house-communes" wilaya={form.wilaya} />
                 </div>
                 <div>
-                  <label style={labelStyle}>Prix/nuit (DZD) *</label>
+                  <label style={labelStyle}>{t('Prix/nuit (DZD) *')}</label>
                   <input type="number" min="0" required style={inputStyle} placeholder="5000" value={form.pricePerNight}
                     onChange={(e) => setForm({ ...form, pricePerNight: e.target.value })} />
                 </div>
                 <div>
-                  <label style={labelStyle}>Chambres</label>
+                  <label style={labelStyle}>{t('Chambres')}</label>
                   <input type="number" min="1" style={inputStyle} value={form.rooms}
                     onChange={(e) => setForm({ ...form, rooms: e.target.value })} />
                 </div>
                 <div>
-                  <label style={labelStyle}>SDB</label>
+                  <label style={labelStyle}>{t('SDB')}</label>
                   <input type="number" min="1" style={inputStyle} value={form.bathrooms}
                     onChange={(e) => setForm({ ...form, bathrooms: e.target.value })} />
                 </div>
                 <div>
-                  <label style={labelStyle}>Capacité</label>
+                  <label style={labelStyle}>{t('Capacité')}</label>
                   <input type="number" min="1" style={inputStyle} value={form.capacity}
                     onChange={(e) => setForm({ ...form, capacity: e.target.value })} />
                 </div>
                 <div>
-                  <label style={labelStyle}>Adresse</label>
-                  <input style={inputStyle} placeholder="Adresse" value={form.address}
+                  <label style={labelStyle}>{t('Adresse')}</label>
+                  <input style={inputStyle} placeholder={t('Adresse')} value={form.address}
                     onChange={(e) => setForm({ ...form, address: e.target.value })} />
                 </div>
                 <div style={{ gridColumn: '1/-1' }}>
-                  <label style={labelStyle}>Description</label>
-                  <textarea rows={3} style={{ ...inputStyle, resize: 'vertical' }} placeholder="Décrivez votre maison..."
+                  <label style={labelStyle}>{t('Description')}</label>
+                  <textarea rows={3} style={{ ...inputStyle, resize: 'vertical' }} placeholder={t('Décrivez votre maison...')}
                     value={form.description}
                     onChange={(e) => setForm({ ...form, description: e.target.value })} />
                 </div>
                 <div style={{ gridColumn: '1/-1' }}>
-                  <label style={labelStyle}>Équipements (séparés par virgule)</label>
-                  <input style={inputStyle} placeholder="Wi-Fi, Piscine, Parking..." value={form.amenities}
+                  <label style={labelStyle}>{t('Équipements (séparés par virgule)')}</label>
+                  <input style={inputStyle} placeholder={t('Wi-Fi, Piscine, Parking...')} value={form.amenities}
                     onChange={(e) => setForm({ ...form, amenities: e.target.value })} />
                 </div>
                 <div style={{ gridColumn: '1/-1' }}>
-                  <label style={labelStyle}>Idéal pour (Cochez les options applicables)</label>
+                  <label style={labelStyle}>{t('Idéal pour (Cochez les options applicables)')}</label>
                   <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', padding: '8px 14px', background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0' }}>
                     {['Familles', 'Amis', 'Couples', 'Solo', 'Affaires'].map(opt => (
                       <label key={opt} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, color: '#475569', cursor: 'pointer' }}>
@@ -352,7 +354,7 @@ function MyHousesContent() {
                   </div>
                 </div>
                 <div style={{ gridColumn: '1/-1' }}>
-                  <label style={labelStyle}>Localisation sur la carte</label>
+                  <label style={labelStyle}>{t('Localisation sur la carte')}</label>
                   <MapPicker
                     value={{ lat: form.lat, lng: form.lng }}
                     onChange={(lat, lng) => setForm((f) => ({ ...f, lat: lat ?? '', lng: lng ?? '' }))}
@@ -360,7 +362,7 @@ function MyHousesContent() {
                   />
                 </div>
                 <div style={{ gridColumn: '1/-1' }}>
-                  <label style={labelStyle}>Photos (la première sera la photo principale)</label>
+                  <label style={labelStyle}>{t('Photos (la première sera la photo principale)')}</label>
                   <ImageUploader 
                     onChange={(selectedFiles) => setFiles(selectedFiles)} 
                     maxFiles={6} 
@@ -373,7 +375,7 @@ function MyHousesContent() {
                 <button type="button"
                   onClick={() => { setShowModal(false); setFormError(''); setForm(emptyForm); setFiles(null); setEditingId(null); }}
                   style={{ padding: '10px 20px', borderRadius: 12, border: '1px solid #e2e8f0', background: '#f8fafc', color: '#64748b', cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>
-                  Annuler
+                  {t('Annuler')}
                 </button>
                 <button type="submit" disabled={submitting}
                   style={{
@@ -381,7 +383,7 @@ function MyHousesContent() {
                     background: 'linear-gradient(135deg, #7c3aed, #a855f7)', color: '#fff',
                     fontWeight: 700, fontSize: 14, cursor: 'pointer', opacity: submitting ? 0.7 : 1
                   }}>
-                  {submitting ? 'Enregistrement...' : editingId ? 'Mettre à jour' : 'Ajouter'}
+                  {submitting ? t('Enregistrement...') : editingId ? t('Mettre à jour') : t('Ajouter')}
                 </button>
               </div>
             </form>
@@ -401,8 +403,8 @@ function MyHousesContent() {
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
               <div>
-                <h3 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: '#1e293b' }}>Ajouter une wilaya</h3>
-                <p style={{ margin: '3px 0 0', fontSize: 12, color: '#94a3b8' }}>Entrez le nom de la nouvelle wilaya</p>
+                <h3 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: '#1e293b' }}>{t('Ajouter une wilaya')}</h3>
+                <p style={{ margin: '3px 0 0', fontSize: 12, color: '#94a3b8' }}>{t('Entrez le nom de la nouvelle wilaya')}</p>
               </div>
               <button type="button" onClick={() => { setShowWilayaModal(false); setTempWilaya(''); }}
                 style={{ background: '#f1f5f9', border: 'none', borderRadius: 10, padding: 8, cursor: 'pointer', color: '#64748b', display: 'flex' }}>
@@ -412,7 +414,7 @@ function MyHousesContent() {
             <input
               type="text"
               autoFocus
-              placeholder="ex: Nouvelle Wilaya"
+              placeholder={t('ex: Nouvelle Wilaya')}
               value={tempWilaya}
               onChange={(e) => setTempWilaya(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
@@ -424,7 +426,7 @@ function MyHousesContent() {
                 onClick={() => { setShowWilayaModal(false); setTempWilaya(''); }}
                 style={{ padding: '9px 18px', borderRadius: 10, border: '1px solid #e2e8f0', background: '#f8fafc', color: '#64748b', cursor: 'pointer', fontWeight: 600, fontSize: 13 }}
               >
-                Annuler
+                {t('Annuler')}
               </button>
               <button
                 type="button"
@@ -447,7 +449,7 @@ function MyHousesContent() {
                   boxShadow: '0 4px 12px rgba(124,58,237,0.3)'
                 }}
               >
-                Ajouter
+                {t('Ajouter')}
               </button>
             </div>
           </div>
@@ -458,8 +460,9 @@ function MyHousesContent() {
 }
 
 export default function MyHousesPage() {
+  const { t } = useT();
   return (
-    <Suspense fallback={<div style={{ textAlign: 'center', padding: '40px 0', color: '#94a3b8' }}>Chargement...</div>}>
+    <Suspense fallback={<div style={{ textAlign: 'center', padding: '40px 0', color: '#94a3b8' }}>{t('Chargement...')}</div>}>
       <MyHousesContent />
     </Suspense>
   );

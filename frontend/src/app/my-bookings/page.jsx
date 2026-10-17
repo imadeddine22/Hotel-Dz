@@ -7,6 +7,8 @@ import Footer from '@/components/Footer';
 import api, { getImageUrl } from '@/lib/api';
 import { formatDZD } from '@/lib/data';
 
+import { useT } from '@/lib/i18n/useT';
+import { dateLocale } from '@/lib/i18n/format';
 // Must match REQUEST_HOLD_MS in backend/src/utils/checkAvailability.js
 const REQUEST_HOLD_MS = 48 * 60 * 60 * 1000;
 
@@ -37,6 +39,7 @@ function displayStatus(b) {
 }
 
 export default function MyBookingsPage() {
+  const { t } = useT();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -61,7 +64,7 @@ export default function MyBookingsPage() {
   }, []);
 
   const cancel = async (id) => {
-    if (!confirm('Voulez-vous vraiment annuler cette réservation ?')) return;
+    if (!confirm(t('Voulez-vous vraiment annuler cette réservation ?'))) return;
     try {
       await api.put(`/bookings/${id}/cancel`);
       load();
@@ -74,24 +77,23 @@ export default function MyBookingsPage() {
     <main className="min-h-screen bg-gray-50">
       <Navbar />
       <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
-        <h1 className="mb-6 text-2xl font-extrabold text-ink">Mes réservations</h1>
+        <h1 className="mb-6 text-2xl font-extrabold text-ink">{t('Mes réservations')}</h1>
 
         {justRequested && (
           <div role="status" className="mb-6 flex gap-3 rounded-2xl border border-green-100 bg-green-50 px-5 py-4 text-sm text-green-800">
             <CheckCircle2 className="h-5 w-5 shrink-0" aria-hidden="true" />
             <p>
-              <strong>Demande envoyée.</strong> Le propriétaire va l&apos;accepter ou la refuser (sous 48 h au plus).
-              Vous paierez directement sur place à l&apos;arrivée.
+              <strong>{t('Demande envoyée.')}</strong> {t('Le propriétaire va l\'accepter ou la refuser (sous 48 h au plus). Vous paierez directement sur place à l\'arrivée.')}
             </p>
           </div>
         )}
 
         {loading ? (
-          <p className="text-gray-400">Chargement...</p>
+          <p className="text-gray-400">{t('Chargement...')}</p>
         ) : error ? (
           <p className="rounded-lg bg-red-50 px-4 py-3 text-red-600">{error}</p>
         ) : bookings.length === 0 ? (
-          <p className="text-gray-400">Vous n&apos;avez pas encore de réservation.</p>
+          <p className="text-gray-400">{t('Vous n\'avez pas encore de réservation.')}</p>
         ) : (
           <div className="space-y-4">
             {bookings.map((b) => {
@@ -109,39 +111,39 @@ export default function MyBookingsPage() {
                   <div className="flex flex-1 flex-col">
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <h3 className="font-bold text-ink">{property?.name || 'Hébergement supprimé'}</h3>
+                        <h3 className="font-bold text-ink">{property?.name || t('Hébergement supprimé')}</h3>
                         <p className="flex items-center gap-1 text-sm text-gray-500">
                           <MapPin className="h-4 w-4" aria-hidden="true" /> {property?.city}, {property?.wilaya}
                         </p>
                         <p className="mt-1 text-sm text-gray-500">
-                          {isHouse ? `${property?.type || 'Maison'} entière` : b.room?.title} · {b.guests} pers.
+                          {isHouse ? `${property?.type || 'Maison'} entière` : b.room?.title} · {b.guests} {t('pers.')}
                         </p>
                       </div>
                       <div className="flex flex-col items-end gap-1.5">
-                        <span className={`rounded-full px-3 py-1 text-xs font-semibold ${STATUS[shown].cls}`}>{STATUS[shown].label}</span>
+                        <span className={`rounded-full px-3 py-1 text-xs font-semibold ${STATUS[shown].cls}`}>{t(STATUS[shown].label)}</span>
                         {showPayment && (
                           <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-medium ${PAYMENT[b.paymentStatus || 'unpaid'].cls}`}>
-                            {PAYMENT[b.paymentStatus || 'unpaid'].label}
+                            {t(PAYMENT[b.paymentStatus || 'unpaid'].label)}
                           </span>
                         )}
                       </div>
                     </div>
 
                     {shown === 'rejected' && (
-                      <p className="mt-2 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700">Motif du refus : {b.rejectionReason}</p>
+                      <p className="mt-2 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700">{t('Motif du refus :')} {b.rejectionReason}</p>
                     )}
                     {shown === 'expired' && (
-                      <p className="mt-2 text-xs text-gray-500">Le propriétaire n&apos;a pas répondu à temps : les dates ne sont plus réservées.</p>
+                      <p className="mt-2 text-xs text-gray-500">{t('Le propriétaire n\'a pas répondu à temps : les dates ne sont plus réservées.')}</p>
                     )}
 
                     <div className="mt-auto flex items-end justify-between pt-3">
                       <p className="text-sm text-gray-500">
-                        {new Date(b.checkIn).toLocaleDateString('fr-DZ')} → {new Date(b.checkOut).toLocaleDateString('fr-DZ')}
+                        {new Date(b.checkIn).toLocaleDateString(dateLocale())} → {new Date(b.checkOut).toLocaleDateString(dateLocale())}
                         <span className="ml-2 font-bold text-brand-600">{formatDZD(b.totalPrice)}</span>
                       </p>
                       {['pending', 'confirmed'].includes(b.status) && !started && (
                         <button onClick={() => cancel(b._id)} className="text-sm font-medium text-red-600 hover:underline">
-                          Annuler
+                          {t('Annuler')}
                         </button>
                       )}
                     </div>

@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { Hotel, Home, ArrowRight } from 'lucide-react';
 
+import { useT } from '@/lib/i18n/useT';
 const GRADIENTS = [
   'linear-gradient(135deg, #0891b2 0%, #06b6d4 50%, #22d3ee 100%)',
   'linear-gradient(135deg, #7c3aed 0%, #8b5cf6 50%, #a78bfa 100%)',
@@ -24,6 +25,7 @@ const PATTERNS = [
 ];
 
 export default function WilayaCard({ name, index = 0 }) {
+  const { t } = useT();
   const gradient = GRADIENTS[index % GRADIENTS.length];
   const pattern = PATTERNS[index % PATTERNS.length];
 
@@ -87,7 +89,7 @@ export default function WilayaCard({ name, index = 0 }) {
             {name}
           </h3>
           <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', marginTop: 4, fontWeight: 500 }}>
-            Voir les hôtels & maisons
+            {t('Voir les hôtels & maisons')}
           </p>
         </div>
 

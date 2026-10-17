@@ -8,6 +8,7 @@ import TripBudgetCalculator from '@/components/tools/TripBudgetCalculator';
 import { breadcrumbLd, faqLd, JsonLd, SITE_URL } from '@/lib/seo';
 import { getTool, TOOLS } from '../tools';
 
+import T from '@/components/T';
 const UPDATED = '2026-10-16';
 
 // Per-tool editorial content: intro answer block, method and FAQ.
@@ -149,17 +150,17 @@ export default function ToolPage({ params }) {
 
       <article className="mx-auto max-w-5xl px-4 py-10 text-slate-700">
         <nav aria-label="Fil d'Ariane" className="mb-4 text-xs text-slate-500">
-          <Link href="/" className="hover:text-slate-900">Accueil</Link>
+          <Link href="/" className="hover:text-slate-900"><T>Accueil</T></Link>
           <span aria-hidden="true"> / </span>
-          <Link href="/outils" className="hover:text-slate-900">Outils</Link>
+          <Link href="/outils" className="hover:text-slate-900"><T>Outils</T></Link>
           <span aria-hidden="true"> / </span>
-          <span className="text-slate-900">{tool.title}</span>
+          <span className="text-slate-900"><T>{tool.title}</T></span>
         </nav>
 
-        <h1 className="font-serif text-3xl font-bold text-slate-900 md:text-4xl">{tool.title}</h1>
-        <p className="mt-3 max-w-3xl text-base leading-relaxed">{c.intro}</p>
+        <h1 className="font-serif text-3xl font-bold text-slate-900 md:text-4xl"><T>{tool.title}</T></h1>
+        <p className="mt-3 max-w-3xl text-base leading-relaxed"><T>{c.intro}</T></p>
         <p className="mt-2 text-xs text-slate-500">
-          Outil gratuit, sans inscription. Mis à jour le <time dateTime={UPDATED}>16 octobre 2026</time>.
+          <T>Outil gratuit, sans inscription. Mis à jour le</T> <time dateTime={UPDATED}><T>16 octobre 2026</T></time>.
         </p>
 
         <div className="mt-8">
@@ -171,39 +172,39 @@ export default function ToolPage({ params }) {
             href={tool.cta.href}
             className="inline-flex min-h-[44px] items-center rounded-full bg-slate-900 px-6 text-sm font-bold text-white hover:bg-slate-800"
           >
-            {tool.cta.label}
+            <T>{tool.cta.label}</T>
           </Link>
         </div>
 
-        <h2 className="mt-12 text-xl font-bold text-slate-900">Comment fonctionne le calcul ?</h2>
+        <h2 className="mt-12 text-xl font-bold text-slate-900"><T>Comment fonctionne le calcul ?</T></h2>
         <ol className="mt-3 list-decimal space-y-1 pl-5">
-          {c.method.map((m) => <li key={m}>{m}</li>)}
+          {c.method.map((m) => <li key={m}><T>{m}</T></li>)}
         </ol>
 
-        <h2 className="mt-10 text-xl font-bold text-slate-900">Questions fréquentes</h2>
+        <h2 className="mt-10 text-xl font-bold text-slate-900"><T>Questions fréquentes</T></h2>
         <div className="mt-3 divide-y divide-slate-200 rounded-xl border border-slate-200">
           {c.faqs.map((f) => (
             <details key={f.q} className="p-4">
-              <summary className="cursor-pointer list-none font-semibold text-slate-900">{f.q}</summary>
-              <p className="mt-2 leading-relaxed">{f.a}</p>
+              <summary className="cursor-pointer list-none font-semibold text-slate-900"><T>{f.q}</T></summary>
+              <p className="mt-2 leading-relaxed"><T>{f.a}</T></p>
             </details>
           ))}
         </div>
 
-        <h2 className="mt-10 text-xl font-bold text-slate-900">Autres outils gratuits</h2>
+        <h2 className="mt-10 text-xl font-bold text-slate-900"><T>Autres outils gratuits</T></h2>
         <ul className="mt-3 grid gap-3 sm:grid-cols-2">
           {others.map((t) => (
             <li key={t.slug}>
               <Link href={`/outils/${t.slug}`} className="block rounded-xl border border-slate-200 p-4 hover:border-cyan-600">
-                <span className="font-semibold text-slate-900">{t.title}</span>
-                <span className="mt-1 block text-sm">{t.short}</span>
+                <span className="font-semibold text-slate-900"><T>{t.title}</T></span>
+                <span className="mt-1 block text-sm"><T>{t.short}</T></span>
               </Link>
             </li>
           ))}
         </ul>
 
         <p className="mt-10 text-xs text-slate-500">
-          Les résultats sont des estimations fournies à titre indicatif et ne constituent pas un conseil financier.
+          <T>Les résultats sont des estimations fournies à titre indicatif et ne constituent pas un conseil financier.</T>
         </p>
       </article>
       <Footer />

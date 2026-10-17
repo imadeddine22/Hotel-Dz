@@ -4,16 +4,15 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Tag, ChevronLeft, ChevronRight, MapPin, BedDouble, ChevronRight as ArrowIcon, Plus } from 'lucide-react';
 import api, { getImageUrl } from '@/lib/api';
-import { useAuthStore, useLangStore } from '@/store/authStore';
-import { TRANSLATIONS } from '@/lib/data';
+import { useAuthStore } from '@/store/authStore';
+import { useT } from '@/lib/i18n/useT';
 
 
 export default function FeaturedSales({ selectedCity }) {
   const [sales, setSales] = useState([]);
   const [loading, setLoading] = useState(true);
   const user = useAuthStore((s) => s.user);
-  const { lang } = useLangStore();
-  const t = TRANSLATIONS[lang] || TRANSLATIONS.fr;
+  const { t, lang } = useT();
   const isSeller = user?.role === 'seller';
 
   // Newest approved sale listings, filtered by the selected wilaya on the server
@@ -49,10 +48,10 @@ export default function FeaturedSales({ selectedCity }) {
           </span>
           <div>
             <h2 style={{ fontSize: 22, fontWeight: 800, color: '#1e293b', margin: 0 }}>
-              {selectedCity && lang !== 'ar' ? `Biens à vendre · ${selectedCity}` : (t.featuredSales || 'Biens à Vendre')}
+              {selectedCity && lang !== 'ar' ? t('Biens à vendre · {selectedCity}', { selectedCity }) : (t.featuredSales || t('Biens à Vendre'))}
             </h2>
             <p style={{ fontSize: 13, color: '#94a3b8', margin: '2px 0 0' }}>
-              {t.featuredSalesSubtitle || 'Achetez votre futur logement en Algérie'}
+              {t.featuredSalesSubtitle || t('Achetez votre futur logement en Algérie')}
             </p>
           </div>
         </div>
@@ -63,7 +62,7 @@ export default function FeaturedSales({ selectedCity }) {
             padding: '8px 20px', fontSize: 13, fontWeight: 700,
             color: '#fff', textDecoration: 'none', boxShadow: '0 4px 14px rgba(15,23,42,0.25)'
           }}>
-            <Plus size={15} /> Publier un bien
+            <Plus size={15} /> {t('Publier un bien')}
           </Link>
           <Link href="/sales" style={{
             display: 'flex', alignItems: 'center', gap: 4, borderRadius: 999,
@@ -115,7 +114,7 @@ export default function FeaturedSales({ selectedCity }) {
                 >
                   <img 
                     src={img} 
-                    alt={item.title} 
+                    alt={t(item.title)} 
                     style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s' }} 
                     className="group-hover:scale-105"
                   />
@@ -125,7 +124,7 @@ export default function FeaturedSales({ selectedCity }) {
                     background: 'rgba(15,23,42,0.95)', color: '#fff',
                     borderRadius: 999, padding: '4px 12px', fontSize: 11, fontWeight: 700
                   }}>
-                    {item.type || 'Maison'}
+                    {t(item.type || 'Maison')}
                   </span>
                   
                   {/* Details overlay */}
@@ -136,18 +135,18 @@ export default function FeaturedSales({ selectedCity }) {
                   }}>
                     <div style={{ position: 'absolute', bottom: 16, left: 16, right: 16 }}>
                       <h3 style={{ fontSize: 17, fontWeight: 700, color: '#fff', margin: '0 0 4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {item.title}
+                        {t(item.title)}
                       </h3>
                       <p style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, color: '#e2e8f0', margin: '0 0 8px' }}>
-                        <MapPin size={14} className="text-slate-400" /> {item.city}, {item.wilaya}
+                        <MapPin size={14} className="text-slate-400" /> {t(item.city)}, {t(item.wilaya)}
                       </p>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <div style={{ display: 'flex', gap: 10, fontSize: 12, color: '#cbd5e1' }}>
-                          {item.area > 0 && <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}>{item.area} m²</span>}
-                          {item.rooms > 0 && <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}><BedDouble size={13} /> {item.rooms} p.</span>}
+                          {item.area > 0 && <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}>{item.area} {t('m²')}</span>}
+                          {item.rooms > 0 && <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}><BedDouble size={13} /> {item.rooms} {t('p.')}</span>}
                         </div>
                         <span style={{ fontSize: 14, fontWeight: 800, color: '#cbd5e1' }}>
-                          {new Intl.NumberFormat('fr-DZ').format(price)} DZD
+                          {new Intl.NumberFormat('fr-DZ').format(price)} {t('DZD')}
                         </span>
                       </div>
                     </div>
@@ -157,7 +156,7 @@ export default function FeaturedSales({ selectedCity }) {
             })
           ) : (
             <p style={{ padding: '40px 0', color: '#94a3b8', fontSize: 14 }}>
-              {`Aucun bien à vendre pour « ${selectedCity} » pour le moment.`}
+              {t('Aucun bien à vendre pour « {selectedCity} » pour le moment.', { selectedCity })}
             </p>
           )}
         </div>

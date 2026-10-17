@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { autoTranslate } from '../utils/autoTranslate.js';
 
 const hotelSchema = new mongoose.Schema(
   {
@@ -46,6 +47,10 @@ const hotelSchema = new mongoose.Schema(
 );
 
 hotelSchema.index({ wilaya: 1, status: 1 });
+
+// Name/description/amenities are machine-translated into the other site languages after each save
+export const TRANSLATED_FIELDS = ['name', 'description', 'amenities'];
+autoTranslate(hotelSchema, TRANSLATED_FIELDS);
 
 const Hotel = mongoose.model('Hotel', hotelSchema);
 export default Hotel;

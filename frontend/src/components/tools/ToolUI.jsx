@@ -2,6 +2,7 @@
 
 import { useId } from 'react';
 
+import { useT } from '@/lib/i18n/useT';
 export const fmt = (n) =>
   Number.isFinite(n) ? new Intl.NumberFormat('fr-DZ', { maximumFractionDigits: 0 }).format(Math.round(n)) : '—';
 
@@ -56,12 +57,13 @@ export function ResultCard({ label, value, unit = 'DA', highlight = false }) {
 
 /** Two-column calculator layout: inputs on the left, live results on the right. */
 export function ToolLayout({ inputs, results }) {
+  const { t } = useT();
   return (
     <div className="grid gap-6 rounded-2xl border border-slate-200 bg-slate-50 p-4 md:grid-cols-2 md:p-6">
-      <form className="space-y-4" onSubmit={(e) => e.preventDefault()} aria-label="Paramètres du calcul">
+      <form className="space-y-4" onSubmit={(e) => e.preventDefault()} aria-label={t('Paramètres du calcul')}>
         {inputs}
       </form>
-      <section aria-live="polite" aria-label="Résultats">
+      <section aria-live="polite" aria-label={t('Résultats')}>
         <dl className="grid gap-3">{results}</dl>
       </section>
     </div>

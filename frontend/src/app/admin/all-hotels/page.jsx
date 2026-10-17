@@ -7,7 +7,9 @@ import { useWilayas } from '@/hooks/useWilayas';
 import api, { getImageUrl, getServerURL, resolveImg } from '@/lib/api';
 import { formatDZD } from '@/lib/data';
 
+import { useT } from '@/lib/i18n/useT';
 export default function AdminAllHotelsPage() {
+  const { t } = useT();
   const { wilayas, addWilaya } = useWilayas();
   const [hotels, setHotels] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -86,7 +88,7 @@ export default function AdminAllHotelsPage() {
   };
 
   const handleDelete = async (id, name) => {
-    if (!confirm(`Êtes-vous sûr de supprimer "${name}" ?`)) return;
+    if (!confirm(t('Êtes-vous sûr de supprimer "{name}" ?', { name }))) return;
     try {
       await api.delete(`/admin/hotels/${id}`);
       setHotels((h) => h.filter((x) => x._id !== id));
@@ -148,15 +150,15 @@ export default function AdminAllHotelsPage() {
     <div>
       <div className="admin-page-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <h1 className="admin-page-title">Tous les hôtels</h1>
-          <p className="admin-page-subtitle">Hébergements disponibles sur la plateforme</p>
+          <h1 className="admin-page-title">{t('Tous les hôtels')}</h1>
+          <p className="admin-page-subtitle">{t('Hébergements disponibles sur la plateforme')}</p>
         </div>
         <button
           className="admin-btn admin-btn-primary"
           onClick={() => { setEditingId(null); setForm(emptyForm); setShowModal(true); }}
           style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', fontSize: 14 }}
         >
-          <Plus style={{ width: 18, height: 18 }} /> Ajouter un hôtel
+          <Plus style={{ width: 18, height: 18 }} /> {t('Ajouter un hôtel')}
         </button>
       </div>
 
@@ -174,7 +176,7 @@ export default function AdminAllHotelsPage() {
               className={`admin-filter-btn ${statusFilter === f.value ? 'active' : ''}`}
               onClick={() => setStatusFilter(f.value)}
             >
-              {f.label}
+              {t(f.label)}
             </button>
           ))}
         </div>
@@ -183,22 +185,22 @@ export default function AdminAllHotelsPage() {
             onClick={() => setTypeFilter('')}
             className={`shrink-0 rounded-full px-4 py-1.5 text-sm ${!typeFilter ? 'bg-brand-500 text-white' : 'border border-gray-200 text-gray-600 bg-white'}`}
           >
-            Tous les types
+            {t('Tous les types')}
           </button>
-          {TYPES.map((t) => (
+          {TYPES.map((item) => (
             <button
-              key={t}
-              onClick={() => setTypeFilter(t)}
-              className={`shrink-0 rounded-full px-4 py-1.5 text-sm ${typeFilter === t ? 'bg-brand-500 text-white' : 'border border-gray-200 text-gray-600 bg-white'}`}
+              key={item}
+              onClick={() => setTypeFilter(item)}
+              className={`shrink-0 rounded-full px-4 py-1.5 text-sm ${typeFilter === item ? 'bg-brand-500 text-white' : 'border border-gray-200 text-gray-600 bg-white'}`}
             >
-              {t}
+              {t(item)}
             </button>
           ))}
         </div>
         <form onSubmit={handleSearch} style={{ marginLeft: 'auto' }}>
           <input
             type="text"
-            placeholder="Rechercher un hôtel..."
+            placeholder={t('Rechercher un hôtel...')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="admin-search-input"
@@ -227,8 +229,8 @@ export default function AdminAllHotelsPage() {
             <div className="admin-empty-icon">
               <Building2 />
             </div>
-            <p className="admin-empty-title">Aucun hôtel trouvé</p>
-            <p className="admin-empty-desc">Modifiez vos filtres pour voir plus de résultats</p>
+            <p className="admin-empty-title">{t('Aucun hôtel trouvé')}</p>
+            <p className="admin-empty-desc">{t('Modifiez vos filtres pour voir plus de résultats')}</p>
           </div>
         </div>
       ) : (
@@ -242,13 +244,13 @@ export default function AdminAllHotelsPage() {
                   className="admin-hotel-card-img"
                 />
                 <span className={`admin-hotel-card-status ${h.status}`} style={{ position: 'absolute', top: 10, right: 10 }}>
-                  {h.status === 'approved' ? 'Approuvé' : h.status === 'pending' ? 'En attente' : 'Rejeté'}
+                  {h.status === 'approved' ? t('Approuvé') : h.status === 'pending' ? t('En attente') : t('Rejeté')}
                 </span>
               </div>
               <div className="admin-hotel-card-body">
                 <h4 className="admin-hotel-card-name">{h.name}</h4>
                 <p className="admin-hotel-card-location">
-                  <MapPin /> {h.city}, {h.wilaya}
+                  <MapPin /> {t(h.city)}, {t(h.wilaya)}
                 </p>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 6 }}>
                   {[...Array(h.starRating || 0)].map((_, i) => (
@@ -267,7 +269,7 @@ export default function AdminAllHotelsPage() {
                       onClick={() => setViewingHotel(h)}
                       className="admin-btn"
                       style={{ padding: '4px 8px', fontSize: 11, background: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1', borderRadius: 8 }}
-                      title="Voir l'offre"
+                      title={t('Voir l\'offre')}
                     >
                       <Eye style={{ width: 13, height: 13 }} />
                     </button>
@@ -276,7 +278,7 @@ export default function AdminAllHotelsPage() {
                         onClick={() => handleStatusChange(h._id, 'approve')}
                         className="admin-btn"
                         style={{ padding: '4px 8px', fontSize: 11, background: '#e0f7fa', color: '#00bcd4', border: '1px solid #a7f3d0', borderRadius: 8 }}
-                        title="Approuver"
+                        title={t('Approuver')}
                       >
                         <CheckCircle style={{ width: 13, height: 13 }} />
                       </button>
@@ -286,7 +288,7 @@ export default function AdminAllHotelsPage() {
                         onClick={() => { setRejectingHotel(h); setRejectionReason(''); }}
                         className="admin-btn"
                         style={{ padding: '4px 8px', fontSize: 11, background: '#fef2f2', color: '#ef4444', border: '1px solid #fecaca', borderRadius: 8 }}
-                        title="Rejeter avec motif"
+                        title={t('Rejeter avec motif')}
                       >
                         <XCircle style={{ width: 13, height: 13 }} />
                       </button>
@@ -295,7 +297,7 @@ export default function AdminAllHotelsPage() {
                       onClick={() => openEdit(h)}
                       className="admin-btn"
                       style={{ padding: '4px 10px', fontSize: 11, background: '#f8fafc', color: '#64748b', border: '1px solid #e2e8f0', borderRadius: 8 }}
-                      title="Modifier"
+                      title={t('Modifier')}
                     >
                       <Pencil style={{ width: 14, height: 14 }} />
                     </button>
@@ -303,7 +305,7 @@ export default function AdminAllHotelsPage() {
                       onClick={() => handleDelete(h._id, h.name)}
                       className="admin-btn admin-btn-danger"
                       style={{ padding: '4px 10px', fontSize: 11 }}
-                      title="Supprimer"
+                      title={t('Supprimer')}
                     >
                       <Trash2 style={{ width: 14, height: 14 }} />
                     </button>
@@ -332,9 +334,9 @@ export default function AdminAllHotelsPage() {
             }}>
               <div>
                 <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: '#1e293b' }}>
-                  {editingId ? 'Modifier l\'hôtel' : 'Ajouter un hôtel'}
+                  {editingId ? t('Modifier l\'hôtel') : t('Ajouter un hôtel')}
                 </h2>
-                <p style={{ margin: '2px 0 0', fontSize: 13, color: '#94a3b8' }}>Remplissez les informations de l'hôtel</p>
+                <p style={{ margin: '2px 0 0', fontSize: 13, color: '#94a3b8' }}>{t('Remplissez les informations de l\'hôtel')}</p>
               </div>
               <button onClick={() => { setShowModal(false); setFormError(''); setForm(emptyForm); setEditingId(null); }}
                 style={{ background: '#f1f5f9', border: 'none', borderRadius: 10, padding: 8, cursor: 'pointer', color: '#64748b' }}>
@@ -350,24 +352,24 @@ export default function AdminAllHotelsPage() {
               )}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
                 <div style={{ gridColumn: '1/-1' }}>
-                  <label style={labelStyle}>Nom de l'hôtel *</label>
-                  <input required style={inputStyle} placeholder="ex: Hôtel El Aurassi" value={form.name}
+                  <label style={labelStyle}>{t('Nom de l\'hôtel *')}</label>
+                  <input required style={inputStyle} placeholder={t('ex: Hôtel El Aurassi')} value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })} />
                 </div>
                 <div style={{ gridColumn: '1/-1' }}>
-                  <label style={labelStyle}>Propriétaire *</label>
+                  <label style={labelStyle}>{t('Propriétaire *')}</label>
                   <select required style={inputStyle} value={form.owner}
                     onChange={(e) => setForm({ ...form, owner: e.target.value })}>
-                    <option value="">Sélectionner le propriétaire (Moi ou Hôtelier)</option>
+                    <option value="">{t('Sélectionner le propriétaire (Moi ou Hôtelier)')}</option>
                     {owners.map(u => (
                       <option key={u._id} value={u._id}>
-                        {u.fullName} ({u.role === 'admin' ? 'Admin' : 'Hôtelier'}) - {u.email}
+                        {u.fullName} ({u.role === 'admin' ? t('Admin') : t('Hôtelier')}) - {u.email}
                       </option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label style={labelStyle}>Type *</label>
+                  <label style={labelStyle}>{t('Type *')}</label>
                   <select required style={inputStyle} value={form.type}
                     onChange={(e) => setForm({ ...form, type: e.target.value })}>
                     {['Luxe','Affaires','Balnéaire','Riad','Boutique','Montagne','Désert','Appart-hôtel','Économique'].map(t => (
@@ -376,7 +378,7 @@ export default function AdminAllHotelsPage() {
                   </select>
                 </div>
                 <div>
-                  <label style={labelStyle}>Étoiles *</label>
+                  <label style={labelStyle}>{t('Étoiles *')}</label>
                   <select required style={inputStyle} value={form.starRating}
                     onChange={(e) => setForm({ ...form, starRating: e.target.value })}>
                     {[1,2,3,4,5].map(n => <option key={n} value={n}>{n} ★</option>)}
@@ -384,45 +386,45 @@ export default function AdminAllHotelsPage() {
                 </div>
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <label style={labelStyle}>Wilaya *</label>
+                    <label style={labelStyle}>{t('Wilaya *')}</label>
                     <button
                       type="button"
                       onClick={() => setShowWilayaModal(true)}
                       style={{ fontSize: 11, color: '#34c77b', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}
                     >
-                      + Ajouter
+                      {t('+ Ajouter')}
                     </button>
                   </div>
                   <select required style={inputStyle} value={form.wilaya}
                     onChange={(e) => setForm({ ...form, wilaya: e.target.value })}>
-                    <option value="">Choisir une wilaya</option>
+                    <option value="">{t('Choisir une wilaya')}</option>
                     {wilayas.map(w => <option key={w} value={w}>{w}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label style={labelStyle}>Ville *</label>
-                  <input required style={inputStyle} placeholder="ex: Alger Centre" value={form.city}
+                  <label style={labelStyle}>{t('Ville *')}</label>
+                  <input required style={inputStyle} placeholder={t('ex: Alger Centre')} value={form.city}
                     onChange={(e) => setForm({ ...form, city: e.target.value })} />
                 </div>
                 <div style={{ gridColumn: '1/-1' }}>
-                  <label style={labelStyle}>Adresse</label>
-                  <input style={inputStyle} placeholder="Adresse complète" value={form.address}
+                  <label style={labelStyle}>{t('Adresse')}</label>
+                  <input style={inputStyle} placeholder={t('Adresse complète')} value={form.address}
                     onChange={(e) => setForm({ ...form, address: e.target.value })} />
                 </div>
                 <div style={{ gridColumn: '1/-1' }}>
-                  <label style={labelStyle}>Description</label>
-                  <textarea rows={3} style={{ ...inputStyle, resize: 'vertical' }} placeholder="Décrivez l'hôtel..."
+                  <label style={labelStyle}>{t('Description')}</label>
+                  <textarea rows={3} style={{ ...inputStyle, resize: 'vertical' }} placeholder={t('Décrivez l\'hôtel...')}
                     value={form.description}
                     onChange={(e) => setForm({ ...form, description: e.target.value })} />
                 </div>
                 <div style={{ gridColumn: '1/-1' }}>
-                  <label style={labelStyle}>Équipements (séparés par virgule)</label>
-                  <input style={inputStyle} placeholder="ex: Wi-Fi, Piscine, Restaurant, Spa"
+                  <label style={labelStyle}>{t('Équipements (séparés par virgule)')}</label>
+                  <input style={inputStyle} placeholder={t('ex: Wi-Fi, Piscine, Restaurant, Spa')}
                     value={form.amenities}
                     onChange={(e) => setForm({ ...form, amenities: e.target.value })} />
                 </div>
                 <div style={{ gridColumn: '1/-1' }}>
-                  <label style={labelStyle}>Idéal pour (Cochez les options applicables)</label>
+                  <label style={labelStyle}>{t('Idéal pour (Cochez les options applicables)')}</label>
                   <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', padding: '8px 14px', background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0' }}>
                     {['Familles', 'Amis', 'Couples', 'Solo', 'Affaires'].map(opt => (
                       <label key={opt} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, color: '#475569', cursor: 'pointer' }}>
@@ -437,15 +439,15 @@ export default function AdminAllHotelsPage() {
                   </div>
                 </div>
                 <div style={{ gridColumn: '1/-1' }}>
-                  <label style={labelStyle}>Statut</label>
+                  <label style={labelStyle}>{t('Statut')}</label>
                   <select style={inputStyle} value={form.status}
                     onChange={(e) => setForm({ ...form, status: e.target.value })}>
-                    <option value="approved">Approuvé</option>
-                    <option value="pending">En attente</option>
+                    <option value="approved">{t('Approuvé')}</option>
+                    <option value="pending">{t('En attente')}</option>
                   </select>
                 </div>
                 <div style={{ gridColumn: '1/-1' }}>
-                  <label style={labelStyle}>Localisation sur la carte</label>
+                  <label style={labelStyle}>{t('Localisation sur la carte')}</label>
                   <MapPicker
                     value={{ lat: form.lat, lng: form.lng }}
                     onChange={(lat, lng) => setForm((f) => ({ ...f, lat: lat ?? '', lng: lng ?? '' }))}
@@ -457,12 +459,12 @@ export default function AdminAllHotelsPage() {
                 <button type="button"
                   onClick={() => { setShowModal(false); setFormError(''); setForm(emptyForm); setEditingId(null); }}
                   style={{ padding: '10px 20px', borderRadius: 12, border: '1px solid #e2e8f0', background: '#f8fafc', color: '#64748b', cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>
-                  Annuler
+                  {t('Annuler')}
                 </button>
                 <button type="submit" disabled={submitting}
                   className="admin-btn admin-btn-primary"
                   style={{ padding: '10px 24px', fontSize: 14, opacity: submitting ? 0.7 : 1 }}>
-                  {submitting ? 'Enregistrement...' : editingId ? 'Mettre à jour' : 'Ajouter l\'hôtel'}
+                  {submitting ? t('Enregistrement...') : editingId ? t('Mettre à jour') : t('Ajouter l\'hôtel')}
                 </button>
               </div>
             </form>
@@ -481,7 +483,7 @@ export default function AdminAllHotelsPage() {
             boxShadow: '0 25px 60px rgba(0,0,0,0.2)', padding: '24px 26px'
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#1e293b' }}>Ajouter une wilaya</h3>
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#1e293b' }}>{t('Ajouter une wilaya')}</h3>
               <button type="button" onClick={() => { setShowWilayaModal(false); setTempWilaya(''); }}
                 style={{ background: '#f1f5f9', border: 'none', borderRadius: 10, padding: 8, cursor: 'pointer', color: '#64748b' }}>
                 <X style={{ width: 16, height: 16 }} />
@@ -489,7 +491,7 @@ export default function AdminAllHotelsPage() {
             </div>
             <input
               type="text"
-              placeholder="Nom de la wilaya (ex: Ghardaïa)"
+              placeholder={t('Nom de la wilaya (ex: Ghardaïa)')}
               value={tempWilaya}
               onChange={(e) => setTempWilaya(e.target.value)}
               style={{ ...inputStyle, marginBottom: 16, background: '#fff' }}
@@ -500,7 +502,7 @@ export default function AdminAllHotelsPage() {
                 onClick={() => { setShowWilayaModal(false); setTempWilaya(''); }}
                 style={{ padding: '8px 16px', borderRadius: 10, border: '1px solid #e2e8f0', background: '#f8fafc', color: '#64748b', cursor: 'pointer', fontWeight: 600, fontSize: 13 }}
               >
-                Annuler
+                {t('Annuler')}
               </button>
               <button
                 type="button"
@@ -517,7 +519,7 @@ export default function AdminAllHotelsPage() {
                 }}
                 style={{ padding: '8px 18px', borderRadius: 10, border: 'none', background: '#34c77b', color: '#fff', cursor: 'pointer', fontWeight: 600, fontSize: 13 }}
               >
-                Ajouter
+                {t('Ajouter')}
               </button>
             </div>
           </div>
@@ -530,7 +532,7 @@ export default function AdminAllHotelsPage() {
             <div className="flex items-center justify-between border-b pb-4 mb-4">
               <div>
                 <span className="text-xs font-bold text-indigo-600 uppercase tracking-wider">
-                  {viewingHotel.type} · {viewingHotel.starRating || 3} Étoiles
+                  {t(viewingHotel.type)} · {viewingHotel.starRating || 3} {t('Étoiles')}
                 </span>
                 <h2 className="text-2xl font-extrabold text-gray-900">{viewingHotel.name}</h2>
               </div>
@@ -553,27 +555,27 @@ export default function AdminAllHotelsPage() {
               </div>
             ) : (
               <div className="mb-6 flex h-40 w-full items-center justify-center rounded-2xl bg-gray-50 text-gray-400 font-medium">
-                Aucune photo disponible
+                {t('Aucune photo disponible')}
               </div>
             )}
 
             {/* Owner & Location */}
             <div className="grid md:grid-cols-2 gap-4 p-4 rounded-2xl bg-gray-50 mb-6 text-sm">
               <div>
-                <p className="text-xs text-gray-400 font-bold uppercase">Propriétaire</p>
-                <p className="font-extrabold text-gray-900">{viewingHotel.owner?.fullName || 'Hôtelier'}</p>
+                <p className="text-xs text-gray-400 font-bold uppercase">{t('Propriétaire')}</p>
+                <p className="font-extrabold text-gray-900">{viewingHotel.owner?.fullName || t('Hôtelier')}</p>
                 <p className="text-xs text-gray-500">{viewingHotel.owner?.email || '—'}</p>
               </div>
               <div>
-                <p className="text-xs text-gray-400 font-bold uppercase">Emplacement</p>
-                <p className="font-bold text-gray-900">{viewingHotel.address || viewingHotel.city}, {viewingHotel.wilaya}</p>
+                <p className="text-xs text-gray-400 font-bold uppercase">{t('Emplacement')}</p>
+                <p className="font-bold text-gray-900">{viewingHotel.address || viewingHotel.city}, {t(viewingHotel.wilaya)}</p>
               </div>
             </div>
 
             {/* Description */}
             {viewingHotel.description && (
               <div className="mb-6">
-                <h4 className="font-bold text-gray-900 mb-1 text-sm">Description</h4>
+                <h4 className="font-bold text-gray-900 mb-1 text-sm">{t('Description')}</h4>
                 <p className="text-sm text-gray-600 leading-relaxed bg-gray-50/50 p-4 rounded-2xl border border-gray-100">
                   {viewingHotel.description}
                 </p>
@@ -583,7 +585,7 @@ export default function AdminAllHotelsPage() {
             {/* Rejection reason notice if rejected */}
             {viewingHotel.status === 'rejected' && viewingHotel.rejectionReason && (
               <div className="mb-6 rounded-2xl bg-red-50 p-4 border border-red-200">
-                <p className="text-xs font-bold text-red-800 uppercase">Motif du refus enregistré :</p>
+                <p className="text-xs font-bold text-red-800 uppercase">{t('Motif du refus enregistré :')}</p>
                 <p className="mt-1 text-sm font-semibold text-red-700 italic">"{viewingHotel.rejectionReason}"</p>
               </div>
             )}
@@ -595,7 +597,7 @@ export default function AdminAllHotelsPage() {
                   onClick={() => handleStatusChange(viewingHotel._id, 'approve')}
                   className="rounded-full bg-emerald-600 px-6 py-2.5 font-bold text-white shadow-md hover:bg-emerald-700 transition"
                 >
-                  Approuver l'hôtel
+                  {t('Approuver l\'hôtel')}
                 </button>
               )}
               {viewingHotel.status !== 'rejected' && (
@@ -606,14 +608,14 @@ export default function AdminAllHotelsPage() {
                   }}
                   className="rounded-full bg-amber-500 px-6 py-2.5 font-bold text-white shadow-md hover:bg-amber-600 transition"
                 >
-                  Rejeter avec motif
+                  {t('Rejeter avec motif')}
                 </button>
               )}
               <button
                 onClick={() => setViewingHotel(null)}
                 className="rounded-full border border-gray-200 px-6 py-2.5 font-bold text-gray-600 hover:bg-gray-50 transition"
               >
-                Fermer
+                {t('Fermer')}
               </button>
             </div>
           </div>
@@ -625,7 +627,7 @@ export default function AdminAllHotelsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="relative w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl border border-gray-100">
             <div className="flex items-center justify-between border-b pb-4 mb-4">
-              <h3 className="text-lg font-bold text-gray-900">Refuser l'hôtel : {rejectingHotel.name}</h3>
+              <h3 className="text-lg font-bold text-gray-900">{t('Refuser l\'hôtel :')} {rejectingHotel.name}</h3>
               <button onClick={() => setRejectingHotel(null)} className="rounded-full p-1 text-gray-400 hover:bg-gray-100">
                 <X className="h-5 w-5" />
               </button>
@@ -658,7 +660,7 @@ export default function AdminAllHotelsPage() {
               rows={4}
               value={rejectionReason}
               onChange={(e) => setRejectionReason(e.target.value)}
-              placeholder="Écrivez le motif du refus..."
+              placeholder={t('Écrivez le motif du refus...')}
               className="w-full rounded-2xl border border-gray-200 p-4 text-sm outline-none focus:border-amber-500 transition resize-none mb-6"
             />
 
@@ -667,13 +669,13 @@ export default function AdminAllHotelsPage() {
                 onClick={() => setRejectingHotel(null)}
                 className="rounded-full border border-gray-200 px-5 py-2.5 text-sm font-bold text-gray-600 hover:bg-gray-50 transition"
               >
-                Annuler
+                {t('Annuler')}
               </button>
               <button
                 onClick={() => handleStatusChange(rejectingHotel._id, 'reject', rejectionReason)}
                 className="rounded-full bg-red-600 px-6 py-2.5 text-sm font-bold text-white shadow-md hover:bg-red-700 transition"
               >
-                Confirmer le refus
+                {t('Confirmer le refus')}
               </button>
             </div>
           </div>

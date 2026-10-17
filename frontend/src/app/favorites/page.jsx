@@ -11,6 +11,7 @@ import api, { getImageUrl, resolveImg } from '@/lib/api';
 import { formatDZD } from '@/lib/data';
 import { useAuthStore } from '@/store/authStore';
 
+import { useT } from '@/lib/i18n/useT';
 // ── localStorage helpers (shared with FavoriteButton) ──────────────
 const ANON_KEY = 'anon_favorites';
 
@@ -33,6 +34,7 @@ function setAnonFavs(favs) {
 
 
 export default function FavoritesPage() {
+  const { t } = useT();
   const router = useRouter();
   const { user, loading: authLoading } = useAuthStore();
   const [hotels, setHotels] = useState([]);
@@ -105,7 +107,7 @@ export default function FavoritesPage() {
     return (
       <main className="min-h-screen">
         <Navbar />
-        <p className="py-20 text-center text-gray-400">Chargement...</p>
+        <p className="py-20 text-center text-gray-400">{t('Chargement...')}</p>
       </main>
     );
   }
@@ -122,13 +124,13 @@ export default function FavoritesPage() {
           <span className="mb-3 grid h-14 w-14 place-items-center rounded-full bg-white/20">
             <Heart className="h-7 w-7 fill-white" />
           </span>
-          <h1 className="text-3xl font-extrabold">Mes favoris</h1>
+          <h1 className="text-3xl font-extrabold">{t('Mes favoris')}</h1>
           <p className="mt-2 text-rose-50">
-            {total > 0 ? `${total} hébergement(s) sauvegardé(s)` : 'Vous n\'avez pas encore de favoris'}
+            {total > 0 ? t('{total} hébergement(s) sauvegardé(s)', { total }) : t('Vous n\'avez pas encore de favoris')}
           </p>
           {!user && (
             <p className="mt-3 text-sm text-rose-100 bg-white/10 rounded-full px-4 py-1.5">
-              💡 <Link href="/login" className="underline font-semibold">Connectez-vous</Link> pour synchroniser vos favoris sur tous vos appareils
+              💡 <Link href="/login" className="underline font-semibold">{t('Connectez-vous')}</Link> {t('pour synchroniser vos favoris sur tous vos appareils')}
             </p>
           )}
         </div>
@@ -143,7 +145,7 @@ export default function FavoritesPage() {
               tab === 'hotels' ? 'bg-brand-500 text-white' : 'bg-white text-gray-600 shadow-sm'
             }`}
           >
-            <Hotel className="h-4 w-4" /> Hôtels ({hotels.length})
+            <Hotel className="h-4 w-4" /> {t('Hôtels (')}{hotels.length})
           </button>
           <button
             onClick={() => setTab('houses')}
@@ -151,12 +153,12 @@ export default function FavoritesPage() {
               tab === 'houses' ? 'bg-brand-500 text-white' : 'bg-white text-gray-600 shadow-sm'
             }`}
           >
-            <Home className="h-4 w-4" /> Maisons ({houses.length})
+            <Home className="h-4 w-4" /> {t('Maisons (')}{houses.length})
           </button>
         </div>
 
         {loading ? (
-          <p className="py-16 text-center text-gray-400">Chargement...</p>
+          <p className="py-16 text-center text-gray-400">{t('Chargement...')}</p>
         ) : tab === 'hotels' ? (
           hotels.length === 0 ? (
             <EmptyState
@@ -180,7 +182,7 @@ export default function FavoritesPage() {
                         className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
                       />
                       <span className="absolute left-3 top-3 rounded-full bg-red-500 px-2.5 py-1 text-xs font-bold text-white shadow flex items-center gap-1">
-                        <Heart className="h-3 w-3 fill-white" /> Favori
+                        <Heart className="h-3 w-3 fill-white" /> {t('Favori')}
                       </span>
                       {h.starRating > 0 && (
                         <span className="absolute right-3 top-3 rounded-full bg-white/95 px-2.5 py-1 text-xs font-bold text-amber-600 shadow">
@@ -190,7 +192,7 @@ export default function FavoritesPage() {
                     </div>
                     <div className="p-4">
                       <h3 className="font-bold text-ink">{h.name}</h3>
-                      <p className="mt-1 text-sm text-gray-500">{h.city}{h.wilaya ? `, ${h.wilaya}` : ''}</p>
+                      <p className="mt-1 text-sm text-gray-500">{t(h.city)}{h.wilaya ? `, ${h.wilaya}` : ''}</p>
                       {h.price > 0 && (
                         <p className="mt-2 text-lg font-extrabold text-brand-600">{formatDZD(h.price)}</p>
                       )}
@@ -200,7 +202,7 @@ export default function FavoritesPage() {
                     <button
                       onClick={() => removeAnonFav('hotel', h._id || h.id)}
                       className="absolute right-3 bottom-3 grid h-8 w-8 place-items-center rounded-full bg-red-50 text-red-400 hover:bg-red-100 hover:text-red-600 transition opacity-0 group-hover:opacity-100"
-                      title="Retirer des favoris"
+                      title={t('Retirer des favoris')}
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -225,7 +227,7 @@ export default function FavoritesPage() {
                   <button
                     onClick={() => removeAnonFav('house', h._id || h.id)}
                     className="absolute right-3 bottom-3 grid h-8 w-8 place-items-center rounded-full bg-red-50 text-red-400 hover:bg-red-100 hover:text-red-600 transition opacity-0 group-hover:opacity-100"
-                    title="Retirer des favoris"
+                    title={t('Retirer des favoris')}
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>

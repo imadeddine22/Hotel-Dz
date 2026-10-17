@@ -6,9 +6,9 @@ import { usePathname } from 'next/navigation';
 import { ChevronDown, Menu, X, Heart, User, Globe } from 'lucide-react';
 import { useAuthStore, useLangStore } from '@/store/authStore';
 import { useFavoritesStore } from '@/store/favoritesStore';
-import { TRANSLATIONS } from '@/lib/data';
 import BrandLogo from '@/components/BrandLogo';
 import { SITE_NAME } from '@/lib/brand';
+import { useT } from '@/lib/i18n/useT';
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
@@ -16,8 +16,8 @@ export default function Navbar() {
   const langRef = useRef(null);
   const pathname = usePathname();
   const user = useAuthStore((s) => s.user);
-  const { lang, setLang } = useLangStore();
-  const t = TRANSLATIONS[lang] || TRANSLATIONS.fr;
+  const { setLang } = useLangStore();
+  const { t, lang } = useT();
 
   const { hotelIds, houseIds, load } = useFavoritesStore();
   const [anonCount, setAnonCount] = useState(0);
@@ -64,12 +64,13 @@ export default function Navbar() {
 
   const totalFavorites = user ? (hotelIds.length + houseIds.length) : anonCount;
 
-  useEffect(() => {
-    if (typeof document !== 'undefined') {
-      document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
-      document.documentElement.lang = lang;
-    }
-  }, [lang]);
+  // Reload after switching so listings already loaded are fetched again in the new language
+  // (they are localized when received). <html dir/lang> is handled by AuthInit on every page.
+  const changeLang = (code) => {
+    if (code === lang) return;
+    setLang(code);
+    window.location.reload();
+  };
 
   const dashHref =
     user?.role === 'admin' ? '/admin' : user?.role === 'owner' ? '/owner/dashboard' : user?.role === 'seller' ? '/seller/dashboard' : '/my-bookings';
@@ -106,7 +107,7 @@ export default function Navbar() {
                     : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
                 }`}
               >
-                {link.label}
+                {t(link.label)}
               </Link>
             );
           })}
@@ -170,7 +171,7 @@ export default function Navbar() {
                   <button
                     key={l.code}
                     onClick={() => {
-                      setLang(l.code);
+                      changeLang(l.code);
                       setLangOpen(false);
                     }}
                     className={`w-full rounded-xl px-3 py-2 text-xs font-bold text-left transition ${
@@ -179,7 +180,7 @@ export default function Navbar() {
                         : 'text-gray-700 hover:bg-gray-50'
                     }`}
                   >
-                    {l.label}
+                    {t(l.label)}
                   </button>
                 ))}
               </div>
@@ -205,7 +206,7 @@ export default function Navbar() {
             {['fr', 'ar', 'en'].map((code) => (
               <button
                 key={code}
-                onClick={() => setLang(code)}
+                onClick={() => changeLang(code)}
                 className={`px-3 py-1 text-xs font-bold rounded-lg transition ${
                   lang === code ? 'bg-brand-500 text-white' : 'text-gray-600 hover:bg-gray-200'
                 }`}
@@ -226,7 +227,7 @@ export default function Navbar() {
                   isActive ? 'bg-brand-50 text-brand-600' : 'text-gray-700 hover:bg-gray-50'
                 }`}
               >
-                {link.label}
+                {t(link.label)}
               </Link>
             );
           })}

@@ -3,6 +3,7 @@
 import { useRef } from 'react';
 import { ArrowLeft, ArrowRight, Star } from 'lucide-react';
 
+import { useT } from '@/lib/i18n/useT';
 const TESTIMONIALS = [
   {
     name: 'Leslie Alexander',
@@ -47,6 +48,7 @@ const TESTIMONIALS = [
 ];
 
 export default function Testimonials() {
+  const { t } = useT();
   const scrollRef = useRef(null);
 
   const scroll = (direction) => {
@@ -64,13 +66,13 @@ export default function Testimonials() {
         <div className="mb-12 flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-end">
           <div>
             <div className="mb-2 flex items-center gap-4">
-              <span className="text-sm font-bold text-[#f97316] uppercase tracking-wider">Our Testimonial</span>
+              <span className="text-sm font-bold text-[#f97316] uppercase tracking-wider">{t('Our Testimonial')}</span>
               <div className="h-[2px] w-12 bg-[#f97316]/30">
                 <div className="h-full w-6 bg-[#f97316]"></div>
               </div>
             </div>
             <h2 className="text-4xl font-extrabold text-[#0f172a] tracking-tight sm:text-5xl">
-              Clients Feedback
+              {t('Clients Feedback')}
             </h2>
           </div>
           
@@ -78,14 +80,14 @@ export default function Testimonials() {
             <button
               onClick={() => scroll('left')}
               className="flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-md transition-transform hover:scale-105 hover:shadow-lg text-brand-500"
-              aria-label="Previous testimonials"
+              aria-label={t('Previous testimonials')}
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
             <button
               onClick={() => scroll('right')}
               className="flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-md transition-transform hover:scale-105 hover:shadow-lg text-brand-500"
-              aria-label="Next testimonials"
+              aria-label={t('Next testimonials')}
             >
               <ArrowRight className="h-5 w-5" />
             </button>
@@ -97,44 +99,44 @@ export default function Testimonials() {
           ref={scrollRef}
           className="no-scrollbar -mx-4 flex snap-x snap-mandatory gap-6 overflow-x-auto px-4 pb-12 sm:-mx-6 sm:px-6"
         >
-          {TESTIMONIALS.map((t, i) => (
+          {TESTIMONIALS.map((item, i) => (
             <div key={i} className="flex w-[320px] shrink-0 snap-start flex-col gap-6 sm:w-[380px]">
               
-              {t.topText ? (
+              {item.topText ? (
                 <>
                   <div className="flex flex-col gap-6 rounded-2xl bg-white p-8 shadow-sm">
                     <p className="text-lg text-gray-600 leading-relaxed">
-                      "{t.text}"
+                      "{t(item.text)}"
                     </p>
                     <div className="flex items-center gap-1">
-                      {[...Array(t.rating)].map((_, idx) => (
+                      {[...Array(item.rating)].map((_, idx) => (
                         <Star key={idx} className="h-5 w-5 fill-[#f97316] text-[#f97316]" />
                       ))}
                     </div>
                   </div>
                   <div className="flex items-center gap-4 px-4">
-                    <img src={t.img} alt={t.name} className="h-16 w-16 rounded-full object-cover shadow-sm border-2 border-white" />
+                    <img src={item.img} alt={t(item.name)} className="h-16 w-16 rounded-full object-cover shadow-sm border-2 border-white" />
                     <div>
-                      <h4 className="text-lg font-bold text-ink">{t.name}</h4>
-                      <p className="text-sm text-gray-500">{t.company}</p>
+                      <h4 className="text-lg font-bold text-ink">{t(item.name)}</h4>
+                      <p className="text-sm text-gray-500">{item.company}</p>
                     </div>
                   </div>
                 </>
               ) : (
                 <>
                   <div className="flex items-center gap-4 px-4 pt-6">
-                    <img src={t.img} alt={t.name} className="h-16 w-16 rounded-full object-cover shadow-sm border-2 border-white" />
+                    <img src={item.img} alt={t(item.name)} className="h-16 w-16 rounded-full object-cover shadow-sm border-2 border-white" />
                     <div>
-                      <h4 className="text-lg font-bold text-ink">{t.name}</h4>
-                      <p className="text-sm text-gray-500">{t.company}</p>
+                      <h4 className="text-lg font-bold text-ink">{t(item.name)}</h4>
+                      <p className="text-sm text-gray-500">{item.company}</p>
                     </div>
                   </div>
                   <div className="flex flex-col gap-6 rounded-2xl bg-white p-8 shadow-sm">
                     <p className="text-lg text-gray-600 leading-relaxed">
-                      "{t.text}"
+                      "{t(item.text)}"
                     </p>
                     <div className="flex items-center gap-1">
-                      {[...Array(t.rating)].map((_, idx) => (
+                      {[...Array(item.rating)].map((_, idx) => (
                         <Star key={idx} className="h-5 w-5 fill-[#f97316] text-[#f97316]" />
                       ))}
                     </div>

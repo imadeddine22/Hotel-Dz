@@ -13,6 +13,7 @@ const fredoka = localFont({
 });
 import { JsonLd, SITE_NAME, SITE_URL } from '@/lib/seo';
 
+import T from '@/components/T';
 const DESCRIPTION =
   "Réservez un hôtel, louez une maison ou achetez un bien immobilier dans les 69 wilayas d'Algérie. Annonces vérifiées, réservation gratuite et paiement sur place.";
 
@@ -71,7 +72,7 @@ export default function RootLayout({ children }) {
     <html lang="fr" className={fredoka.variable}>
       <body className="font-sans antialiased">
         <a href="#main-content" className="skip-link">
-          Aller au contenu principal
+          <T>Aller au contenu principal</T>
         </a>
         <JsonLd data={siteLd} />
         <AuthInit />

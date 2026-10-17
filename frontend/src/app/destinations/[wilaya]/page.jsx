@@ -3,6 +3,8 @@ import WilayaClient from './WilayaClient';
 import { apiGet, breadcrumbLd, faqLd, formatDZD, JsonLd, SITE_URL } from '@/lib/seo';
 import { getWilayaInfo, getNeighbourWilayas, wilayaPath } from '@/lib/wilayaInfo';
 
+import T from '@/components/T';
+import { translate } from '@/lib/i18n';
 const median = (nums) => {
   const s = nums.filter((n) => n > 0).sort((a, b) => a - b);
   if (!s.length) return 0;
@@ -32,35 +34,42 @@ async function getWilayaStats(name) {
   };
 }
 
+// Each FAQ entry is a translation key + values, so it can be shown in the visitor's language
+// (<T k vars />); the French text built from the same key feeds the JSON-LD for search engines.
 function buildFaqs(name, info, s) {
+  const msg = (k, vars) => ({ k, vars });
   const faqs = [
     {
-      q: `Combien d'hôtels sont disponibles à ${name} sur Meskan dz ?`,
+      q: msg("Combien d'hôtels sont disponibles à {name} sur Meskan dz ?", { name }),
       a: s.hotels
-        ? `Meskan dz référence actuellement ${s.hotels} hôtel${s.hotels > 1 ? 's' : ''} vérifié${s.hotels > 1 ? 's' : ''} dans la wilaya de ${name}, réservables en ligne gratuitement, avec paiement sur place à l'arrivée.`
-        : `Aucun hôtel n'est encore publié à ${name}. Les hôteliers de la wilaya peuvent inscrire leur établissement gratuitement sur Meskan dz.`,
+        ? msg("Meskan dz référence actuellement {n} hôtel(s) vérifié(s) dans la wilaya de {name}, réservables en ligne gratuitement, avec paiement sur place à l'arrivée.", { n: s.hotels, name })
+        : msg("Aucun hôtel n'est encore publié à {name}. Les hôteliers de la wilaya peuvent inscrire leur établissement gratuitement sur Meskan dz.", { name }),
     },
     {
-      q: `Quel est le prix d'une location de maison à ${name} ?`,
+      q: msg("Quel est le prix d'une location de maison à {name} ?", { name }),
       a: s.medianNight
-        ? `Le prix médian d'une maison ou d'un appartement en location à ${name} est de ${formatDZD(s.medianNight)} par nuit, calculé sur les ${s.houses} annonces publiées sur Meskan dz.`
-        : `Il n'y a pas encore assez d'annonces de location à ${name} pour calculer un prix moyen. Consultez la page régulièrement : de nouvelles maisons sont ajoutées chaque semaine.`,
+        ? msg("Le prix médian d'une maison ou d'un appartement en location à {name} est de {price} par nuit, calculé sur les {n} annonces publiées sur Meskan dz.", { name, price: formatDZD(s.medianNight), n: s.houses })
+        : msg("Il n'y a pas encore assez d'annonces de location à {name} pour calculer un prix moyen. Consultez la page régulièrement : de nouvelles maisons sont ajoutées chaque semaine.", { name }),
     },
     {
-      q: `Peut-on acheter un bien immobilier à ${name} via Meskan dz ?`,
+      q: msg('Peut-on acheter un bien immobilier à {name} via Meskan dz ?', { name }),
       a: s.sales
-        ? `Oui, ${s.sales} bien${s.sales > 1 ? 's' : ''} à vendre ${s.sales > 1 ? 'sont' : 'est'} publié${s.sales > 1 ? 's' : ''} à ${name}${s.medianSale ? `, pour un prix médian de ${formatDZD(s.medianSale)}` : ''}. Chaque annonce est validée par notre équipe et le vendeur est contactable directement.`
-        : `Aucun bien n'est actuellement en vente à ${name}. Les vendeurs peuvent publier une annonce après inscription sur Meskan dz.`,
+        ? s.medianSale
+          ? msg('Oui, {n} bien(s) à vendre publié(s) à {name}, pour un prix médian de {price}. Chaque annonce est validée par notre équipe et le vendeur est contactable directement.', { n: s.sales, name, price: formatDZD(s.medianSale) })
+          : msg('Oui, {n} bien(s) à vendre publié(s) à {name}. Chaque annonce est validée par notre équipe et le vendeur est contactable directement.', { n: s.sales, name })
+        : msg("Aucun bien n'est actuellement en vente à {name}. Les vendeurs peuvent publier une annonce après inscription sur Meskan dz.", { name }),
     },
   ];
   if (info) {
     faqs.push({
-      q: `Quand partir à ${name} ?`,
-      a: `${name} (wilaya n°${info.code}) fait partie de la région ${info.region.label}. ${info.region.blurb}`,
+      q: msg('Quand partir à {name} ?', { name }),
+      a: msg('{name} (wilaya n°{code}) fait partie de la région {region}. {blurb}', { name, code: info.code, region: info.region.label, blurb: info.region.blurb }),
     });
   }
   return faqs;
 }
+
+const fr = (m) => translate('fr', m.k, m.vars);
 
 export async function generateMetadata({ params }) {
   const name = decodeURIComponent(params.wilaya);
@@ -103,29 +112,31 @@ export default async function WilayaPage({ params }) {
             { name: 'Destinations', path: '/destinations' },
             { name: displayName, path: wilayaPath(displayName) },
           ]),
-          faqLd(faqs),
+          faqLd(faqs.map((f) => ({ q: fr(f.q), a: fr(f.a) }))),
         ]}
       />
 
       <section className="mx-auto max-w-5xl px-4 pb-16 pt-4 text-slate-700" aria-labelledby="wilaya-guide">
         <nav aria-label="Fil d'Ariane" className="mb-4 text-xs text-slate-500">
-          <Link href="/" className="hover:text-slate-900">Accueil</Link>
+          <Link href="/" className="hover:text-slate-900"><T>Accueil</T></Link>
           <span aria-hidden="true"> / </span>
-          <Link href="/destinations" className="hover:text-slate-900">Destinations</Link>
+          <Link href="/destinations" className="hover:text-slate-900"><T>Destinations</T></Link>
           <span aria-hidden="true"> / </span>
-          <span className="text-slate-900">{displayName}</span>
+          <span className="text-slate-900"><T>{displayName}</T></span>
         </nav>
 
         <h2 id="wilaya-guide" className="font-serif text-2xl font-bold text-slate-900 md:text-3xl">
-          Séjourner, louer ou acheter à {displayName}
+          <T k="Séjourner, louer ou acheter à {name}" vars={{ name: displayName }} />
         </h2>
 
         <p className="mt-3 max-w-3xl leading-relaxed">
-          {info ? `${displayName} est la wilaya n°${info.code} d'Algérie, dans la région ${info.region.label}. ` : ''}
-          {s.hotels + s.houses + s.sales > 0
-            ? `Sur Meskan dz, vous y trouvez ${s.hotels} hôtel${s.hotels > 1 ? 's' : ''}, ${s.houses} maison${s.houses > 1 ? 's' : ''} à louer et ${s.sales} bien${s.sales > 1 ? 's' : ''} à vendre, tous vérifiés par notre équipe.`
-            : `Les premières annonces de ${displayName} arrivent bientôt sur Meskan dz. Hôteliers, propriétaires et vendeurs de la wilaya peuvent publier leur annonce dès maintenant.`}
-          {s.cities.length > 0 && ` Annonces disponibles notamment à ${s.cities.join(', ')}.`}
+          {info && <T k="{displayName} est la wilaya n°{code} d'Algérie, dans la région {label}. " vars={{ displayName, code: info.code, label: info.region.label }} />}
+          {s.hotels + s.houses + s.sales > 0 ? (
+            <T k="Sur Meskan dz, vous y trouvez {hotels} hôtel(s), {houses} maison(s) à louer et {sales} bien(s) à vendre, tous vérifiés par notre équipe." vars={{ hotels: s.hotels, houses: s.houses, sales: s.sales }} />
+          ) : (
+            <T k="Les premières annonces de {displayName} arrivent bientôt sur Meskan dz. Hôteliers, propriétaires et vendeurs de la wilaya peuvent publier leur annonce dès maintenant." vars={{ displayName }} />
+          )}
+          {s.cities.length > 0 && <> <T k="Annonces disponibles notamment à {cities}." vars={{ cities: s.cities.join(', ') }} /></>}
         </p>
 
         <dl className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -136,7 +147,7 @@ export default async function WilayaPage({ params }) {
             { label: 'Prix médian à la vente', value: s.medianSale ? formatDZD(s.medianSale) : '—' },
           ].map((st) => (
             <div key={st.label} className="rounded-xl border border-slate-200 bg-white p-4">
-              <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">{st.label}</dt>
+              <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500"><T>{st.label}</T></dt>
               <dd className="mt-1 text-lg font-bold tabular-nums text-slate-900">{st.value}</dd>
             </div>
           ))}
@@ -144,38 +155,38 @@ export default async function WilayaPage({ params }) {
 
         {s.topHotel && (
           <p className="mt-6">
-            L'hôtel le mieux noté de la wilaya est{' '}
+            <T>L'hôtel le mieux noté de la wilaya est</T>{' '}
             <Link href={`/hotels/${s.topHotel._id}`} className="font-semibold text-cyan-700 underline-offset-2 hover:underline">
               {s.topHotel.name}
             </Link>{' '}
-            ({Number(s.topHotel.avgRating).toFixed(1)}/5 sur {s.topHotel.reviewsCount} avis).
+            <T k="({rating}/5 sur {n} avis)." vars={{ rating: Number(s.topHotel.avgRating).toFixed(1), n: s.topHotel.reviewsCount }} />
           </p>
         )}
 
         {info?.highlights.length > 0 && (
           <>
-            <h3 className="mt-8 text-lg font-bold text-slate-900">À voir à {displayName}</h3>
-            <ul className="mt-2 list-disc space-y-1 pl-5">
-              {info.highlights.map((h) => <li key={h}>{h.charAt(0).toUpperCase() + h.slice(1)}</li>)}
+            <h3 className="mt-8 text-lg font-bold text-slate-900"><T k="À voir à {name}" vars={{ name: displayName }} /></h3>
+            <ul className="mt-2 list-disc space-y-1 ps-5">
+              {info.highlights.map((h) => <li key={h}><T>{h.charAt(0).toUpperCase() + h.slice(1)}</T></li>)}
             </ul>
           </>
         )}
 
-        <h3 className="mt-8 text-lg font-bold text-slate-900">Questions fréquentes</h3>
+        <h3 className="mt-8 text-lg font-bold text-slate-900"><T>Questions fréquentes</T></h3>
         <div className="mt-3 divide-y divide-slate-200 rounded-xl border border-slate-200 bg-white">
           {faqs.map((f) => (
-            <details key={f.q} className="group p-4">
+            <details key={f.q.k} className="group p-4">
               <summary className="cursor-pointer list-none font-semibold text-slate-900 marker:hidden">
-                {f.q}
+                <T k={f.q.k} vars={f.q.vars} />
               </summary>
-              <p className="mt-2 leading-relaxed">{f.a}</p>
+              <p className="mt-2 leading-relaxed"><T k={f.a.k} vars={f.a.vars} /></p>
             </details>
           ))}
         </div>
 
         {neighbours.length > 0 && (
           <>
-            <h3 className="mt-8 text-lg font-bold text-slate-900">Autres destinations — {info.region.label}</h3>
+            <h3 className="mt-8 text-lg font-bold text-slate-900"><T>Autres destinations —</T> <T>{info.region.label}</T></h3>
             <ul className="mt-3 flex flex-wrap gap-2">
               {neighbours.map((w) => (
                 <li key={w}>
@@ -183,7 +194,7 @@ export default async function WilayaPage({ params }) {
                     href={wilayaPath(w)}
                     className="inline-flex min-h-[44px] items-center rounded-full border border-slate-200 bg-white px-4 text-sm font-medium hover:border-cyan-500 hover:text-cyan-700"
                   >
-                    {w}
+                    <T>{w}</T>
                   </Link>
                 </li>
               ))}
@@ -192,13 +203,13 @@ export default async function WilayaPage({ params }) {
         )}
 
         <p className="mt-8 text-sm">
-          Vous financez un achat à {displayName} ?{' '}
+          <T k="Vous financez un achat à {name} ?" vars={{ name: displayName }} />{' '}
           <Link href="/outils/simulateur-credit-immobilier" className="font-semibold text-cyan-700 hover:underline">
-            Simulez votre crédit immobilier
+            <T>Simulez votre crédit immobilier</T>
           </Link>{' '}
-          ou{' '}
+          <T>ou</T>{' '}
           <Link href="/outils/rentabilite-locative" className="font-semibold text-cyan-700 hover:underline">
-            calculez la rentabilité d'une location
+            <T>calculez la rentabilité d'une location</T>
           </Link>.
         </p>
       </section>

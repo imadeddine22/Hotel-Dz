@@ -4,7 +4,9 @@ import { useState, useRef } from 'react';
 import { UploadCloud, X, Image as ImageIcon, Star } from 'lucide-react';
 import { getImageUrl } from '@/lib/api';
 
+import { useT } from '@/lib/i18n/useT';
 export default function ImageUploader({ onChange, setFiles: setFilesExternal, files: filesExternal, maxFiles = 6, existingImages = [] }) {
+  const { t } = useT();
   const [previews, setPreviews] = useState(
     existingImages.map(img => ({ url: getImageUrl(img.url || img), isExisting: true }))
   );
@@ -26,7 +28,7 @@ export default function ImageUploader({ onChange, setFiles: setFilesExternal, fi
     const selectedFiles = Array.from(e.target.files);
     
     if (previews.length + selectedFiles.length > maxFiles) {
-      alert(`Vous ne pouvez sélectionner que ${maxFiles} photos au total.`);
+      alert(t('Vous ne pouvez sélectionner que {maxFiles} photos au total.', { maxFiles }));
       return;
     }
 
@@ -98,10 +100,10 @@ export default function ImageUploader({ onChange, setFiles: setFilesExternal, fi
             </div>
           </div>
           <p style={{ margin: 0, fontSize: 15, fontWeight: 600, color: '#334155' }}>
-            Cliquez ou glissez-déposez pour ajouter des photos
+            {t('Cliquez ou glissez-déposez pour ajouter des photos')}
           </p>
           <p style={{ margin: '4px 0 0', fontSize: 13, color: '#94a3b8' }}>
-            {previews.length} / {maxFiles} sélectionnées (JPG, PNG)
+            {previews.length} / {maxFiles} {t('sélectionnées (JPG, PNG)')}
           </p>
         </div>
       )}
@@ -124,7 +126,7 @@ export default function ImageUploader({ onChange, setFiles: setFilesExternal, fi
             }}>
               <img
                 src={preview.url}
-                alt={`Preview ${index}`}
+                alt={t('Preview {index}', { index })}
                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
               />
               
@@ -137,7 +139,7 @@ export default function ImageUploader({ onChange, setFiles: setFilesExternal, fi
                   fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4,
                   backdropFilter: 'blur(4px)'
                 }}>
-                  <Star size={12} fill="#fff" /> Principale
+                  <Star size={12} fill="#fff" /> {t('Principale')}
                 </div>
               )}
               {/* Badge for gallery items */}
@@ -149,7 +151,7 @@ export default function ImageUploader({ onChange, setFiles: setFilesExternal, fi
                   fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4,
                   backdropFilter: 'blur(4px)'
                 }}>
-                  <ImageIcon size={12} /> Galerie
+                  <ImageIcon size={12} /> {t('Galerie')}
                 </div>
               )}
 

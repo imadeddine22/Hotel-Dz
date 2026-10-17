@@ -14,7 +14,9 @@ import CtaBanner from '@/components/CtaBanner';
 import Footer from '@/components/Footer';
 import { findWilaya } from '@/hooks/useCommunes';
 
+import { useT } from '@/lib/i18n/useT';
 export default function HomePage() {
+  const { t } = useT();
   // Wilaya or commune typed in the hero search / picked in the city cards
   const [place, setPlaceRaw] = useState('');
   // 'tlemcen' / 'Bejaia' → official spelling ('Tlemcen', 'Béjaïa'); communes are kept as typed
@@ -31,13 +33,13 @@ export default function HomePage() {
           <div id="search-results" className="mx-auto max-w-7xl scroll-mt-24 px-4 pt-4 sm:px-6">
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-brand-100 bg-white px-5 py-4 shadow-sm" aria-live="polite">
               <p className="text-sm text-gray-600">
-                Résultats pour <strong className="text-ink">« {place} »</strong> : hôtels, maisons à louer et biens à vendre.
+                {t('Résultats pour')} <strong className="text-ink">« {place} »</strong> {t(': hôtels, maisons à louer et biens à vendre.')}
               </p>
               <button
                 onClick={() => setPlace('')}
                 className="inline-flex min-h-[40px] items-center gap-1.5 rounded-full border border-gray-200 px-4 text-sm font-semibold text-gray-600 hover:bg-gray-50"
               >
-                <X className="h-4 w-4" aria-hidden="true" /> Effacer la recherche
+                <X className="h-4 w-4" aria-hidden="true" /> {t('Effacer la recherche')}
               </button>
             </div>
           </div>

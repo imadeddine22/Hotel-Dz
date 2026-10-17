@@ -24,6 +24,7 @@ import {
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
 
+import { useT } from '@/lib/i18n/useT';
 const ADMIN_MENU = [
   { href: '/admin', label: 'Tableau de bord', icon: LayoutDashboard },
   { href: '/admin/hotels', label: 'Approbations', icon: CheckSquare },
@@ -37,6 +38,7 @@ const ADMIN_MENU = [
 ];
 
 export default function AdminLayout({ children }) {
+  const { t } = useT();
   const router = useRouter();
   const pathname = usePathname();
   const { user, loading, logout, isRole } = useAuthStore();
@@ -62,7 +64,7 @@ export default function AdminLayout({ children }) {
     return (
       <div className="admin-loading">
         <div className="admin-loading-spinner" />
-        <p>Chargement...</p>
+        <p>{t('Chargement...')}</p>
       </div>
     );
   }
@@ -98,7 +100,7 @@ export default function AdminLayout({ children }) {
                 className={`admin-nav-item ${active ? 'active' : ''}`}
               >
                 <Icon className="admin-nav-icon" />
-                <span>{item.label}</span>
+                <span>{t(item.label)}</span>
                 {showBadge && <span className="admin-nav-badge">{unread}</span>}
               </Link>
             );
@@ -111,7 +113,7 @@ export default function AdminLayout({ children }) {
             className="admin-nav-item logout"
           >
             <LogOut className="admin-nav-icon" />
-            <span>Déconnexion</span>
+            <span>{t('Déconnexion')}</span>
           </button>
         </div>
       </aside>
@@ -121,12 +123,12 @@ export default function AdminLayout({ children }) {
         {/* Top Bar */}
         <header className="admin-topbar">
           <div className="admin-topbar-left">
-            <button className="admin-menu-btn" onClick={() => setSidebarOpen(true)} aria-label="Ouvrir le menu">
+            <button className="admin-menu-btn" onClick={() => setSidebarOpen(true)} aria-label={t('Ouvrir le menu')}>
               <Menu className="w-5 h-5" />
             </button>
           </div>
           <div className="admin-topbar-right">
-            <Link href="/admin/messages" className="admin-notif-btn" aria-label="Messages">
+            <Link href="/admin/messages" className="admin-notif-btn" aria-label={t('Messages')}>
               <Bell className="w-5 h-5" />
               {unread > 0 && <span className="admin-notif-badge">{unread}</span>}
             </Link>
@@ -136,24 +138,24 @@ export default function AdminLayout({ children }) {
                 onClick={() => setProfileOpen(!profileOpen)}
               >
                 <div className="admin-avatar">
-                  {user.fullName?.charAt(0)?.toUpperCase() || 'A'}
+                  {user.fullName?.charAt(0)?.toUpperCase() || t('A')}
                 </div>
                 <div className="admin-profile-info">
                   <span className="admin-profile-name">{user.fullName}</span>
-                  <span className="admin-profile-role">Administrateur</span>
+                  <span className="admin-profile-role">{t('Administrateur')}</span>
                 </div>
                 <ChevronDown className={`admin-chevron ${profileOpen ? 'rotated' : ''}`} />
               </button>
               {profileOpen && (
                 <div className="admin-profile-dropdown">
                   <Link href="/profile" className="admin-dropdown-item">
-                    <Settings className="w-4 h-4" /> Paramètres
+                    <Settings className="w-4 h-4" /> {t('Paramètres')}
                   </Link>
                   <button
                     onClick={async () => { await logout(); router.push('/'); }}
                     className="admin-dropdown-item danger"
                   >
-                    <LogOut className="w-4 h-4" /> Déconnexion
+                    <LogOut className="w-4 h-4" /> {t('Déconnexion')}
                   </button>
                 </div>
               )}

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { ArrowLeft, ArrowRight, Star, Tag, Users, Home as HomeIcon } from 'lucide-react';
 import Link from 'next/link';
 
+import { useT } from '@/lib/i18n/useT';
 const TESTIMONIALS = [
   {
     text: "We Couldn't Be Happier With The Outcome Of Our Renovation Project. From The Initial Consultation To The Final Touches, The Team Demonstrated A High Level Of Professionalism, Creativity.",
@@ -32,6 +33,7 @@ const TESTIMONIALS = [
 ];
 
 export default function HomeDetailsSection() {
+  const { t } = useT();
   const [activeTestimonial, setActiveTestimonial] = useState(0);
 
   const nextTestimonial = () => {
@@ -50,18 +52,18 @@ export default function HomeDetailsSection() {
       {/* ─── SECTION 1: JOURNEY TO PERFECT STAY / HOME ─── */}
       <div className="text-center space-y-6">
         <h2 className="text-3xl md:text-5xl font-black font-serif text-slate-800 tracking-tight leading-none">
-          Your Journey To The Perfect <br className="hidden md:inline" />
-          Home <span className="text-teal-500 italic font-medium font-serif leading-none tracking-normal">Starts With Us</span>
+          {t('Your Journey To The Perfect')} <br className="hidden md:inline" />
+          {t('Home')} <span className="text-teal-500 italic font-medium font-serif leading-none tracking-normal">{t('Starts With Us')}</span>
         </h2>
         <p className="max-w-2xl mx-auto text-slate-500 text-xs md:text-sm font-medium leading-relaxed">
-          With a proven track record and in-depth market knowledge, we're here to make your real estate journey smooth and stress-free. Whether buying, selling, or renting, you can count on our team to deliver results with integrity.
+          {t('With a proven track record and in-depth market knowledge, we\'re here to make your real estate journey smooth and stress-free. Whether buying, selling, or renting, you can count on our team to deliver results with integrity.')}
         </p>
 
         {/* Corporate Team Image & Stats Panel */}
         <div className="relative mt-12 rounded-3xl overflow-hidden shadow-lg aspect-[16/9] max-h-[460px] w-full">
           <img
             src="https://images.unsplash.com/photo-1556761175-b413da4baf72?w=1200&q=80"
-            alt="Meskan dz Team"
+            alt={t('Meskan dz Team')}
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-slate-900/10"></div>
@@ -74,7 +76,7 @@ export default function HomeDetailsSection() {
           <div className="bg-white rounded-3xl p-6 shadow-card border border-slate-100 flex flex-col items-start text-left">
             <span className="text-3xl md:text-4xl font-black text-slate-800 font-serif">1,500</span>
             <p className="text-[11px] text-slate-500 font-bold mt-2 leading-relaxed">
-              Total Properties Managed, Helping Families Find Their Dream Stay For Over A Decade.
+              {t('Total Properties Managed, Helping Families Find Their Dream Stay For Over A Decade.')}
             </p>
           </div>
 
@@ -82,7 +84,7 @@ export default function HomeDetailsSection() {
           <div className="bg-white rounded-3xl p-6 shadow-card border border-slate-100 flex flex-col items-start text-left">
             <span className="text-3xl md:text-4xl font-black text-slate-800 font-serif">30+</span>
             <p className="text-[11px] text-slate-500 font-bold mt-2 leading-relaxed">
-              Strong Partnerships With Local Hoteliers & Owners To Enhance Our Services.
+              {t('Strong Partnerships With Local Hoteliers & Owners To Enhance Our Services.')}
             </p>
           </div>
 
@@ -90,7 +92,7 @@ export default function HomeDetailsSection() {
           <div className="bg-white rounded-3xl p-6 shadow-card border border-slate-100 flex flex-col items-start text-left">
             <span className="text-3xl md:text-4xl font-black text-slate-800 font-serif">98%</span>
             <p className="text-[11px] text-slate-500 font-bold mt-2 leading-relaxed">
-              Client Satisfaction Rate, Reflecting Our Commitment To Exceptional Service.
+              {t('Client Satisfaction Rate, Reflecting Our Commitment To Exceptional Service.')}
             </p>
           </div>
 
@@ -100,14 +102,14 @@ export default function HomeDetailsSection() {
       {/* ─── SECTION 2: TESTIMONIALS ─── */}
       <div className="text-center space-y-8 py-10">
         <h2 className="text-3xl md:text-5xl font-black font-serif text-slate-800 leading-none">
-          Hear From Our Awesome <br className="hidden md:inline" />
-          <span className="text-teal-500 italic font-medium font-serif leading-none mt-2 inline-block">Satisfied Clients</span>
+          {t('Hear From Our Awesome')} <br className="hidden md:inline" />
+          <span className="text-teal-500 italic font-medium font-serif leading-none mt-2 inline-block">{t('Satisfied Clients')}</span>
         </h2>
         
         {/* Active Testimonial Card */}
         <div className="max-w-5xl mx-auto bg-slate-50/50 rounded-3xl border border-slate-100 p-8 md:p-16 relative flex flex-col items-center">
           <p className="text-base md:text-2xl font-medium text-slate-600 leading-relaxed italic max-w-3xl text-center">
-            "{current.text}"
+            "{t(current.text)}"
           </p>
 
           {/* Stars & Rating */}
@@ -129,7 +131,7 @@ export default function HomeDetailsSection() {
             />
             <div className="text-left leading-tight">
               <h4 className="text-base font-bold text-slate-800">{current.name}</h4>
-              <p className="text-xs font-bold text-slate-400 mt-0.5">{current.title}</p>
+              <p className="text-xs font-bold text-slate-400 mt-0.5">{t(current.title)}</p>
             </div>
           </div>
 
@@ -138,7 +140,7 @@ export default function HomeDetailsSection() {
             <button
               onClick={prevTestimonial}
               className="w-9 h-9 rounded-full border border-slate-200 bg-white hover:bg-slate-50 flex items-center justify-center text-slate-600 transition shadow-sm"
-              aria-label="Previous Testimonial"
+              aria-label={t('Previous Testimonial')}
             >
               <ArrowLeft className="h-4 w-4" />
             </button>
@@ -148,7 +150,7 @@ export default function HomeDetailsSection() {
             <button
               onClick={nextTestimonial}
               className="w-9 h-9 rounded-full border border-slate-200 bg-white hover:bg-slate-50 flex items-center justify-center text-slate-600 transition shadow-sm"
-              aria-label="Next Testimonial"
+              aria-label={t('Next Testimonial')}
             >
               <ArrowRight className="h-4 w-4" />
             </button>

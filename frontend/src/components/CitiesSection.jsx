@@ -3,12 +3,11 @@
 import { useEffect, useState } from 'react';
 import { MapPin } from 'lucide-react';
 import api from '@/lib/api';
-import { CITIES, TRANSLATIONS } from '@/lib/data';
-import { useLangStore } from '@/store/authStore';
+import { CITIES } from '@/lib/data';
+import { useT } from '@/lib/i18n/useT';
 
 export default function CitiesSection({ selectedCity, onSelectCity }) {
-  const { lang } = useLangStore();
-  const t = TRANSLATIONS[lang] || TRANSLATIONS.fr;
+  const { t, lang } = useT();
   const [counts, setCounts] = useState({});
 
   // Real number of approved hotels per city (the static data only had placeholder counts)
@@ -68,12 +67,12 @@ export default function CitiesSection({ selectedCity, onSelectCity }) {
             >
               <img
                 src={c.img}
-                alt={c.name}
+                alt={t(c.name)}
                 className="h-full w-full object-cover transition duration-500 group-hover:scale-110"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
               <div className="absolute inset-x-0 bottom-0 p-3 text-right">
-                <h3 className="text-lg font-bold text-white">{c.name}</h3>
+                <h3 className="text-lg font-bold text-white">{t(c.name)}</h3>
                 {counts[c.name] != null && (
                   <p className="text-xs text-gray-200">{counts[c.name]} {t.hotelsCount}</p>
                 )}

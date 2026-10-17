@@ -3,16 +3,15 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Star, ChevronLeft, ChevronRight, MapPin, Plus } from 'lucide-react';
-import { TRANSLATIONS } from '@/lib/data';
 import api, { getImageUrl } from '@/lib/api';
-import { useAuthStore, useLangStore } from '@/store/authStore';
+import { useAuthStore } from '@/store/authStore';
 import FavoriteButton from '@/components/FavoriteButton';
+import { useT } from '@/lib/i18n/useT';
 
 export default function FeaturedHotels() {
   const scroller = useRef(null);
   const user = useAuthStore((s) => s.user);
-  const { lang } = useLangStore();
-  const t = TRANSLATIONS[lang] || TRANSLATIONS.fr;
+  const { t, lang } = useT();
   const isOwner = user?.role === 'owner';
   const [hotels, setHotels] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -68,7 +67,7 @@ export default function FeaturedHotels() {
         <button
           onClick={() => scroll(-1)}
           className="absolute -left-3 top-1/2 z-10 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-white shadow-lg hover:bg-gray-50"
-          aria-label="Précédent"
+          aria-label={t('Précédent')}
         >
           <ChevronLeft className="h-5 w-5" />
         </button>
@@ -99,7 +98,7 @@ export default function FeaturedHotels() {
                 <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-4">
                   <h3 className="text-lg font-bold text-white">{h.name}</h3>
                   <p className="flex items-center gap-1 text-sm text-gray-200">
-                    <MapPin className="h-4 w-4" /> {h.city}
+                    <MapPin className="h-4 w-4" /> {t(h.city)}
                   </p>
                 </div>
               </Link>
@@ -113,7 +112,7 @@ export default function FeaturedHotels() {
         <button
           onClick={() => scroll(1)}
           className="absolute -right-3 top-1/2 z-10 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-white shadow-lg hover:bg-gray-50"
-          aria-label="Suivant"
+          aria-label={t('Suivant')}
         >
           <ChevronRight className="h-5 w-5" />
         </button>

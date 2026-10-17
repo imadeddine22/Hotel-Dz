@@ -4,11 +4,11 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Home, ChevronLeft, ChevronRight, MapPin, BedDouble, Bath, Users, Plus } from 'lucide-react';
 import api from '@/lib/api';
-import { useAuthStore, useLangStore } from '@/store/authStore';
-import { TRANSLATIONS } from '@/lib/data';
+import { useAuthStore } from '@/store/authStore';
 import FavoriteButton from '@/components/FavoriteButton';
 
 import { getServerURL } from '@/lib/api';
+import { useT } from '@/lib/i18n/useT';
 
 const SERVER = getServerURL();
 function resolveImg(url) {
@@ -23,8 +23,7 @@ export default function FeaturedHouses({ selectedCity }) {
   const [loaded, setLoaded] = useState(false);
   const scroller = { current: null };
   const user = useAuthStore((s) => s.user);
-  const { lang } = useLangStore();
-  const t = TRANSLATIONS[lang] || TRANSLATIONS.fr;
+  const { t, lang } = useT();
   const isOwner = user?.role === 'owner';
 
   // Newest approved houses, filtered by the selected wilaya on the server
@@ -59,7 +58,7 @@ export default function FeaturedHouses({ selectedCity }) {
             <Home size={22} />
           </span>
           <div>
-            <h2 style={{ fontSize: 22, fontWeight: 800, color: '#1e293b', margin: 0 }}>{selectedCity && lang !== 'ar' ? `Maisons à louer · ${selectedCity}` : t.featuredHouses}</h2>
+            <h2 style={{ fontSize: 22, fontWeight: 800, color: '#1e293b', margin: 0 }}>{selectedCity && lang !== 'ar' ? t('Maisons à louer · {selectedCity}', { selectedCity }) : t.featuredHouses}</h2>
             <p style={{ fontSize: 13, color: '#94a3b8', margin: '2px 0 0' }}>{t.featuredHousesSubtitle}</p>
           </div>
         </div>
@@ -129,7 +128,7 @@ export default function FeaturedHouses({ selectedCity }) {
                       background: 'rgba(15,23,42,0.9)', color: '#fff',
                       borderRadius: 999, padding: '4px 12px', fontSize: 11, fontWeight: 700
                     }}>
-                      {h.type || 'Maison'}
+                      {t(h.type || 'Maison')}
                     </span>
                     {/* Details overlay */}
                     <div style={{
@@ -140,16 +139,16 @@ export default function FeaturedHouses({ selectedCity }) {
                       <div style={{ position: 'absolute', bottom: 16, left: 16, right: 16 }}>
                         <h3 style={{ fontSize: 17, fontWeight: 700, color: '#fff', margin: '0 0 4px' }}>{h.name}</h3>
                         <p style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, color: '#e2e8f0', margin: '0 0 8px' }}>
-                          <MapPin size={14} /> {h.city}
+                          <MapPin size={14} /> {t(h.city)}
                         </p>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                           <div style={{ display: 'flex', gap: 10, fontSize: 12, color: '#cbd5e1' }}>
-                            {h.rooms && <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}><BedDouble size={13} /> {h.rooms} ch.</span>}
-                            {h.capacity && <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}><Users size={13} /> {h.capacity} pers.</span>}
+                            {h.rooms && <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}><BedDouble size={13} /> {h.rooms} {t('ch.')}</span>}
+                            {h.capacity && <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}><Users size={13} /> {h.capacity} {t('pers.')}</span>}
                           </div>
                           <span style={{ fontSize: 14, fontWeight: 800, color: '#cbd5e1' }}>
                             {price > 0 ? new Intl.NumberFormat('fr-DZ').format(price) + ' DZD' : '—'}
-                            <span style={{ fontWeight: 400, fontSize: 11 }}>/nuit</span>
+                            <span style={{ fontWeight: 400, fontSize: 11 }}>{t('/nuit')}</span>
                           </span>
                         </div>
                       </div>
@@ -163,7 +162,7 @@ export default function FeaturedHouses({ selectedCity }) {
               );
             })
           ) : (
-            <p style={{ padding: '40px 0', color: '#94a3b8', fontSize: 14 }}>Aucune maison à louer pour « {selectedCity} » pour le moment.</p>
+            <p style={{ padding: '40px 0', color: '#94a3b8', fontSize: 14 }}>{t('Aucune maison à louer pour «')} {selectedCity} {t('» pour le moment.')}</p>
           )}
         </div>
 

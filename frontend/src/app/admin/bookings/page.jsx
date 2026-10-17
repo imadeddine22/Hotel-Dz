@@ -5,6 +5,8 @@ import { CalendarCheck, MapPin } from 'lucide-react';
 import api from '@/lib/api';
 import { formatDZD } from '@/lib/data';
 
+import { useT } from '@/lib/i18n/useT';
+import { dateLocale } from '@/lib/i18n/format';
 const STATUS_LABELS = {
   pending: 'En attente',
   confirmed: 'Confirmée',
@@ -19,6 +21,7 @@ const PAYMENT_LABELS = {
 };
 
 export default function AdminBookingsPage() {
+  const { t } = useT();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -45,8 +48,8 @@ export default function AdminBookingsPage() {
   return (
     <div>
       <div className="admin-page-header">
-        <h1 className="admin-page-title">Réservations</h1>
-        <p className="admin-page-subtitle">Toutes les réservations · {total} au total</p>
+        <h1 className="admin-page-title">{t('Réservations')}</h1>
+        <p className="admin-page-subtitle">{t('Toutes les réservations ·')} {total} {t('au total')}</p>
       </div>
 
       {/* Filters */}
@@ -63,7 +66,7 @@ export default function AdminBookingsPage() {
             className={`admin-filter-btn ${statusFilter === f.value ? 'active' : ''}`}
             onClick={() => setStatusFilter(f.value)}
           >
-            {f.label}
+            {t(f.label)}
           </button>
         ))}
       </div>
@@ -87,23 +90,23 @@ export default function AdminBookingsPage() {
         ) : bookings.length === 0 ? (
           <div className="admin-empty">
             <div className="admin-empty-icon"><CalendarCheck /></div>
-            <p className="admin-empty-title">Aucune réservation</p>
-            <p className="admin-empty-desc">Aucune réservation trouvée avec ces filtres</p>
+            <p className="admin-empty-title">{t('Aucune réservation')}</p>
+            <p className="admin-empty-desc">{t('Aucune réservation trouvée avec ces filtres')}</p>
           </div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
             <table className="admin-table">
               <thead>
                 <tr>
-                  <th>Client</th>
-                  <th>Hôtel</th>
-                  <th>Chambre</th>
-                  <th>Check-in</th>
-                  <th>Check-out</th>
-                  <th>Nuits</th>
-                  <th>Prix total</th>
-                  <th>Statut</th>
-                  <th>Paiement</th>
+                  <th>{t('Client')}</th>
+                  <th>{t('Hôtel')}</th>
+                  <th>{t('Chambre')}</th>
+                  <th>{t('Check-in')}</th>
+                  <th>{t('Check-out')}</th>
+                  <th>{t('Nuits')}</th>
+                  <th>{t('Prix total')}</th>
+                  <th>{t('Statut')}</th>
+                  <th>{t('Paiement')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -126,23 +129,23 @@ export default function AdminBookingsPage() {
                         <div>
                           <span style={{ fontWeight: 600, color: '#1e293b', fontSize: 13 }}>{b.hotel?.name || '—'}</span>
                           {b.hotel?.city && (
-                            <p style={{ fontSize: 11, color: '#94a3b8', margin: 0 }}>{b.hotel.city}, {b.hotel.wilaya}</p>
+                            <p style={{ fontSize: 11, color: '#94a3b8', margin: 0 }}>{t(b.hotel.city)}, {t(b.hotel.wilaya)}</p>
                           )}
                         </div>
                       </div>
                     </td>
                     <td style={{ fontSize: 13 }}>{b.room?.title || b.room?.type || '—'}</td>
                     <td style={{ fontSize: 13, color: '#475569' }}>
-                      {new Date(b.checkIn).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                      {new Date(b.checkIn).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short' })}
                     </td>
                     <td style={{ fontSize: 13, color: '#475569' }}>
-                      {new Date(b.checkOut).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                      {new Date(b.checkOut).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short' })}
                     </td>
                     <td style={{ fontSize: 13, fontWeight: 600, textAlign: 'center' }}>{b.nights}</td>
                     <td style={{ fontWeight: 700, color: '#1e293b', fontSize: 13 }}>{formatDZD(b.totalPrice)}</td>
                     <td>
                       <span className={`admin-badge ${b.status}`}>
-                        {STATUS_LABELS[b.status] || b.status}
+                        {t(STATUS_LABELS[b.status] || b.status)}
                       </span>
                     </td>
                     <td>

@@ -9,6 +9,7 @@ import api, { getImageUrl } from '@/lib/api';
 import { formatDZD } from '@/lib/data';
 import { useWilayas } from '@/hooks/useWilayas';
 
+import { useT } from '@/lib/i18n/useT';
 const PROPERTY_TYPES = [
   'Appartement',
   'Bureau',
@@ -35,6 +36,7 @@ const PRICE_RANGES = [
 ];
 
 export default function SalesPage() {
+  const { t } = useT();
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
@@ -123,19 +125,19 @@ export default function SalesPage() {
   };
 
   const getPriceLabel = () => {
-    if (tempFilters.priceRanges.length === 0) return 'Prix';
+    if (tempFilters.priceRanges.length === 0) return t('Prix');
     if (tempFilters.priceRanges.length === 1) {
       const range = PRICE_RANGES.find(r => r.value === tempFilters.priceRanges[0]);
-      return range ? range.label : 'Prix';
+      return range ? t(range.label) : t('Prix');
     }
-    return `${tempFilters.priceRanges.length} sélectionnés`;
+    return t('{n} sélectionnés', { n: tempFilters.priceRanges.length });
   };
 
   const getSortLabel = () => {
-    if (sort === 'updatedAt') return 'Date de mise à jour';
-    if (sort === 'price') return 'Prix';
-    if (sort === 'newest') return 'Plus récents';
-    return 'Trier par';
+    if (sort === 'updatedAt') return t('Date de mise à jour');
+    if (sort === 'price') return t('Prix');
+    if (sort === 'newest') return t('Plus récents');
+    return t('Trier par');
   };
 
   return (
@@ -162,13 +164,13 @@ export default function SalesPage() {
                   onClick={() => setOpenDropdown(openDropdown === 'vente' ? null : 'vente')}
                   className="bg-white rounded-xl px-4 py-3.5 shadow-sm border border-gray-100 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition"
                 >
-                  <span className="font-serif font-bold text-slate-800">Vente</span>
+                  <span className="font-serif font-bold text-slate-800">{t('Vente')}</span>
                   <ChevronDown className={`h-4 w-4 text-gray-500 transition-transform ${openDropdown === 'vente' ? 'rotate-180' : ''}`} />
                 </div>
                 {openDropdown === 'vente' && (
                   <div className="absolute left-0 right-0 top-full mt-2 z-30 rounded-xl bg-white py-1 shadow-xl border border-gray-100">
                     <button onClick={() => setOpenDropdown(null)} className="w-full text-left px-5 py-2.5 text-sm font-serif font-bold text-teal-600 border-l-2 border-teal-500 bg-teal-50/30">
-                      Vente
+                      {t('Vente')}
                     </button>
                   </div>
                 )}
@@ -180,25 +182,25 @@ export default function SalesPage() {
                   onClick={() => setOpenDropdown(openDropdown === 'type' ? null : 'type')}
                   className="bg-white rounded-xl px-4 py-3.5 shadow-sm border border-gray-100 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition"
                 >
-                  <span className="font-serif font-bold text-slate-800 truncate">{tempFilters.type || 'Type'}</span>
+                  <span className="font-serif font-bold text-slate-800 truncate">{tempFilters.type || t('Type')}</span>
                   <ChevronDown className={`h-4 w-4 text-gray-500 transition-transform ${openDropdown === 'type' ? 'rotate-180' : ''}`} />
                 </div>
                 {openDropdown === 'type' && (
                   <div className="absolute left-0 right-0 top-full mt-2 z-30 max-h-64 overflow-y-auto rounded-xl bg-white py-1 shadow-xl border border-gray-100">
-                    {PROPERTY_TYPES.map((t) => (
+                    {PROPERTY_TYPES.map((item) => (
                       <button
-                        key={t}
+                        key={item}
                         onClick={() => {
-                          setTempFilters({ ...tempFilters, type: t });
+                          setTempFilters({ ...tempFilters, type: item });
                           setOpenDropdown(null);
                         }}
                         className={`w-full text-left px-5 py-2.5 text-sm font-serif font-bold transition-all border-l-2 ${
-                          tempFilters.type === t
+                          tempFilters.type === item
                             ? 'text-teal-600 border-teal-500 bg-teal-50/30'
                             : 'text-slate-800 border-transparent hover:bg-slate-50/50 hover:text-teal-600'
                         }`}
                       >
-                        {t}
+                        {t(item)}
                       </button>
                     ))}
                   </div>
@@ -211,16 +213,16 @@ export default function SalesPage() {
                   onClick={() => setOpenDropdown(openDropdown === 'ville' ? null : 'ville')}
                   className="bg-white rounded-xl px-4 py-3.5 shadow-sm border border-gray-100 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition"
                 >
-                  <span className="font-serif font-bold text-slate-800 truncate">{tempFilters.wilaya || 'Ville'}</span>
+                  <span className="font-serif font-bold text-slate-800 truncate">{tempFilters.wilaya || t('Ville')}</span>
                   <ChevronDown className={`h-4 w-4 text-gray-500 transition-transform ${openDropdown === 'ville' ? 'rotate-180' : ''}`} />
                 </div>
                 {openDropdown === 'ville' && (
                   <div className="absolute left-0 right-0 top-full mt-2 z-30 max-h-64 overflow-y-auto rounded-xl bg-white py-1 shadow-xl border border-gray-100">
                     <div className="px-4 py-1.5 border-b border-gray-100 mb-1 flex justify-between items-center">
-                      <span className="text-xs font-bold text-gray-400">WILAYA</span>
+                      <span className="text-xs font-bold text-gray-400">{t('WILAYA')}</span>
                       {tempFilters.wilaya && (
                         <button onClick={() => setTempFilters({ ...tempFilters, wilaya: '' })} className="text-[10px] text-teal-600 hover:underline font-bold">
-                          Réinitialiser
+                          {t('Réinitialiser')}
                         </button>
                       )}
                     </div>
@@ -256,13 +258,13 @@ export default function SalesPage() {
                 {openDropdown === 'prix' && (
                   <div className="absolute left-0 right-0 top-full mt-2 z-30 w-72 rounded-xl bg-white p-3 shadow-xl border border-gray-100">
                     <div className="flex justify-between items-center mb-2 pb-2 border-b border-gray-100">
-                      <span className="text-xs font-bold text-gray-400">FOURCHETTE DE PRIX</span>
+                      <span className="text-xs font-bold text-gray-400">{t('FOURCHETTE DE PRIX')}</span>
                       {tempFilters.priceRanges.length > 0 && (
                         <button 
                           onClick={() => setTempFilters({ ...tempFilters, priceRanges: [] })}
                           className="text-[10px] text-teal-600 hover:underline font-bold"
                         >
-                          Réinitialiser
+                          {t('Réinitialiser')}
                         </button>
                       )}
                     </div>
@@ -277,7 +279,7 @@ export default function SalesPage() {
                               onChange={() => handlePriceRangeChange(range.value)}
                               className="accent-teal-600 h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
                             />
-                            <span className="text-sm font-serif font-bold text-slate-800">{range.label}</span>
+                            <span className="text-sm font-serif font-bold text-slate-800">{t(range.label)}</span>
                           </label>
                         );
                       })}
@@ -291,7 +293,7 @@ export default function SalesPage() {
                 <div className="bg-white rounded-xl px-4 py-3 border border-gray-100 shadow-sm flex items-center justify-between">
                   <input 
                     type="text" 
-                    placeholder="Référence" 
+                    placeholder={t('Référence')} 
                     value={tempFilters.reference}
                     onChange={(e) => setTempFilters({ ...tempFilters, reference: e.target.value })}
                     className="w-full bg-transparent outline-none text-slate-800 placeholder:text-gray-400 font-serif font-bold"
@@ -317,10 +319,10 @@ export default function SalesPage() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8 border-b border-gray-200/60 pb-8">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 leading-tight font-serif">
-                Maisons et appartements à vendre en Algérie
+                {t('Maisons et appartements à vendre en Algérie')}
               </h1>
               <p className="text-sm font-medium text-gray-500 mt-2">
-                Découvrez notre sélection d'annonces immobilières en vente.
+                {t('Découvrez notre sélection d\'annonces immobilières en vente.')}
               </p>
             </div>
             
@@ -352,7 +354,7 @@ export default function SalesPage() {
                           sort === opt.value ? 'text-emerald-600 bg-emerald-50/30' : 'text-gray-700'
                         }`}
                       >
-                        {opt.label}
+                        {t(opt.label)}
                       </button>
                     ))}
                   </div>
@@ -363,7 +365,7 @@ export default function SalesPage() {
               <button
                 onClick={() => setOrder(order === 'asc' ? 'desc' : 'asc')}
                 className="flex items-center justify-center rounded-xl border border-gray-200 bg-white p-3 hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm"
-                title={order === 'asc' ? 'Tri croissant' : 'Tri décroissant'}
+                title={order === 'asc' ? t('Tri croissant') : t('Tri décroissant')}
               >
                 {order === 'asc' ? (
                   <ArrowUp className="h-4.5 w-4.5 text-emerald-600 font-bold" />
@@ -386,8 +388,8 @@ export default function SalesPage() {
               <div className="mx-auto mb-4 grid h-20 w-20 place-items-center rounded-full bg-emerald-50/60 animate-bounce">
                 <Home className="h-10 w-10 text-emerald-500" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Aucun bien trouvé</h3>
-              <p className="text-sm text-gray-500 max-w-sm mx-auto">Nous n'avons trouvé aucune annonce correspondant à vos critères de filtrage actuel.</p>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">{t('Aucun bien trouvé')}</h3>
+              <p className="text-sm text-gray-500 max-w-sm mx-auto">{t('Nous n\'avons trouvé aucune annonce correspondant à vos critères de filtrage actuel.')}</p>
               <button 
                 onClick={() => {
                   setTempFilters({ wilaya: '', type: 'Appartement', reference: '', priceRanges: [] });
@@ -395,7 +397,7 @@ export default function SalesPage() {
                 }}
                 className="mt-6 inline-flex items-center gap-2 rounded-full bg-emerald-600 px-6 py-2.5 text-sm font-bold text-white shadow hover:bg-emerald-700 transition"
               >
-                <RefreshCw className="h-4 w-4" /> Réinitialiser les filtres
+                <RefreshCw className="h-4 w-4" /> {t('Réinitialiser les filtres')}
               </button>
             </div>
           ) : (
@@ -412,7 +414,7 @@ export default function SalesPage() {
                       {listing.images?.[0] ? (
                         <img 
                           src={getImageUrl(listing.images[0].url)} 
-                          alt={listing.title} 
+                          alt={t(listing.title)} 
                           className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" 
                         />
                       ) : (
@@ -429,7 +431,7 @@ export default function SalesPage() {
                       )}
 
                       <div className="absolute top-3 right-3 rounded-full bg-white/95 backdrop-blur-sm px-3 py-1 text-xs font-bold text-emerald-600">
-                        {listing.type}
+                        {t(listing.type)}
                       </div>
 
                       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent h-24" />
@@ -441,17 +443,17 @@ export default function SalesPage() {
                     {/* Content */}
                     <div className="p-5 flex flex-col flex-1">
                       <h3 className="font-bold text-gray-900 text-lg mb-1.5 truncate group-hover:text-emerald-600 transition-colors">
-                        {listing.title}
+                        {t(listing.title)}
                       </h3>
                       <p className="text-sm text-gray-500 flex items-center gap-1.5 mb-4">
                         <MapPin className="h-4 w-4 text-emerald-500 shrink-0" /> 
-                        <span className="truncate">{listing.city}, {listing.wilaya}</span>
+                        <span className="truncate">{t(listing.city)}, {t(listing.wilaya)}</span>
                       </p>
                       
                       <div className="mt-auto pt-4 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500 font-semibold">
                         <div className="flex items-center gap-3">
-                          {listing.area > 0 && <span>{listing.area} m²</span>}
-                          {listing.rooms > 0 && <span>{listing.rooms} pcs</span>}
+                          {listing.area > 0 && <span>{listing.area} {t('m²')}</span>}
+                          {listing.rooms > 0 && <span>{listing.rooms} {t('pcs')}</span>}
                         </div>
                         <span className="flex items-center gap-1 font-medium text-gray-400">
                           <Eye className="h-3.5 w-3.5" /> {listing.views || 0}

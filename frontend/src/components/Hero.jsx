@@ -2,9 +2,9 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Search, MapPin, X } from 'lucide-react';
-import { QUICK_AREAS, TRANSLATIONS } from '@/lib/data';
-import { useLangStore } from '@/store/authStore';
+import { QUICK_AREAS } from '@/lib/data';
 import { WILAYAS } from '@/lib/wilayas';
+import { useT } from '@/lib/i18n/useT';
 
 const SEARCH_DELAY_MS = 350;
 
@@ -13,8 +13,7 @@ const SEARCH_DELAY_MS = 350;
  * in place (by wilaya or commune) while the user types, via `onSearch(place)`.
  */
 export default function Hero({ value = '', onSearch }) {
-  const { lang } = useLangStore();
-  const t = TRANSLATIONS[lang] || TRANSLATIONS.fr;
+  const { t, lang } = useT();
 
   const [text, setText] = useState(value);
   const timer = useRef(null);
@@ -100,7 +99,7 @@ export default function Hero({ value = '', onSearch }) {
                   <button
                     type="button"
                     onClick={() => { setText(''); apply(''); }}
-                    aria-label="Effacer la recherche"
+                    aria-label={t('Effacer la recherche')}
                     className="absolute right-2 rtl:right-auto rtl:left-2 grid h-8 w-8 place-items-center rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600"
                   >
                     <X className="h-4 w-4" />
@@ -135,7 +134,7 @@ export default function Hero({ value = '', onSearch }) {
                     : 'border-gray-200 bg-gray-50 text-gray-600 hover:bg-brand-50 hover:text-brand-600'
                 }`}
               >
-                {area}
+                {t(area)}
               </button>
             ))}
           </div>

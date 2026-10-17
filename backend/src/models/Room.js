@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { autoTranslate } from '../utils/autoTranslate.js';
 
 const roomSchema = new mongoose.Schema(
   {
@@ -25,6 +26,10 @@ const roomSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// Name/description/amenities are machine-translated into the other site languages after each save
+export const TRANSLATED_FIELDS = ['title', 'description', 'amenities'];
+autoTranslate(roomSchema, TRANSLATED_FIELDS);
 
 const Room = mongoose.model('Room', roomSchema);
 export default Room;

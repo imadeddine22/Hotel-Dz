@@ -45,12 +45,12 @@
 /* --- Sidebar --- */
 .admin-sidebar {
   position: fixed;
-  left: 0;
+  inset-inline-start: 0; /* left in LTR, right in Arabic (RTL) */
   top: 0;
   bottom: 0;
   width: 260px;
   background: #ffffff;
-  border-right: 1px solid #f1f5f9;
+  border-inline-end: 1px solid #f1f5f9;
   display: flex;
   flex-direction: column;
   z-index: 50;
@@ -62,7 +62,11 @@
   .admin-sidebar {
     transform: translateX(-100%);
   }
-  .admin-sidebar.open {
+  [dir="rtl"] .admin-sidebar {
+    transform: translateX(100%);
+  }
+  .admin-sidebar.open,
+  [dir="rtl"] .admin-sidebar.open {
     transform: translateX(0);
   }
 }
@@ -194,7 +198,9 @@
 /* --- Main Area --- */
 .admin-main {
   flex: 1;
-  margin-left: 260px;
+  /* min-width: 0 lets this flex child shrink; without it one wide table or chart widened the whole page on mobile */
+  min-width: 0;
+  margin-inline-start: 260px;
   display: flex;
   flex-direction: column;
   min-height: 100vh;
@@ -202,7 +208,7 @@
 
 @media (max-width: 768px) {
   .admin-main {
-    margin-left: 0;
+    margin-inline-start: 0;
   }
 }
 

@@ -6,6 +6,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import api from '@/lib/api';
 
+import { useT } from '@/lib/i18n/useT';
 const SUBJECTS = [
   'Question sur une réservation',
   'Inscrire mon hôtel',
@@ -15,6 +16,7 @@ const SUBJECTS = [
 ];
 
 export default function ContactPage() {
+  const { t } = useT();
   const [form, setForm] = useState({ name: '', email: '', subject: SUBJECTS[0], message: '' });
   const [errors, setErrors] = useState({});
   const [sent, setSent] = useState(false);
@@ -44,7 +46,7 @@ export default function ContactPage() {
       await api.post('/messages', { ...rest, content: message });
       setSent(true);
     } catch (err) {
-      alert('Erreur lors de l\'envoi du message. Veuillez réessayer.');
+      alert(t('Erreur lors de l\'envoi du message. Veuillez réessayer.'));
     } finally {
       setSending(false);
     }
@@ -56,10 +58,9 @@ export default function ContactPage() {
 
       {/* Header */}
       <section className="bg-gradient-to-r from-brand-500 to-brand-700 py-16 text-center text-white">
-        <h1 className="text-4xl font-extrabold">Contactez-nous</h1>
+        <h1 className="text-4xl font-extrabold">{t('Contactez-nous')}</h1>
         <p className="mx-auto mt-3 max-w-xl px-4 text-brand-50">
-          Une question, un problème ou une suggestion ? Notre équipe vous répond
-          sous 24 heures ouvrées.
+          {t('Une question, un problème ou une suggestion ? Notre équipe vous répond sous 24 heures ouvrées.')}
         </p>
       </section>
 
@@ -70,24 +71,24 @@ export default function ContactPage() {
             {[
               { icon: Mail, title: 'Email', value: 'support@hotelsdz.dz' },
               { icon: Phone, title: 'Téléphone', value: '+213 (0) 21 00 00 00' },
-              { icon: MapPin, title: 'Adresse', value: 'Alger Centre, Alger, Algérie' },
+              { icon: MapPin, title: 'Adresse', value: t('Alger Centre, Alger, Algérie') },
             ].map((c) => (
               <div key={c.title} className="flex items-start gap-4 rounded-2xl bg-white p-5 shadow-card">
                 <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-600">
                   <c.icon className="h-5 w-5" />
                 </span>
                 <div>
-                  <h3 className="font-semibold text-ink">{c.title}</h3>
+                  <h3 className="font-semibold text-ink">{t(c.title)}</h3>
                   <p className="mt-0.5 text-sm text-gray-600">{c.value}</p>
                 </div>
               </div>
             ))}
             <div className="rounded-2xl bg-white p-5 shadow-card">
-              <h3 className="font-semibold text-ink">Horaires</h3>
+              <h3 className="font-semibold text-ink">{t('Horaires')}</h3>
               <p className="mt-1 text-sm text-gray-600">
-                Dimanche – Jeudi : 9h00 – 17h00
+                {t('Dimanche – Jeudi : 9h00 – 17h00')}
                 <br />
-                Vendredi – Samedi : fermé
+                {t('Vendredi – Samedi : fermé')}
               </p>
             </div>
           </div>
@@ -97,10 +98,9 @@ export default function ContactPage() {
             {sent ? (
               <div className="flex flex-col items-center gap-4 py-16 text-center">
                 <CheckCircle2 className="h-14 w-14 text-brand-500" />
-                <h2 className="text-2xl font-bold text-ink">Message envoyé !</h2>
+                <h2 className="text-2xl font-bold text-ink">{t('Message envoyé !')}</h2>
                 <p className="max-w-md text-gray-600">
-                  Merci {form.name.split(' ')[0]} — nous avons bien reçu votre message
-                  et nous vous répondrons à <b>{form.email}</b> dans les plus brefs délais.
+                  {t('Merci')} {form.name.split(' ')[0]} {t('— nous avons bien reçu votre message et nous vous répondrons à')} <b>{form.email}</b> {t('dans les plus brefs délais.')}
                 </p>
                 <button
                   onClick={() => {
@@ -109,7 +109,7 @@ export default function ContactPage() {
                   }}
                   className="mt-2 rounded-full border border-gray-300 px-6 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
                 >
-                  Envoyer un autre message
+                  {t('Envoyer un autre message')}
                 </button>
               </div>
             ) : (
@@ -117,7 +117,7 @@ export default function ContactPage() {
                 <div className="grid gap-5 sm:grid-cols-2">
                   <div>
                     <label htmlFor="name" className="mb-1.5 block text-sm font-medium text-gray-700">
-                      Nom complet <span className="text-red-500">*</span>
+                      {t('Nom complet')} <span className="text-red-500">*</span>
                     </label>
                     <input
                       id="name"
@@ -128,13 +128,13 @@ export default function ContactPage() {
                       className={`w-full rounded-xl border px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100 ${
                         errors.name ? 'border-red-400' : 'border-gray-200'
                       }`}
-                      placeholder="Votre nom"
+                      placeholder={t('Votre nom')}
                     />
                     {errors.name && <p className="mt-1.5 text-sm text-red-600">{errors.name}</p>}
                   </div>
                   <div>
                     <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-gray-700">
-                      Email <span className="text-red-500">*</span>
+                      {t('Email')} <span className="text-red-500">*</span>
                     </label>
                     <input
                       id="email"
@@ -145,7 +145,7 @@ export default function ContactPage() {
                       className={`w-full rounded-xl border px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100 ${
                         errors.email ? 'border-red-400' : 'border-gray-200'
                       }`}
-                      placeholder="vous@exemple.com"
+                      placeholder={t('vous@exemple.com')}
                     />
                     {errors.email && <p className="mt-1.5 text-sm text-red-600">{errors.email}</p>}
                   </div>
@@ -153,7 +153,7 @@ export default function ContactPage() {
 
                 <div className="mt-5">
                   <label htmlFor="subject" className="mb-1.5 block text-sm font-medium text-gray-700">
-                    Sujet
+                    {t('Sujet')}
                   </label>
                   <select
                     id="subject"
@@ -162,14 +162,14 @@ export default function ContactPage() {
                     className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
                   >
                     {SUBJECTS.map((s) => (
-                      <option key={s}>{s}</option>
+                      <option key={s}>{t(s)}</option>
                     ))}
                   </select>
                 </div>
 
                 <div className="mt-5">
                   <label htmlFor="message" className="mb-1.5 block text-sm font-medium text-gray-700">
-                    Message <span className="text-red-500">*</span>
+                    {t('Message')} <span className="text-red-500">*</span>
                   </label>
                   <textarea
                     id="message"
@@ -179,7 +179,7 @@ export default function ContactPage() {
                     className={`w-full resize-y rounded-xl border px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100 ${
                       errors.message ? 'border-red-400' : 'border-gray-200'
                     }`}
-                    placeholder="Décrivez votre demande..."
+                    placeholder={t('Décrivez votre demande...')}
                   />
                   {errors.message && <p className="mt-1.5 text-sm text-red-600">{errors.message}</p>}
                 </div>
@@ -190,7 +190,7 @@ export default function ContactPage() {
                   className="mt-6 flex items-center justify-center gap-2 rounded-full bg-brand-500 px-8 py-3 font-semibold text-white transition hover:bg-brand-600 disabled:opacity-60"
                 >
                   <Send className="h-5 w-5" />
-                  {sending ? 'Envoi en cours...' : 'Envoyer le message'}
+                  {sending ? t('Envoi en cours...') : t('Envoyer le message')}
                 </button>
               </form>
             )}

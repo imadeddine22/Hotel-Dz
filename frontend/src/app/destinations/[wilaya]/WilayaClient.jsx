@@ -10,10 +10,12 @@ import HotelCard from '@/components/HotelCard';
 import HouseCard from '@/components/HouseCard';
 import api from '@/lib/api';
 
+import { useT } from '@/lib/i18n/useT';
 const HOTEL_TYPES = ['Luxe', 'Affaires', 'Balnéaire', 'Riad', 'Boutique', 'Montagne', 'Désert', 'Appart-hôtel', 'Économique'];
 const HOUSE_TYPES = ['Villa', 'Appartement', 'Maison', 'Chalet', 'Studio', 'Duplex', 'Riad', 'Ferme'];
 
 export default function WilayaClient({ children }) {
+  const { t } = useT();
   const params = useParams();
   const wilayaName = decodeURIComponent(params.wilaya);
 
@@ -129,7 +131,7 @@ export default function WilayaClient({ children }) {
             onMouseEnter={(e) => (e.currentTarget.style.color = '#fff')}
             onMouseLeave={(e) => (e.currentTarget.style.color = '#cffafe')}
           >
-            <ArrowLeft size={16} /> Toutes les wilayas
+            <ArrowLeft size={16} /> {t('Toutes les wilayas')}
           </Link>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
@@ -146,7 +148,7 @@ export default function WilayaClient({ children }) {
                 {wilayaName}
               </h1>
               <p style={{ color: '#cffafe', fontSize: 14, marginTop: 4 }}>
-                {loading ? 'Chargement...' : `${hotels.length} hôtel${hotels.length !== 1 ? 's' : ''} · ${houses.length} maison${houses.length !== 1 ? 's' : ''}`}
+                {loading ? t('Chargement...') : t('{h} hôtel(s) · {m} maison(s)', { h: hotels.length, m: houses.length })}
               </p>
             </div>
           </div>
@@ -166,7 +168,7 @@ export default function WilayaClient({ children }) {
             <input
               value={searchQ}
               onChange={(e) => setSearchQ(e.target.value)}
-              placeholder="Rechercher dans cette wilaya..."
+              placeholder={t('Rechercher dans cette wilaya...')}
               style={{
                 flex: 1, border: 'none', outline: 'none', fontSize: 14,
                 background: 'transparent', color: '#1e293b',
@@ -227,31 +229,31 @@ export default function WilayaClient({ children }) {
               boxShadow: !typeFilter ? '0 2px 8px rgba(6,182,212,0.25)' : '0 1px 3px rgba(0,0,0,0.06)',
             }}
           >
-            Tous les types
+            {t('Tous les types')}
           </button>
-          {currentTypes.map((t) => (
+          {currentTypes.map((type) => (
             <button
-              key={t}
-              onClick={() => setTypeFilter(typeFilter === t ? '' : t)}
+              key={type}
+              onClick={() => setTypeFilter(typeFilter === type ? '' : type)}
               style={{
                 borderRadius: 999, padding: '6px 14px', fontSize: 13,
                 cursor: 'pointer', flexShrink: 0, fontWeight: 500, border: 'none',
-                background: typeFilter === t ? '#06b6d4' : '#fff',
-                color: typeFilter === t ? '#fff' : '#64748b',
-                boxShadow: typeFilter === t ? '0 2px 8px rgba(6,182,212,0.25)' : '0 1px 3px rgba(0,0,0,0.06)',
+                background: typeFilter === type ? '#06b6d4' : '#fff',
+                color: typeFilter === type ? '#fff' : '#64748b',
+                boxShadow: typeFilter === type ? '0 2px 8px rgba(6,182,212,0.25)' : '0 1px 3px rgba(0,0,0,0.06)',
               }}
             >
-              {t}
+              {t(type)}
             </button>
           ))}
         </div>
 
         {/* Results count */}
         <h2 style={{ fontSize: 16, fontWeight: 700, color: '#1e293b', marginBottom: 20 }}>
-          {loading ? 'Chargement...' : (
+          {loading ? t('Chargement...') : (
             <>
-              {totalResults} résultat{totalResults !== 1 ? 's' : ''}
-              {typeFilter && <span style={{ color: '#94a3b8', fontWeight: 400 }}> · {typeFilter}</span>}
+              {totalResults} {t('résultat')}{totalResults !== 1 ? 's' : ''}
+              {typeFilter && <span style={{ color: '#94a3b8', fontWeight: 400 }}> · {t(typeFilter)}</span>}
             </>
           )}
         </h2>
@@ -259,14 +261,14 @@ export default function WilayaClient({ children }) {
         {loading ? (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '60px 0', color: '#94a3b8' }}>
             <Loader2 size={36} style={{ animation: 'spin 1s linear infinite', marginBottom: 12 }} />
-            <p style={{ fontSize: 14 }}>Chargement des propriétés...</p>
+            <p style={{ fontSize: 14 }}>{t('Chargement des propriétés...')}</p>
             <style jsx>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
           </div>
         ) : totalResults === 0 ? (
           <div style={{ textAlign: 'center', padding: '60px 0', color: '#94a3b8' }}>
             <MapPin size={48} style={{ marginBottom: 12, opacity: 0.3 }} />
-            <p style={{ fontSize: 16, fontWeight: 600 }}>Aucune propriété trouvée à {wilayaName}</p>
-            <p style={{ fontSize: 14 }}>Modifiez vos filtres ou revenez plus tard</p>
+            <p style={{ fontSize: 16, fontWeight: 600 }}>{t('Aucune propriété trouvée à')} {wilayaName}</p>
+            <p style={{ fontSize: 14 }}>{t('Modifiez vos filtres ou revenez plus tard')}</p>
           </div>
         ) : (
           <>
@@ -277,7 +279,7 @@ export default function WilayaClient({ children }) {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
                     <Hotel size={18} color="#06b6d4" />
                     <h3 style={{ fontSize: 18, fontWeight: 700, color: '#1e293b', margin: 0 }}>
-                      Hôtels
+                      {t('Hôtels')}
                       <span style={{ color: '#94a3b8', fontWeight: 400, fontSize: 14, marginLeft: 8 }}>
                         ({filteredHotels.length})
                       </span>
@@ -305,7 +307,7 @@ export default function WilayaClient({ children }) {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
                     <Home size={18} color="#06b6d4" />
                     <h3 style={{ fontSize: 18, fontWeight: 700, color: '#1e293b', margin: 0 }}>
-                      Maisons
+                      {t('Maisons')}
                       <span style={{ color: '#94a3b8', fontWeight: 400, fontSize: 14, marginLeft: 8 }}>
                         ({filteredHouses.length})
                       </span>

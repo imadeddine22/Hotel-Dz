@@ -10,6 +10,7 @@ import { formatDZD } from '@/lib/data';
 import { useWilayas } from '@/hooks/useWilayas';
 import CommuneDatalist from '@/components/CommuneDatalist';
 
+import { useT } from '@/lib/i18n/useT';
 const PROPERTY_TYPES = ['Appartement', 'Villa', 'Maison', 'Duplex', 'Studio', 'Terrain', 'Local commercial', 'Ferme', 'Chalet', 'Immeuble'];
 
 const STATUS_BADGE = {
@@ -25,6 +26,7 @@ const emptyForm = {
 };
 
 function SellerListingsContent() {
+  const { t } = useT();
   const params = useSearchParams();
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -87,7 +89,7 @@ function SellerListingsContent() {
 
     // Client-side validation
     if (!form.wilaya) {
-      setError('Veuillez sélectionner une wilaya.');
+      setError(t('Veuillez sélectionner une wilaya.'));
       setSaving(false);
       return;
     }
@@ -118,7 +120,7 @@ function SellerListingsContent() {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Supprimer cette annonce ?')) return;
+    if (!confirm(t('Supprimer cette annonce ?'))) return;
     try {
       await api.delete(`/seller/listings/${id}`);
       setListings((prev) => prev.filter((l) => l._id !== id));
@@ -130,18 +132,18 @@ function SellerListingsContent() {
   const set = (field, val) => setForm((p) => ({ ...p, [field]: val }));
 
   return (
-    <DashboardShell role="seller" title="Mes Annonces">
+    <DashboardShell role="seller" title={t('Mes Annonces')}>
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-extrabold text-gray-900">Mes Annonces</h1>
-          <p className="text-sm text-gray-500 mt-1">Gérez vos biens immobiliers à vendre</p>
+          <h1 className="text-2xl font-extrabold text-gray-900">{t('Mes Annonces')}</h1>
+          <p className="text-sm text-gray-500 mt-1">{t('Gérez vos biens immobiliers à vendre')}</p>
         </div>
         {!showForm && (
           <button
             onClick={openNew}
             className="inline-flex items-center gap-2 rounded-full bg-emerald-600 px-6 py-3 font-bold text-white shadow-md hover:bg-emerald-700 transition-all hover:scale-105"
           >
-            <Plus className="h-5 w-5" /> Nouvelle annonce
+            <Plus className="h-5 w-5" /> {t('Nouvelle annonce')}
           </button>
         )}
       </div>
@@ -155,9 +157,9 @@ function SellerListingsContent() {
         <div className="mb-8 rounded-2xl bg-white p-6 shadow-sm border border-gray-100">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg font-bold text-gray-900">
-              {editId ? 'Modifier l\'annonce' : 'Nouvelle annonce'}
+              {editId ? t('Modifier l\'annonce') : t('Nouvelle annonce')}
             </h2>
-            <button onClick={() => { setShowForm(false); setEditId(null); }} aria-label="Fermer" className="rounded-full p-2 hover:bg-gray-100 transition">
+            <button onClick={() => { setShowForm(false); setEditId(null); }} aria-label={t('Fermer')} className="rounded-full p-2 hover:bg-gray-100 transition">
               <X className="h-5 w-5 text-gray-400" />
             </button>
           </div>
@@ -165,67 +167,67 @@ function SellerListingsContent() {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <label className="mb-1 block text-sm font-semibold text-gray-700">Titre *</label>
+                <label className="mb-1 block text-sm font-semibold text-gray-700">{t('Titre *')}</label>
                 <input
                   required value={form.title} onChange={(e) => set('title', e.target.value)}
                   className="w-full rounded-xl border border-gray-200 px-4 py-2.5 outline-none focus:border-emerald-500 transition"
-                  placeholder="Ex: Villa 4 pièces vue mer"
+                  placeholder={t('Ex: Villa 4 pièces vue mer')}
                 />
               </div>
               <div>
                 {/* Native <select>: the previous clickable <div> could not be reached or used with a keyboard */}
-                <label htmlFor="sale-type" className="mb-1 block text-sm font-semibold text-gray-700">Type *</label>
+                <label htmlFor="sale-type" className="mb-1 block text-sm font-semibold text-gray-700">{t('Type *')}</label>
                 <select
                   id="sale-type" required value={form.type} onChange={(e) => set('type', e.target.value)}
                   className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 font-serif font-bold text-slate-800 outline-none shadow-sm transition focus:border-emerald-500"
                 >
-                  {PROPERTY_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                  {PROPERTY_TYPES.map((item) => <option key={item} value={item}>{t(item)}</option>)}
                 </select>
               </div>
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-semibold text-gray-700">Description</label>
+              <label className="mb-1 block text-sm font-semibold text-gray-700">{t('Description')}</label>
               <textarea
                 rows={3} value={form.description} onChange={(e) => set('description', e.target.value)}
                 className="w-full rounded-xl border border-gray-200 px-4 py-2.5 outline-none focus:border-emerald-500 transition resize-none"
-                placeholder="Décrivez le bien..."
+                placeholder={t('Décrivez le bien...')}
               />
             </div>
 
             <div className="grid gap-4 md:grid-cols-3">
               <div>
-                <label htmlFor="sale-wilaya" className="mb-1 block text-sm font-semibold text-gray-700">Wilaya *</label>
+                <label htmlFor="sale-wilaya" className="mb-1 block text-sm font-semibold text-gray-700">{t('Wilaya *')}</label>
                 <select
                   id="sale-wilaya" required value={form.wilaya} onChange={(e) => set('wilaya', e.target.value)}
                   className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 font-serif font-bold text-slate-800 outline-none shadow-sm transition focus:border-emerald-500"
                 >
-                  <option value="">Sélectionner...</option>
+                  <option value="">{t('Sélectionner...')}</option>
                   {wilayas?.map((w) => <option key={w} value={w}>{w}</option>)}
                 </select>
               </div>
               <div>
-                <label htmlFor="sale-city" className="mb-1 block text-sm font-semibold text-gray-700">Ville *</label>
+                <label htmlFor="sale-city" className="mb-1 block text-sm font-semibold text-gray-700">{t('Ville *')}</label>
                 <input
                   id="sale-city" required value={form.city} onChange={(e) => set('city', e.target.value)} list="sale-communes" autoComplete="off"
                   className="w-full rounded-xl border border-gray-200 px-4 py-2.5 outline-none focus:border-emerald-500 transition"
-                  placeholder="Choisissez ou saisissez une commune"
+                  placeholder={t('Choisissez ou saisissez une commune')}
                 />
                 <CommuneDatalist id="sale-communes" wilaya={form.wilaya} />
               </div>
               <div>
-                <label className="mb-1 block text-sm font-semibold text-gray-700">Adresse</label>
+                <label className="mb-1 block text-sm font-semibold text-gray-700">{t('Adresse')}</label>
                 <input
                   value={form.address} onChange={(e) => set('address', e.target.value)}
                   className="w-full rounded-xl border border-gray-200 px-4 py-2.5 outline-none focus:border-emerald-500 transition"
-                  placeholder="Ex: Rue..."
+                  placeholder={t('Ex: Rue...')}
                 />
               </div>
             </div>
 
             <div className="grid gap-4 md:grid-cols-4">
               <div>
-                <label className="mb-1 block text-sm font-semibold text-gray-700">Prix (DZD) *</label>
+                <label className="mb-1 block text-sm font-semibold text-gray-700">{t('Prix (DZD) *')}</label>
                 <input
                   type="number" required min="0" value={form.price} onChange={(e) => set('price', e.target.value)}
                   className="w-full rounded-xl border border-gray-200 px-4 py-2.5 outline-none focus:border-emerald-500 transition"
@@ -233,7 +235,7 @@ function SellerListingsContent() {
                 />
               </div>
               <div>
-                <label className="mb-1 block text-sm font-semibold text-gray-700">Surface (m²)</label>
+                <label className="mb-1 block text-sm font-semibold text-gray-700">{t('Surface (m²)')}</label>
                 <input
                   type="number" min="0" value={form.area} onChange={(e) => set('area', e.target.value)}
                   className="w-full rounded-xl border border-gray-200 px-4 py-2.5 outline-none focus:border-emerald-500 transition"
@@ -241,14 +243,14 @@ function SellerListingsContent() {
                 />
               </div>
               <div>
-                <label className="mb-1 block text-sm font-semibold text-gray-700">Pièces</label>
+                <label className="mb-1 block text-sm font-semibold text-gray-700">{t('Pièces')}</label>
                 <input
                   type="number" min="0" value={form.rooms} onChange={(e) => set('rooms', e.target.value)}
                   className="w-full rounded-xl border border-gray-200 px-4 py-2.5 outline-none focus:border-emerald-500 transition"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-sm font-semibold text-gray-700">Salles de bain</label>
+                <label className="mb-1 block text-sm font-semibold text-gray-700">{t('Salles de bain')}</label>
                 <input
                   type="number" min="0" value={form.bathrooms} onChange={(e) => set('bathrooms', e.target.value)}
                   className="w-full rounded-xl border border-gray-200 px-4 py-2.5 outline-none focus:border-emerald-500 transition"
@@ -258,7 +260,7 @@ function SellerListingsContent() {
 
             <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <label className="mb-1 block text-sm font-semibold text-gray-700">Téléphone de contact</label>
+                <label className="mb-1 block text-sm font-semibold text-gray-700">{t('Téléphone de contact')}</label>
                 <input
                   value={form.contactPhone} onChange={(e) => set('contactPhone', e.target.value)}
                   className="w-full rounded-xl border border-gray-200 px-4 py-2.5 outline-none focus:border-emerald-500 transition"
@@ -266,26 +268,26 @@ function SellerListingsContent() {
                 />
               </div>
               <div>
-                <label className="mb-1 block text-sm font-semibold text-gray-700">Email de contact</label>
+                <label className="mb-1 block text-sm font-semibold text-gray-700">{t('Email de contact')}</label>
                 <input
                   type="email" value={form.contactEmail} onChange={(e) => set('contactEmail', e.target.value)}
                   className="w-full rounded-xl border border-gray-200 px-4 py-2.5 outline-none focus:border-emerald-500 transition"
-                  placeholder="vendeur@email.com"
+                  placeholder={t('vendeur@email.com')}
                 />
               </div>
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-semibold text-gray-700">Équipements (séparés par des virgules)</label>
+              <label className="mb-1 block text-sm font-semibold text-gray-700">{t('Équipements (séparés par des virgules)')}</label>
               <input
                 value={form.amenities} onChange={(e) => set('amenities', e.target.value)}
                 className="w-full rounded-xl border border-gray-200 px-4 py-2.5 outline-none focus:border-emerald-500 transition"
-                placeholder="Garage, Jardin, Piscine, Ascenseur..."
+                placeholder={t('Garage, Jardin, Piscine, Ascenseur...')}
               />
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-semibold text-gray-700">Photos</label>
+              <label className="mb-2 block text-sm font-semibold text-gray-700">{t('Photos')}</label>
               <ImageUploader
                 key={editId || 'new'}
                 existingImages={existingImages}
@@ -298,14 +300,14 @@ function SellerListingsContent() {
                 type="submit" disabled={saving}
                 className="rounded-full bg-emerald-600 px-8 py-3 font-bold text-white shadow-md hover:bg-emerald-700 transition disabled:opacity-60"
               >
-                {saving ? 'Enregistrement...' : editId ? 'Mettre à jour' : 'Publier l\'annonce'}
+                {saving ? t('Enregistrement...') : editId ? t('Mettre à jour') : t('Publier l\'annonce')}
               </button>
               <button
                 type="button"
                 onClick={() => { setShowForm(false); setEditId(null); }}
                 className="rounded-full border border-gray-200 px-6 py-3 font-bold text-gray-600 hover:bg-gray-50 transition"
               >
-                Annuler
+                {t('Annuler')}
               </button>
             </div>
           </form>
@@ -324,13 +326,13 @@ function SellerListingsContent() {
           <div className="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-full bg-emerald-50">
             <Tag className="h-8 w-8 text-emerald-500" />
           </div>
-          <h3 className="text-lg font-bold text-gray-900 mb-2">Aucune annonce</h3>
-          <p className="text-sm text-gray-500 mb-6">Commencez par publier votre première annonce immobilière</p>
+          <h3 className="text-lg font-bold text-gray-900 mb-2">{t('Aucune annonce')}</h3>
+          <p className="text-sm text-gray-500 mb-6">{t('Commencez par publier votre première annonce immobilière')}</p>
           <button
             onClick={openNew}
             className="inline-flex items-center gap-2 rounded-full bg-emerald-600 px-6 py-3 font-bold text-white shadow-md hover:bg-emerald-700 transition"
           >
-            <Plus className="h-5 w-5" /> Publier une annonce
+            <Plus className="h-5 w-5" /> {t('Publier une annonce')}
           </button>
         </div>
       ) : (
@@ -343,25 +345,25 @@ function SellerListingsContent() {
                 {/* Image */}
                 <div className="relative h-44 bg-gray-100 overflow-hidden">
                   {listing.images?.[0] ? (
-                    <img src={getImageUrl(listing.images[0].url)} alt={listing.title} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <img src={getImageUrl(listing.images[0].url)} alt={t(listing.title)} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   ) : (
                     <div className="flex h-full items-center justify-center text-gray-300">
                       <Tag className="h-10 w-10" />
                     </div>
                   )}
                   <div className={`absolute top-3 left-3 inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-bold ${badge.color}`}>
-                    <BadgeIcon className="h-3 w-3" /> {badge.label}
+                    <BadgeIcon className="h-3 w-3" /> {t(badge.label)}
                   </div>
                   <div className="absolute top-3 right-3 rounded-full bg-white/90 backdrop-blur-sm px-3 py-1 text-xs font-bold text-emerald-600">
-                    {listing.type}
+                    {t(listing.type)}
                   </div>
                 </div>
 
                 {/* Content */}
                 <div className="p-4">
-                  <h3 className="font-bold text-gray-900 mb-1 truncate">{listing.title}</h3>
+                  <h3 className="font-bold text-gray-900 mb-1 truncate">{t(listing.title)}</h3>
                   <p className="text-sm text-gray-500 flex items-center gap-1 mb-3">
-                    <MapPin className="h-3.5 w-3.5" /> {listing.city}, {listing.wilaya}
+                    <MapPin className="h-3.5 w-3.5" /> {t(listing.city)}, {t(listing.wilaya)}
                   </p>
 
                   <div className="flex items-center justify-between">
@@ -372,14 +374,14 @@ function SellerListingsContent() {
                   </div>
 
                   {listing.area > 0 && (
-                    <p className="text-xs text-gray-400 mt-1">{listing.area} m² · {listing.rooms} pcs · {listing.bathrooms} sdb</p>
+                    <p className="text-xs text-gray-400 mt-1">{listing.area} {t('m² ·')} {listing.rooms} {t('pcs ·')} {listing.bathrooms} {t('sdb')}</p>
                   )}
 
                   {listing.status === 'rejected' && (
                     <div className="mt-3 rounded-xl bg-red-50 p-3 text-xs text-red-700 border border-red-200">
-                      <span className="font-bold block text-red-800">⚠️ Annonce rejetée par l'administration :</span>
+                      <span className="font-bold block text-red-800">{t('⚠️ Annonce rejetée par l\'administration :')}</span>
                       <p className="mt-1 text-red-600 font-medium italic">
-                        "{listing.rejectionReason || 'Aucun motif spécifié. Veuillez réviser les informations.'}"
+                        "{listing.rejectionReason || t('Aucun motif spécifié. Veuillez réviser les informations.')}"
                       </p>
                     </div>
                   )}
@@ -389,7 +391,7 @@ function SellerListingsContent() {
                       onClick={() => openEdit(listing)}
                       className="flex-1 inline-flex items-center justify-center gap-1 rounded-xl border border-gray-200 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition"
                     >
-                      <Pencil className="h-3.5 w-3.5" /> Modifier
+                      <Pencil className="h-3.5 w-3.5" /> {t('Modifier')}
                     </button>
                     <button
                       onClick={() => handleDelete(listing._id)}
@@ -409,8 +411,9 @@ function SellerListingsContent() {
 }
 
 export default function SellerListings() {
+  const { t } = useT();
   return (
-    <Suspense fallback={<div className="py-20 text-center text-gray-400">Chargement...</div>}>
+    <Suspense fallback={<div className="py-20 text-center text-gray-400">{t('Chargement...')}</div>}>
       <SellerListingsContent />
     </Suspense>
   );

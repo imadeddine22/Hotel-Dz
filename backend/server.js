@@ -9,6 +9,9 @@ const start = async () => {
   app.listen(PORT, () => {
     console.log(`🚀 Meskan dz API listening on port ${PORT} (${process.env.NODE_ENV || 'development'})`);
   });
+  // Translate listings that predate automatic translation (background, quota-limited)
+  const { startTranslationBackfill } = await import('./src/utils/translationBackfill.js');
+  startTranslationBackfill();
 };
 
 start();

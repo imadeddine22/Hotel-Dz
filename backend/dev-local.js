@@ -17,6 +17,9 @@ import { MongoMemoryServer } from 'mongodb-memory-server';
 
 const PORT = process.env.PORT || 5000;
 
+// Don't spend the free translation quota on throwaway demo data; opt in with TRANSLATION_PROVIDER=mymemory
+process.env.TRANSLATION_PROVIDER ||= 'none';
+
 const start = async () => {
   console.log('🧪 Starting in-memory MongoDB (no Atlas / TLS / internet needed)...');
   console.log('   (first run downloads a ~200 MB MongoDB binary once, then it is cached)');
@@ -34,6 +37,8 @@ const start = async () => {
   await seedDatabase();
   const { syncWilayas } = await import('./src/config/db.js');
   await syncWilayas();
+  const { startTranslationBackfill } = await import('./src/utils/translationBackfill.js');
+  startTranslationBackfill();
 
   const app = (await import('./src/app.js')).default;
   app.listen(PORT, () => {

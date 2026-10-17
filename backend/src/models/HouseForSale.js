@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { autoTranslate } from '../utils/autoTranslate.js';
 
 const houseForSaleSchema = new mongoose.Schema(
   {
@@ -63,6 +64,10 @@ houseForSaleSchema.pre('save', async function (next) {
 });
 
 houseForSaleSchema.index({ wilaya: 1, status: 1 });
+
+// Name/description/amenities are machine-translated into the other site languages after each save
+export const TRANSLATED_FIELDS = ['title', 'description', 'amenities'];
+autoTranslate(houseForSaleSchema, TRANSLATED_FIELDS);
 
 const HouseForSale = mongoose.model('HouseForSale', houseForSaleSchema);
 export default HouseForSale;

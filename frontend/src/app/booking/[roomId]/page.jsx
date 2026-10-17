@@ -10,10 +10,12 @@ import { ROOM_TYPE_LABELS } from '@/lib/statusLabels';
 import { formatDZD } from '@/lib/data';
 import { useAuthStore } from '@/store/authStore';
 
+import { useT } from '@/lib/i18n/useT';
 const todayStr = () => new Date().toISOString().split('T')[0];
 const MS_DAY   = 86400000;
 
 export default function BookingPage() {
+  const { t } = useT();
   const { roomId } = useParams();
   const router     = useRouter();
 
@@ -45,7 +47,7 @@ export default function BookingPage() {
   const sendRequest = async (e) => {
     e.preventDefault();
     setError('');
-    if (nights < 1) return setError('Sélectionnez des dates valides.');
+    if (nights < 1) return setError(t('Sélectionnez des dates valides.'));
     // Visitors must log in first; come back to this page afterwards instead of showing a 401 error
     if (!useAuthStore.getState().user && !localStorage.getItem('token')) {
       router.push(`/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`);
@@ -73,8 +75,8 @@ export default function BookingPage() {
       {/* Header */}
       <section className="bg-gradient-to-r from-brand-600 to-cyan-500 py-10 text-white">
         <div className="mx-auto max-w-3xl px-4 sm:px-6">
-          <h1 className="text-3xl font-extrabold">Finaliser la réservation</h1>
-          <p className="mt-1 text-brand-50 text-sm">Demande de réservation · paiement sur place à l&apos;arrivée</p>
+          <h1 className="text-3xl font-extrabold">{t('Finaliser la réservation')}</h1>
+          <p className="mt-1 text-brand-50 text-sm">{t('Demande de réservation · paiement sur place à l\'arrivée')}</p>
         </div>
       </section>
 
@@ -86,15 +88,15 @@ export default function BookingPage() {
         ) : !room ? (
           <div className="flex items-center gap-3 rounded-2xl bg-red-50 px-5 py-4 text-red-600">
             <AlertCircle className="h-5 w-5 shrink-0" />
-            {error || 'Chambre introuvable.'}
+            {error || t('Chambre introuvable.')}
           </div>
         ) : (
           <div className="grid gap-6 md:grid-cols-5">
 
             {/* ── Form (3/5) ── */}
             <form onSubmit={sendRequest} className="md:col-span-3 rounded-3xl bg-white p-7 shadow-card">
-              <h2 className="mb-1 text-lg font-bold text-ink">{room.title}</h2>
-              <p className="mb-6 text-sm text-gray-400">{ROOM_TYPE_LABELS[room.type] || room.type} · jusqu&apos;à {room.capacity} pers.</p>
+              <h2 className="mb-1 text-lg font-bold text-ink">{t(room.title)}</h2>
+              <p className="mb-6 text-sm text-gray-400">{ROOM_TYPE_LABELS[room.type] || room.type} {t('· jusqu\'à')} {room.capacity} {t('pers.')}</p>
 
               {error && (
                 <div className="mb-4 flex items-center gap-2 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
@@ -103,7 +105,7 @@ export default function BookingPage() {
               )}
 
               {/* Check-in */}
-              <label htmlFor="bk-checkin" className="mb-1.5 block text-sm font-medium text-gray-700">Date d&apos;arrivée</label>
+              <label htmlFor="bk-checkin" className="mb-1.5 block text-sm font-medium text-gray-700">{t('Date d\'arrivée')}</label>
               <div className="mb-4 flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-3 focus-within:border-brand-400 focus-within:ring-2 focus-within:ring-brand-100 transition">
                 <Calendar className="h-4 w-4 text-gray-400" />
                 <input
@@ -115,7 +117,7 @@ export default function BookingPage() {
               </div>
 
               {/* Check-out */}
-              <label htmlFor="bk-checkout" className="mb-1.5 block text-sm font-medium text-gray-700">Date de départ</label>
+              <label htmlFor="bk-checkout" className="mb-1.5 block text-sm font-medium text-gray-700">{t('Date de départ')}</label>
               <div className="mb-4 flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-3 focus-within:border-brand-400 focus-within:ring-2 focus-within:ring-brand-100 transition">
                 <Calendar className="h-4 w-4 text-gray-400" />
                 <input
@@ -127,7 +129,7 @@ export default function BookingPage() {
               </div>
 
               {/* Guests */}
-              <label htmlFor="bk-guests" className="mb-1.5 block text-sm font-medium text-gray-700">Voyageurs</label>
+              <label htmlFor="bk-guests" className="mb-1.5 block text-sm font-medium text-gray-700">{t('Voyageurs')}</label>
               <div className="mb-6 flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-3 focus-within:border-brand-400 focus-within:ring-2 focus-within:ring-brand-100 transition">
                 <Users className="h-4 w-4 text-gray-400" />
                 <input
@@ -146,12 +148,12 @@ export default function BookingPage() {
                 {submitting ? (
                   <span className="flex items-center justify-center gap-2">
                     <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
-                    Envoi de la demande…
+                    {t('Envoi de la demande…')}
                   </span>
                 ) : (
                   <span className="flex items-center justify-center gap-2">
                     <Send className="h-5 w-5" />
-                    Envoyer la demande de réservation
+                    {t('Envoyer la demande de réservation')}
                   </span>
                 )}
               </button>
@@ -160,26 +162,25 @@ export default function BookingPage() {
               <div className="mt-4 flex gap-2 rounded-xl bg-brand-50 px-4 py-3 text-xs leading-relaxed text-gray-600">
                 <Info className="mt-0.5 h-4 w-4 shrink-0 text-brand-500" aria-hidden="true" />
                 <p>
-                  Aucun paiement en ligne. Le propriétaire accepte ou refuse votre demande (sous 48 h au plus),
-                  puis vous réglez {nights > 0 ? formatDZD(totalAmount) : 'le séjour'} directement sur place à l&apos;arrivée.
+                  {t('Aucun paiement en ligne. Le propriétaire accepte ou refuse votre demande (sous 48 h au plus), puis vous réglez')} {nights > 0 ? formatDZD(totalAmount) : t('le séjour')} {t('directement sur place à l\'arrivée.')}
                 </p>
               </div>
             </form>
 
             {/* ── Summary (2/5) ── */}
             <div className="md:col-span-2 h-fit rounded-3xl bg-white p-7 shadow-card">
-              <h2 className="mb-5 font-bold text-ink">Récapitulatif</h2>
+              <h2 className="mb-5 font-bold text-ink">{t('Récapitulatif')}</h2>
 
-              <Row label="Prix / nuit"    value={formatDZD(room.pricePerNight)} />
-              <Row label="Nuits"          value={nights || '—'} />
-              <Row label="Voyageurs"      value={form.guests} />
+              <Row label={t('Prix / nuit')}    value={formatDZD(room.pricePerNight)} />
+              <Row label={t('Nuits')}          value={nights || '—'} />
+              <Row label={t('Voyageurs')}      value={form.guests} />
 
               <div className="my-4 border-t border-dashed border-gray-100" />
 
               <div className="my-4 border-t border-gray-200" />
 
               <div className="flex items-center justify-between">
-                <span className="font-bold text-ink">Total à régler sur place</span>
+                <span className="font-bold text-ink">{t('Total à régler sur place')}</span>
                 <span className="text-xl font-extrabold text-brand-600">
                   {nights > 0 ? formatDZD(totalAmount) : '—'}
                 </span>

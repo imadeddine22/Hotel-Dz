@@ -10,9 +10,11 @@ import { useWilayas } from '@/hooks/useWilayas';
 
 import HotelsMap from '@/components/HotelsMap';
 
+import { useT } from '@/lib/i18n/useT';
 const TYPES = ['Luxe', 'Affaires', 'Balnéaire', 'Riad', 'Boutique', 'Montagne', 'Désert', 'Appart-hôtel', 'Économique'];
 
 export default function HotelsPage() {
+  const { t } = useT();
   const { wilayas } = useWilayas();
   const [filters, setFilters] = useState({ wilaya: '', type: '', minStars: '', q: '' });
   const [hotels, setHotels] = useState([]);
@@ -70,7 +72,7 @@ export default function HotelsPage() {
           
           {/* Header & Filters (Sticky) */}
           <div className="sticky top-0 z-10 border-b border-gray-100 bg-white p-4 sm:p-6 shadow-sm">
-            <h1 className="mb-4 text-2xl font-extrabold text-ink">Trouvez votre hôtel de rêve</h1>
+            <h1 className="mb-4 text-2xl font-extrabold text-ink">{t('Trouvez votre hôtel de rêve')}</h1>
             
             <div className="flex flex-wrap items-center gap-3">
               <div className="flex flex-1 min-w-[200px] items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 bg-gray-50 focus-within:border-brand-500 focus-within:bg-white transition-colors">
@@ -79,7 +81,7 @@ export default function HotelsPage() {
                   value={filters.q}
                   onChange={(e) => setFilters({ ...filters, q: e.target.value })}
                   onKeyDown={(e) => e.key === 'Enter' && fetchHotels()}
-                  placeholder="Rechercher une destination ou un hôtel..."
+                  placeholder={t('Rechercher une destination ou un hôtel...')}
                   className="w-full outline-none bg-transparent text-sm"
                 />
               </div>
@@ -89,7 +91,7 @@ export default function HotelsPage() {
                 onChange={(e) => setFilters({ ...filters, wilaya: e.target.value })}
                 className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 outline-none hover:border-brand-300 transition-colors"
               >
-                <option value="">Toutes les wilayas</option>
+                <option value="">{t('Toutes les wilayas')}</option>
                 {wilayas.map((w) => (
                   <option key={w} value={w}>{w}</option>
                 ))}
@@ -103,15 +105,15 @@ export default function HotelsPage() {
                 onClick={() => setFilters({ ...filters, type: '' })}
                 className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${!filters.type ? 'bg-brand-500 text-white shadow-md' : 'border border-gray-200 text-gray-600 hover:bg-gray-50'}`}
               >
-                Tous
+                {t('Tous')}
               </button>
-              {TYPES.map((t) => (
+              {TYPES.map((item) => (
                 <button
-                  key={t}
-                  onClick={() => setFilters({ ...filters, type: t })}
-                  className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${filters.type === t ? 'bg-[#00bcd4] text-white shadow-md' : 'border border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+                  key={item}
+                  onClick={() => setFilters({ ...filters, type: item })}
+                  className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${filters.type === item ? 'bg-[#00bcd4] text-white shadow-md' : 'border border-gray-200 text-gray-600 hover:bg-gray-50'}`}
                 >
-                  {t}
+                  {t(item)}
                 </button>
               ))}
             </div>
@@ -121,18 +123,18 @@ export default function HotelsPage() {
           <div className="p-4 sm:p-6 bg-gray-50/30 flex-1">
             {usingMock && (
               <p className="mb-4 rounded-lg bg-amber-50 px-4 py-2 text-sm text-amber-700 border border-amber-100">
-                Impossible de charger les hôtels pour le moment. Vérifiez votre connexion et réessayez.
+                {t('Impossible de charger les hôtels pour le moment. Vérifiez votre connexion et réessayez.')}
               </p>
             )}
 
             <h2 className="mb-4 text-lg font-bold text-ink flex items-center gap-2">
-              Résultats de recherche <span className="rounded bg-brand-50 px-2 py-0.5 text-sm text-brand-600">{hotels.length} propriétés</span>
+              {t('Résultats de recherche')} <span className="rounded bg-brand-50 px-2 py-0.5 text-sm text-brand-600">{hotels.length} {t('propriétés')}</span>
             </h2>
 
             {loading ? (
-              <p className="py-10 text-center text-gray-400">Recherche en cours...</p>
+              <p className="py-10 text-center text-gray-400">{t('Recherche en cours...')}</p>
             ) : hotels.length === 0 ? (
-              <p className="py-10 text-center text-gray-400">Aucun hôtel trouvé pour ces critères.</p>
+              <p className="py-10 text-center text-gray-400">{t('Aucun hôtel trouvé pour ces critères.')}</p>
             ) : (
               <div className="flex flex-col gap-5">
                 {hotels.map((h) => (
