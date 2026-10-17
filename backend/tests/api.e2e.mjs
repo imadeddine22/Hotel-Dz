@@ -532,7 +532,7 @@ describe('Policies, instant booking and free cancellation');
 {
   const host = await register('owner');
   const admin = await login('admin@hotelsdz.dz', 'admin123');
-  const policies = { instantBooking: true, freeCancellationDays: 5, checkInFrom: '15:00', checkOutUntil: '25:99', petsAllowed: 'true', hack: 1 };
+  const policies = { instantBooking: true, freeCancellationDays: 5, checkInFrom: '15:00', checkOutUntil: '25:99', petsAllowed: 'true', hack: 1, customRules: ['  Familles   uniquement ', 'familles uniquement', '', 'x'.repeat(120), ...Array.from({ length: 12 }, (_, i) => `Règle ${i}`)] };
   const h = await req('POST', '/houses', {
     token: host.token,
     form: { name: `Maison Règles ${uid}`, description: 'Test', wilaya: 'Tipaza', city: 'Tipaza', type: 'Villa', rooms: 2, bathrooms: 1, capacity: 4, pricePerNight: 8000, policies, images: [PNG] },
@@ -541,6 +541,8 @@ describe('Policies, instant booking and free cancellation');
   const p = h.data.house?.policies || {};
   check('policies saved', p.instantBooking === true && p.freeCancellationDays === 5 && p.checkInFrom === '15:00' && p.petsAllowed === true);
   check('invalid policy values fall back to defaults', p.checkOutUntil === '12:00' && p.hack === undefined, JSON.stringify(p));
+  const cr = p.customRules || [];
+  check('custom rules trimmed, deduplicated, capped (10 × 80 chars)', cr.length === 10 && cr[0] === 'Familles uniquement' && cr[1].length === 80 && !cr.includes(''), JSON.stringify(cr));
   const houseId = h.data.house?._id;
   await req('PUT', `/admin/houses/${houseId}/approve`, { token: admin });
 
@@ -559,7 +561,9 @@ describe('Policies, instant booking and free cancellation');
 
   // switching back to request mode: new bookings wait for the owner again
   const upd = await req('PUT', `/houses/${houseId}`, { token: host.token, body: { policies: { instantBooking: false } } });
-  check('owner edits policies (others kept)', upd.data.house?.policies?.instantBooking === false && upd.data.house?.policies?.freeCancellationDays === 5);
+  check('owner edits policies (others kept)', upd.data.house?.policies?.instantBooking === false && upd.data.house?.policies?.freeCancellationDays === 5 && upd.data.house?.policies?.customRules?.length === 10);
+  const upd2 = await req('PUT', `/houses/${houseId}`, { token: host.token, body: { policies: { customRules: ['Familles uniquement', 'Calme après 22 h'] } } });
+  check('owner replaces custom rules', JSON.stringify(upd2.data.house?.policies?.customRules) === '["Familles uniquement","Calme après 22 h"]', JSON.stringify(upd2.data.house?.policies));
   await req('PUT', `/admin/houses/${houseId}/approve`, { token: admin }); // editing sends it back to review
   const req2 = await req('POST', '/bookings/house', { token: customer.token, body: { houseId, checkIn: day(40), checkOut: day(41) } });
   check('request mode: booking waits for the owner', req2.data.booking?.status === 'pending' && req2.data.booking?.instant === false);
@@ -568,6 +572,8 @@ describe('Policies, instant booking and free cancellation');
 
   const sofitel = (await req('GET', '/hotels?limit=50')).data.hotels.find((x) => x.name === 'Sofitel Algiers Hamma');
   check('policies are public on listings', sofitel?.policies?.instantBooking === true);
+  const pub = await req('GET', `/houses/${houseId}`);
+  check('custom rules are public on the listing', pub.data.house?.policies?.customRules?.includes('Calme après 22 h'), JSON.stringify(pub.data.house?.policies));
 }
 
 describe('Scores out of 10, house reviews and deals');

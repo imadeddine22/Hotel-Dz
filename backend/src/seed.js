@@ -129,7 +129,7 @@ export const seedDatabase = async () => {
 
   // --- Booking policies on a few demo listings (instant booking, free cancellation) ---
   await Hotel.updateOne({ name: 'Sofitel Algiers Hamma' }, { policies: { checkInFrom: '15:00', checkOutUntil: '12:00', freeCancellationDays: 3, instantBooking: true, childrenAllowed: true, petsAllowed: false, smokingAllowed: false } });
-  await House.updateOne({ name: 'Villa Yasmine' }, { policies: { checkInFrom: '16:00', checkOutUntil: '11:00', freeCancellationDays: 7, instantBooking: false, childrenAllowed: true, petsAllowed: true, smokingAllowed: false } });
+  await House.updateOne({ name: 'Villa Yasmine' }, { policies: { checkInFrom: '16:00', checkOutUntil: '11:00', freeCancellationDays: 7, instantBooking: false, childrenAllowed: true, petsAllowed: true, smokingAllowed: false, customRules: ['Familles uniquement', 'Pas de fêtes ni d’événements'] } });
 
   // --- Outside Algeria (only when those countries are open): prices in TND / MAD ---
   if (ENABLED_COUNTRIES.includes('TN')) {

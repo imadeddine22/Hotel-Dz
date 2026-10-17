@@ -10,6 +10,7 @@ export const DEFAULT_POLICIES = {
   petsAllowed: false,
   smokingAllowed: false,
   instantBooking: false, // true: bookings are confirmed at once, no owner approval
+  customRules: [], // owner's own rules, e.g. "Familles uniquement" (max 10 × 80 chars)
 };
 
 /** Adds `policies` to a listing schema. */
@@ -23,6 +24,7 @@ export function policiesPlugin(schema) {
       petsAllowed: { type: Boolean, default: DEFAULT_POLICIES.petsAllowed },
       smokingAllowed: { type: Boolean, default: DEFAULT_POLICIES.smokingAllowed },
       instantBooking: { type: Boolean, default: DEFAULT_POLICIES.instantBooking },
+      customRules: { type: [String], default: [] },
     },
   });
 }
@@ -53,6 +55,14 @@ export function parsePolicies(input, current = {}) {
   if (p.freeCancellationDays !== undefined && Number.isInteger(days) && days >= 0 && days <= 60) out.freeCancellationDays = days;
   for (const k of ['childrenAllowed', 'petsAllowed', 'smokingAllowed', 'instantBooking']) {
     if (p[k] !== undefined) out[k] = bool(p[k]);
+  }
+  if (Array.isArray(p.customRules)) {
+    // free text from the owner: trimmed, no duplicates, at most 10 rules of 80 characters
+    const seen = new Set();
+    out.customRules = p.customRules
+      .map((r) => String(r ?? '').replace(/\s+/g, ' ').trim().slice(0, 80))
+      .filter((r) => r && !seen.has(r.toLowerCase()) && seen.add(r.toLowerCase()))
+      .slice(0, 10);
   }
   return out;
 }

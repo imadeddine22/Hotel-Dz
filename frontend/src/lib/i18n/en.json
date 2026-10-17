@@ -1176,5 +1176,13 @@
   "Ajouter un type de chambre": "Add a room type",
   "Chambre simple (1 personne)": "Single room (1 person)",
   "Chambre double (2 personnes)": "Double room (2 people)",
-  "Chambre familiale": "Family room"
+  "Chambre familiale": "Family room",
+  "Autres règles (facultatif)": "Other rules (optional)",
+  "Ajouter une règle": "Add a rule",
+  "Ex : Familles uniquement": "E.g. Families only",
+  "Familles uniquement": "Families only",
+  "Couples mariés uniquement (livret de famille)": "Married couples only (family booklet)",
+  "Pas de fêtes ni d’événements": "No parties or events",
+  "Calme après 22 h": "Quiet after 10 pm",
+  "Pièce d’identité exigée à l’arrivée": "ID required at check-in"
 }

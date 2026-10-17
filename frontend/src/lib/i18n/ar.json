@@ -1178,5 +1178,13 @@
   "Ajouter un type de chambre": "أضف نوع غرفة",
   "Chambre simple (1 personne)": "غرفة فردية (شخص واحد)",
   "Chambre double (2 personnes)": "غرفة مزدوجة (شخصان)",
-  "Chambre familiale": "غرفة عائلية"
+  "Chambre familiale": "غرفة عائلية",
+  "Autres règles (facultatif)": "قواعد أخرى (اختياري)",
+  "Ajouter une règle": "إضافة قاعدة",
+  "Ex : Familles uniquement": "مثال: عائلات فقط",
+  "Familles uniquement": "عائلات فقط",
+  "Couples mariés uniquement (livret de famille)": "المتزوجون فقط (الدفتر العائلي)",
+  "Pas de fêtes ni d’événements": "ممنوع الحفلات والمناسبات",
+  "Calme après 22 h": "الهدوء بعد الساعة 22:00",
+  "Pièce d’identité exigée à l’arrivée": "بطاقة الهوية مطلوبة عند الوصول"
 }

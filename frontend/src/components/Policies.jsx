@@ -1,6 +1,6 @@
 'use client';
 
-import { Clock, CalendarX, CalendarCheck, Baby, PawPrint, Cigarette, Zap, Check, X } from 'lucide-react';
+import { Clock, CalendarX, CalendarCheck, Baby, PawPrint, Cigarette, Zap, Check, X, Info } from 'lucide-react';
 import { useT } from '@/lib/i18n/useT';
 import { DEFAULT_POLICIES } from '@/components/PoliciesFields';
 
@@ -67,6 +67,9 @@ export default function Policies({ policies }) {
         <Rule icon={Baby} label={t('Enfants')} ok={p.childrenAllowed} />
         <Rule icon={PawPrint} label={t('Animaux')} ok={p.petsAllowed} />
         <Rule icon={Cigarette} label={t('Fumeurs')} ok={p.smokingAllowed} />
+        {(p.customRules || []).map((r) => (
+          <Rule key={r} icon={Info} label={t(r)} />
+        ))}
       </ul>
       <p className="mt-4 text-xs text-gray-400">{t('Paiement sur place, à l’arrivée.')}</p>
     </section>
