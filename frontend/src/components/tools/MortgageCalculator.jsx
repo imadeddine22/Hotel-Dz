@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { fmt, NumberField, ResultCard, ToolLayout } from './ToolUI';
 
 import { useT } from '@/lib/i18n/useT';
@@ -19,6 +19,15 @@ export default function MortgageCalculator() {
   const [rate, setRate] = useState(6);
   const [years, setYears] = useState(20);
   const [debtRatio, setDebtRatio] = useState(30);
+
+  // Opened from a property (?price=38000000): start from its price with a 20 % deposit
+  useEffect(() => {
+    const p = Number(new URLSearchParams(window.location.search).get('price'));
+    if (Number.isFinite(p) && p > 0) {
+      setPrice(p);
+      setDeposit(Math.round(p * 0.2));
+    }
+  }, []);
 
   const r = useMemo(() => {
     const principal = Math.max(0, (Number(price) || 0) - (Number(deposit) || 0));

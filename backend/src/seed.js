@@ -17,6 +17,7 @@ import Review from './models/Review.js';
 import Message from './models/Message.js';
 import Testimonial from './models/Testimonial.js';
 import Conversation from './models/Conversation.js';
+import HouseForSale from './models/HouseForSale.js';
 import { ENABLED_COUNTRIES } from './utils/countries.js';
 
 const img = (id) => ({
@@ -66,7 +67,7 @@ export const seedDatabase = async () => {
   // Wipe
   await Promise.all([
     User.deleteMany({}), Hotel.deleteMany({}), House.deleteMany({}), Room.deleteMany({}),
-    Booking.deleteMany({}), Review.deleteMany({}), Message.deleteMany({}), Testimonial.deleteMany({}), Conversation.deleteMany({}),
+    Booking.deleteMany({}), Review.deleteMany({}), Message.deleteMany({}), Testimonial.deleteMany({}), Conversation.deleteMany({}), HouseForSale.deleteMany({}),
   ]);
 
   // --- Users ---
@@ -158,6 +159,35 @@ export const seedDatabase = async () => {
     policies: { checkInFrom: '16:00', checkOutUntil: '10:00', freeCancellationDays: 7, childrenAllowed: true, smokingAllowed: false },
   });
   if (ENABLED_COUNTRIES.length > 1) console.log(`🌍 Abroad: demo listings for ${ENABLED_COUNTRIES.filter((c) => c !== 'DZ').join(', ')}`);
+
+  // --- Properties for sale (realistic prices in DZD) ---
+  const seller = await User.create({
+    fullName: 'Nadia Immobilier', email: 'vendeur@hotelsdz.dz', password: 'seller123',
+    phone: '0552222222', role: 'seller', isVerified: true,
+  });
+  const SALES = [
+    { title: 'Appartement F4 vue sur la baie', type: 'Appartement', wilaya: 'Alger', city: 'Hydra', price: 38000000, area: 120, rooms: 4, bathrooms: 2, lat: 36.7431, lng: 3.0303, photo: '1502672260266-1c1ef2d93688', days: 2, amenities: ['Ascenseur', 'Parking', 'Climatisation'] },
+    { title: 'F3 rénové proche du front de mer', type: 'Appartement', wilaya: 'Oran', city: 'Oran', price: 16500000, area: 85, rooms: 3, bathrooms: 1, lat: 35.7058, lng: -0.6497, photo: '1522708323590-d24dbb6b0267', days: 5, amenities: ['Balcon', 'Climatisation'] },
+    { title: 'Villa avec jardin et vue mer', type: 'Villa', wilaya: 'Béjaïa', city: 'Tichy', price: 45000000, area: 250, rooms: 6, bathrooms: 3, lat: 36.6667, lng: 5.1667, photo: '1564013799919-ab600027ffc6', days: 12, amenities: ['Jardin', 'Garage', 'Terrasse'] },
+    { title: 'Terrain constructible 400 m²', type: 'Terrain', wilaya: 'Tlemcen', city: 'Mansourah', price: 9000000, area: 400, rooms: 0, bathrooms: 0, lat: 34.8667, lng: -1.3333, photo: '1500382017468-9049fed747ef', days: 20, amenities: ['Acte notarié', 'Viabilisé'] },
+    { title: 'F2 au centre-ville', type: 'Appartement', wilaya: 'Constantine', city: 'Constantine', price: 9800000, area: 60, rooms: 2, bathrooms: 1, lat: 36.365, lng: 6.6147, photo: '1493809842364-78817add7ffb', days: 1, amenities: ['Ascenseur'] },
+    { title: 'Grande villa avec piscine', type: 'Villa', wilaya: 'Tipaza', city: 'Chenoua', price: 62000000, area: 300, rooms: 7, bathrooms: 4, lat: 36.6, lng: 2.4, photo: '1499793983690-e29da59ef1c2', days: 30, amenities: ['Piscine', 'Jardin', 'Garage'] },
+    { title: 'Local commercial sur grand boulevard', type: 'Local commercial', wilaya: 'Sétif', city: 'Sétif', price: 14000000, area: 80, rooms: 1, bathrooms: 1, lat: 36.1911, lng: 5.4137, photo: '1497366216548-37526070297c', days: 9, amenities: ['Vitrine', 'Rideau métallique'] },
+    { title: 'Duplex lumineux avec terrasse', type: 'Duplex', wilaya: 'Annaba', city: 'Annaba', price: 28000000, area: 160, rooms: 5, bathrooms: 2, lat: 36.9, lng: 7.7667, photo: '1505691938895-1758d7feb511', days: 4, amenities: ['Terrasse', 'Parking', 'Climatisation'] },
+  ];
+  for (const x of SALES) {
+    const listing = await HouseForSale.create({
+      seller: seller._id, title: x.title, type: x.type, wilaya: x.wilaya, city: x.city,
+      address: `${x.city}, ${x.wilaya}`, price: x.price, area: x.area, rooms: x.rooms, bathrooms: x.bathrooms,
+      description: `${x.title} à ${x.city} (${x.wilaya}) : ${x.area} m²${x.rooms ? `, ${x.rooms} pièce(s)` : ''}. Visite sur rendez-vous, papiers en règle.`,
+      coordinates: { lat: x.lat, lng: x.lng }, images: [img(x.photo)], amenities: x.amenities,
+      contactPhone: seller.phone, contactEmail: seller.email, status: 'approved',
+    });
+    // spread the publication dates so "Nouveau" (< 7 days) and sorting are visible
+    const created = daysFromNow(-x.days);
+    await HouseForSale.collection.updateOne({ _id: listing._id }, { $set: { createdAt: created, updatedAt: created } });
+  }
+  console.log(`🏷️  Sales: ${SALES.length} (seller vendeur@hotelsdz.dz / seller123)`);
 
   // --- Contact messages ---
   await Message.create(MESSAGES);
@@ -268,7 +298,8 @@ export const seedDatabase = async () => {
   console.log('\n✅ Seed complete!\n');
   console.log('   Admin   →  admin@hotelsdz.dz  /  admin123');
   console.log('   Hôtelier→  owner@hotelsdz.dz  /  owner123');
-  console.log('   Client  →  sara@example.com   /  pass123\n');
+  console.log('   Client  →  sara@example.com   /  pass123');
+  console.log('   Vendeur →  vendeur@hotelsdz.dz / seller123\n');
 };
 
 // CLI entry: `npm run seed` connects to the configured DB, seeds, disconnects.

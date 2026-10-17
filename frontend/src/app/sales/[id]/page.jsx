@@ -3,14 +3,21 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from '@/components/LocaleLink';
-import { MapPin, Phone, Mail, ArrowLeft, Eye, Home, Ruler, DoorOpen, Bath, Tag, ChevronLeft, ChevronRight, User } from 'lucide-react';
+import { MapPin, Phone, Mail, ArrowLeft, Eye, Home, Ruler, DoorOpen, Bath, Tag, ChevronLeft, ChevronRight, User, MessageCircle, Calculator } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import api, { getImageUrl } from '@/lib/api';
 import { formatDZD } from '@/lib/data';
+import { monthlyPayment } from '@/components/tools/MortgageCalculator';
 
 import { useT } from '@/lib/i18n/useT';
 import { useInitialData } from '@/components/InitialData';
+/** "0552 22 22 22" → "213552222222" for wa.me links */
+const waNumber = (phone) => {
+  const d = String(phone || '').replace(/\D/g, '');
+  return d.startsWith('213') ? d : d.startsWith('0') ? `213${d.slice(1)}` : `213${d}`;
+};
+
 export default function SaleDetailPage() {
   const { t } = useT();
   const { id } = useParams();
@@ -140,6 +147,9 @@ export default function SaleDetailPage() {
                   </div>
                   <div className="text-right">
                     <p className="text-2xl font-extrabold text-emerald-600">{formatDZD(listing.price, listing.currency)}</p>
+                    {listing.area > 0 && (
+                      <p className="text-xs font-semibold text-gray-500">{formatDZD(Math.round(listing.price / listing.area), listing.currency)} / {t('m²')}</p>
+                    )}
                     <p className="text-xs text-gray-400 flex items-center justify-end gap-1 mt-1">
                       <Eye className="h-3 w-3" /> {listing.views} {t('vues')}
                     </p>
@@ -223,6 +233,18 @@ export default function SaleDetailPage() {
                   </a>
                 )}
 
+                {(listing.contactPhone || seller.phone) && (
+                  <a
+                    href={`https://wa.me/${waNumber(listing.contactPhone || seller.phone)}?text=${encodeURIComponent(`${t('Bonjour, votre annonce m’intéresse')} : ${listing.title} (${listing.reference || ''})`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 w-full rounded-xl bg-[#25D366] px-5 py-3.5 font-bold text-white shadow-md hover:bg-[#1fb857] transition mb-3"
+                  >
+                    <MessageCircle className="h-5 w-5" />
+                    <span>WhatsApp</span>
+                  </a>
+                )}
+
                 {(listing.contactEmail || seller.email) && (
                   <a
                     href={`mailto:${listing.contactEmail || seller.email}`}
@@ -232,6 +254,14 @@ export default function SaleDetailPage() {
                     <span className="truncate">{listing.contactEmail || seller.email}</span>
                   </a>
                 )}
+
+                <Link
+                  href={`/outils/simulateur-credit-immobilier?price=${listing.price}`}
+                  className="mt-4 flex items-center justify-between gap-3 rounded-xl border border-emerald-100 bg-emerald-50 px-5 py-3.5 text-sm font-semibold text-emerald-800 transition hover:bg-emerald-100"
+                >
+                  <span className="flex items-center gap-2"><Calculator className="h-5 w-5" /> {t('Calculer ma mensualité')}</span>
+                  <span className="text-xs font-bold">≈ {formatDZD(Math.round(monthlyPayment(listing.price * 0.8, 6, 20) / 100) * 100, listing.currency)} / {t('mois')}</span>
+                </Link>
 
                 <div className="mt-6 p-4 rounded-xl bg-amber-50 border border-amber-100">
                   <p className="text-xs text-amber-700 font-medium">

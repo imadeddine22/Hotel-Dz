@@ -15,6 +15,19 @@ export const getListings = async (req, res, next) => {
     if (where) (filter.$and = filter.$and || []).push(where);
     if (city) filter.city = searchRegex(city);
     if (type && type !== 'Tous') filter.type = type;
+    // Rooms like Algerian "F" sizes: rooms=3 → exactly 3 (F3), rooms=5+ → 5 or more
+    if (req.query.rooms) {
+      const r = String(req.query.rooms);
+      const n = parseInt(r, 10);
+      if (Number.isInteger(n) && n > 0) filter.rooms = r.endsWith('+') ? { $gte: n } : n;
+    }
+    const minArea = Number(req.query.minArea);
+    const maxArea = Number(req.query.maxArea);
+    if (minArea > 0 || maxArea > 0) {
+      filter.area = {};
+      if (minArea > 0) filter.area.$gte = minArea;
+      if (maxArea > 0) filter.area.$lte = maxArea;
+    }
     if (reference) filter.reference = searchRegex(reference);
     if (q) {
       const rx = searchRegex(q);

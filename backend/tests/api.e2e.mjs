@@ -656,6 +656,25 @@ describe('Guest ↔ owner messages');
   check('admin can read for support', (await req('GET', `/conversations/${convId}`, { token: admin })).status === 200);
 }
 
+describe('Sales search filters');
+{
+  const all = (await req('GET', '/sales?limit=50')).data;
+  check('demo properties for sale are listed', all.total >= 8, `total=${all.total}`);
+  const f3 = (await req('GET', '/sales?rooms=3&limit=50')).data.listings || [];
+  check('rooms=3 → exactly 3 rooms (F3)', f3.length > 0 && f3.every((l) => l.rooms === 3));
+  const big = (await req('GET', `/sales?rooms=${encodeURIComponent('5+')}&limit=50`)).data.listings || [];
+  check('rooms=5+ → 5 rooms or more', big.length > 0 && big.every((l) => l.rooms >= 5));
+  const area = (await req('GET', '/sales?minArea=100&maxArea=200&limit=50')).data.listings || [];
+  check('area range', area.length > 0 && area.every((l) => l.area >= 100 && l.area <= 200));
+  const cheap = (await req('GET', '/sales?priceRanges=0-10000000&limit=50')).data.listings || [];
+  check('price range in millions', cheap.length > 0 && cheap.every((l) => l.price <= 10000000));
+  const sorted = (await req('GET', '/sales?sort=price_asc&limit=50')).data.listings || [];
+  check('sort by price ascending', sorted.every((l, i) => i === 0 || sorted[i - 1].price <= l.price));
+  const bej = (await req('GET', `/sales?wilaya=${encodeURIComponent('Bejaia')}&limit=50`)).data.listings || [];
+  check('wilaya filter (accent-insensitive)', bej.length > 0 && bej.every((l) => l.wilaya === 'Béjaïa'));
+  expectStatus('bad filter values do not crash', await req('GET', '/sales?rooms=abc&minArea=-5&maxArea=x'), 200);
+}
+
 describe('No online payment');
 {
   const r = await fetch(`${API}/payments/webhook`, { method: 'POST', body: '{}' });

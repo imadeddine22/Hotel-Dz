@@ -13,6 +13,6 @@ export function generateMetadata() {
 
 // First page of listings rendered on the server: crawlers see real listings and links to them
 export default async function Layout({ children }) {
-  const data = await apiGet('/sales?page=1&limit=12&sort=updatedAt&order=desc', { revalidate: 300 });
+  const data = await apiGet('/sales?page=1&limit=12&sort=newest', { revalidate: 300 });
   return <InitialData value={localized(data, getLang())}>{children}</InitialData>;
 }
