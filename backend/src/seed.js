@@ -223,6 +223,32 @@ export const seedDatabase = async () => {
   }
   console.log(`📅 Bookings: ${bookingCount}`);
 
+  // --- Guest reviews (score /10 + categories) on a few paid stays ---
+  const COMMENTS = [
+    'Très bon accueil, chambre propre et bien située.',
+    'Personnel aux petits soins, je reviendrai.',
+    'Bon rapport qualité-prix, petit-déjeuner correct.',
+    'Emplacement idéal, un peu de bruit le soir.',
+    'Séjour parfait, tout était conforme aux photos.',
+  ];
+  const paidStays = await Booking.find({ paymentStatus: 'paid', hotel: { $exists: true } }).limit(8);
+  for (const [i, b] of paidStays.entries()) {
+    const base = 7 + (i % 4); // 7–10
+    const cat = () => Math.min(10, Math.max(6, base + Math.round(Math.random() * 2 - 1)));
+    await Review.create({
+      hotel: b.hotel, customer: b.customer, booking: b._id, score: base,
+      categories: { cleanliness: cat(), location: cat(), value: cat(), staff: cat(), comfort: cat() },
+      comment: COMMENTS[i % COMMENTS.length],
+    });
+  }
+  console.log(`⭐ Reviews: ${paidStays.length}`);
+
+  // --- Deals: discounts set by owners ---
+  const inMonth = daysFromNow(30);
+  await Room.updateOne({ hotel: (await Hotel.findOne({ name: 'Le Méridien Oran' }))?._id, type: 'single' }, { discountPercent: 15, discountUntil: inMonth });
+  await House.updateOne({ name: 'Chalet Tikjda' }, { discountPercent: 10, discountUntil: inMonth });
+  console.log('🏷️  Deals: -15 % at Le Méridien Oran (single room), -10 % at Chalet Tikjda');
+
   console.log('\n✅ Seed complete!\n');
   console.log('   Admin   →  admin@hotelsdz.dz  /  admin123');
   console.log('   Hôtelier→  owner@hotelsdz.dz  /  owner123');

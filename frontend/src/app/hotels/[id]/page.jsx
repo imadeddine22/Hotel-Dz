@@ -16,6 +16,8 @@ import { formatDZD } from '@/lib/data';
 import { useT } from '@/lib/i18n/useT';
 import { useInitialData } from '@/components/InitialData';
 import Policies, { PolicyBadges } from '@/components/Policies';
+import { ScoreBadge, ScoreBars, DealPrice } from '@/components/Score';
+import { effectivePrice } from '@/lib/scores';
 export default function HotelDetailPage() {
   const { t } = useT();
   const { id } = useParams();
@@ -201,7 +203,7 @@ export default function HotelDetailPage() {
                     )}
                   </div>
                   <div className="flex items-center justify-between gap-4 sm:flex-col sm:items-end">
-                    <span className="text-lg font-extrabold text-brand-600">{formatDZD(room.pricePerNight, hotel.currency)}<span className="text-xs font-normal text-gray-400"> {t('/nuit')}</span></span>
+                    <span className="text-end"><DealPrice {...effectivePrice(room)} currency={hotel.currency} className="text-lg font-extrabold text-brand-600" /><span className="text-xs font-normal text-gray-400"> {t('/nuit')}</span></span>
                     <button
                       onClick={() => router.push(`/booking/${room._id}?hotel=${hotel._id}`)}
                       className="rounded-lg bg-brand-500 px-5 py-2 text-sm font-semibold text-white hover:bg-brand-600"
@@ -221,16 +223,20 @@ export default function HotelDetailPage() {
           </div>
 
           {/* Reviews */}
-          <h2 className="mb-4 mt-10 text-xl font-bold text-ink">{t('Avis (')}{reviews.length})</h2>
+          <h2 className="mb-4 mt-10 text-xl font-bold text-ink">{t('Avis des clients')}</h2>
+          {hotel.reviewsCount > 0 && (
+            <div className="mb-6 space-y-5 rounded-2xl border border-gray-100 bg-white p-5">
+              <ScoreBadge score={hotel.avgRating} count={hotel.reviewsCount} size="lg" />
+              <ScoreBars scores={hotel.scores} />
+            </div>
+          )}
           <div className="space-y-4">
             {reviews.length === 0 && <p className="text-gray-400">{t('Pas encore d\'avis.')}</p>}
             {reviews.map((rev) => (
               <div key={rev._id} className="rounded-xl border border-gray-100 bg-white p-4">
                 <div className="mb-1 flex items-center justify-between">
                   <span className="font-semibold text-ink">{rev.customer?.fullName || t('Client')}</span>
-                  <span className="flex items-center gap-1 text-amber-600">
-                    <Star className="h-4 w-4 fill-amber-500 text-amber-500" /> {rev.rating}
-                  </span>
+                  <span className="rounded-md bg-brand-600 px-2 py-0.5 text-sm font-bold text-white" dir="ltr">{Number(rev.score || rev.rating * 2).toFixed(1)}</span>
                 </div>
                 <p className="text-sm text-gray-600">{rev.comment}</p>
               </div>
@@ -241,17 +247,12 @@ export default function HotelDetailPage() {
         {/* Right: summary card */}
         <aside className="lg:col-span-1">
           <div className="sticky top-24 rounded-2xl border border-gray-100 bg-white p-6 shadow-card">
-            <div className="mb-4 flex items-center gap-2">
-              <span className="flex items-center gap-1 rounded-md bg-amber-50 px-2 py-1 font-bold text-amber-700">
-                <Star className="h-4 w-4 fill-amber-500 text-amber-500" /> {hotel.avgRating || '—'}
-              </span>
-              <span className="text-sm text-gray-500">{hotel.reviewsCount || 0} {t('avis')}</span>
-            </div>
+            <ScoreBadge score={hotel.avgRating} count={hotel.reviewsCount} className="mb-4" />
             <p className="mb-4 text-sm text-gray-500">
               {t('À partir de')}{' '}
-              <span className="text-xl font-extrabold text-brand-600">
-                {rooms.length ? formatDZD(Math.min(...rooms.map((r) => r.pricePerNight)), hotel.currency) : '—'}
-              </span>{' '}
+              {rooms.length ? (
+                <DealPrice {...rooms.map(effectivePrice).sort((a, b) => a.price - b.price)[0]} currency={hotel.currency} />
+              ) : '—'}{' '}
               {t('/ nuit')}
             </p>
             <button

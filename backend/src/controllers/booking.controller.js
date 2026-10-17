@@ -1,3 +1,4 @@
+import { effectivePrice } from '../utils/pricing.js';
 import Booking from '../models/Booking.js';
 import { DEFAULT_POLICIES, freeCancellationDeadline } from '../utils/policies.js';
 import Room from '../models/Room.js';
@@ -120,7 +121,8 @@ export const createBooking = async (req, res, next) => {
     }
 
     const nights = Math.round((end - start) / MS_PER_DAY);
-    const totalPrice = nights * room.pricePerNight;
+    const deal = effectivePrice(room);
+    const totalPrice = nights * deal.price;
 
     const booking = await Booking.create({
       customer: req.user._id,
@@ -132,6 +134,7 @@ export const createBooking = async (req, res, next) => {
       nights,
       guests,
       totalPrice,
+      discountPercent: deal.discountPercent,
       currency: room.hotel.currency || 'DZD',
       ...bookingTerms(room.hotel, start),
       paymentStatus: 'unpaid',
@@ -179,7 +182,8 @@ export const createHouseBooking = async (req, res, next) => {
     }
 
     const nights = Math.round((end - start) / MS_PER_DAY);
-    const totalPrice = nights * house.pricePerNight;
+    const deal = effectivePrice(house);
+    const totalPrice = nights * deal.price;
 
     const booking = await Booking.create({
       customer: req.user._id,
@@ -190,6 +194,7 @@ export const createHouseBooking = async (req, res, next) => {
       nights,
       guests,
       totalPrice,
+      discountPercent: deal.discountPercent,
       currency: house.currency || 'DZD',
       ...bookingTerms(house, start),
       paymentStatus: 'unpaid',

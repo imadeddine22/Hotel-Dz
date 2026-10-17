@@ -74,6 +74,8 @@ export default function DestinationsPage() {
           name: h.name,
           city: h.city,
           price: h.price || 0,
+          originalPrice: h.originalPrice || null,
+          discountPercent: h.discountPercent || 0,
           currency: h.currency || 'DZD',
           coordinates: h.coordinates || CITY_COORDS[h.city] || CITY_COORDS['Alger'],
           rating: h.avgRating ?? h.rating ?? 0,

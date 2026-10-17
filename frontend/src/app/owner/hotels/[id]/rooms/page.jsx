@@ -9,9 +9,10 @@ import api, { getImageUrl } from '@/lib/api';
 import { formatDZD } from '@/lib/data';
 
 import { useT } from '@/lib/i18n/useT';
+import DiscountFields from '@/components/DiscountFields';
 const ROOM_TYPES = ['single', 'double', 'suite', 'family'];
 const ROOM_TYPE_LABELS = { single: 'Simple', double: 'Double', suite: 'Suite', family: 'Familiale' };
-const EMPTY_ROOM = { type: 'double', title: '', pricePerNight: '', capacity: 2, bedsCount: 1, quantity: 1, amenities: '' };
+const EMPTY_ROOM = { type: 'double', title: '', pricePerNight: '', capacity: 2, bedsCount: 1, quantity: 1, amenities: '', discountPercent: 0, discountUntil: '' };
 
 export default function ManageRoomsPage() {
   const { t } = useT();
@@ -41,6 +42,7 @@ export default function ManageRoomsPage() {
     setForm({
       type: r.type, title: r.title, pricePerNight: r.pricePerNight, capacity: r.capacity,
       bedsCount: r.bedsCount ?? 1, quantity: r.quantity, amenities: (r.amenities || []).join(', '),
+      discountPercent: r.discountPercent || 0, discountUntil: r.discountUntil ? String(r.discountUntil).slice(0, 10) : '',
     });
     setFiles([]);
     setShowForm(true);
@@ -90,6 +92,7 @@ export default function ManageRoomsPage() {
           </div>
           <Field label={t('Titre')} value={form.title} onChange={(v) => set('title', v)} />
           <Field label={`${t('Prix / nuit')} (${currency})`} type="number" value={form.pricePerNight} onChange={(v) => set('pricePerNight', v)} />
+          <DiscountFields percent={form.discountPercent} until={form.discountUntil} onChange={(d) => setForm((f) => ({ ...f, ...d }))} />
           <Field label={t('Capacité')} type="number" value={form.capacity} onChange={(v) => set('capacity', v)} />
           <div>
             <label htmlFor="room-beds" className="mb-1 block text-sm font-medium text-gray-700">{t('Nombre de lits')}</label>

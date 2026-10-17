@@ -43,6 +43,7 @@ const bookingSchema = new mongoose.Schema(
     paymentMethod: { type: String, enum: ['on_site', 'online'], default: 'on_site' },
     paymentProvider: { type: String, default: '' },
     // Policies snapshot taken when booking (later edits by the owner don't change past bookings)
+    discountPercent: { type: Number, default: 0 }, // deal applied when booking (price snapshot)
     instant: { type: Boolean, default: false }, // confirmed at once (instant booking), no owner approval
     freeCancellationUntil: { type: Date, default: null }, // null = no free cancellation
     // Cancelled by the customer after the free-cancellation deadline (pay on site: nothing to refund)

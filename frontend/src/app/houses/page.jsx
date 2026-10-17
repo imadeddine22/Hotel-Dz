@@ -64,6 +64,7 @@ export default function HousesPage() {
     name: h.name, city: h.city, wilaya: h.wilaya, type: h.type,
     rooms: h.rooms, bathrooms: h.bathrooms, capacity: h.capacity,
     pricePerNight: h.pricePerNight ?? h.price ?? 0,
+    discountPercent: h.discountPercent || 0, discountUntil: h.discountUntil || null, avgRating: h.avgRating || 0, reviewsCount: h.reviewsCount || 0,
     currency: h.currency || 'DZD',
     policies: h.policies,
     images: h.images || (h.img ? [{ url: h.img }] : []),

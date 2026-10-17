@@ -12,6 +12,8 @@ import api, { getImageUrl, resolveImg } from '@/lib/api';
 import { useT } from '@/lib/i18n/useT';
 import { useInitialData } from '@/components/InitialData';
 import Policies, { PolicyBadges } from '@/components/Policies';
+import { ScoreBadge, ScoreBars } from '@/components/Score';
+import { effectivePrice } from '@/lib/scores';
 const MOCK = {
   name: 'Villa Yasmine', city: 'Alger', wilaya: 'Alger', type: 'Villa',
   rooms: 4, bathrooms: 2, capacity: 8, pricePerNight: 15000,
@@ -30,11 +32,13 @@ export default function HouseDetailPage() {
   const [loading, setLoading] = useState(!initial?.house);
   const [activeImg, setActiveImg] = useState(0);
   const [mock, setMock] = useState(false);
+  const [reviews, setReviews] = useState([]);
 
   useEffect(() => {
     (async () => {
       try {
         const { data } = await api.get(`/houses/${id}`);
+        api.get(`/houses/${id}/reviews`).then((r) => setReviews(r.data.reviews || [])).catch(() => {});
         setHouse(data.house);
       } catch {
         if (!initial?.house) {
@@ -60,7 +64,8 @@ export default function HouseDetailPage() {
   );
 
   const images = house.images?.length ? house.images : [{ url: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=1200&q=80' }];
-  const price = house.pricePerNight ?? 0;
+  const deal = effectivePrice(house); // running owner discount, if any
+  const price = deal.price;
 
   return (
     <main className="min-h-screen" style={{ background: '#f8fafc' }}>
@@ -195,25 +200,27 @@ export default function HouseDetailPage() {
             <Policies policies={house.policies} />
           </div>
 
-          {/* Rating */}
-          {house.avgRating > 0 && (
-            <div style={{ background: '#fff', borderRadius: 16, padding: 24, boxShadow: '0 1px 8px rgba(0,0,0,0.05)' }}>
-              <h2 style={{ fontSize: 18, fontWeight: 700, color: '#1e293b', margin: '0 0 12px' }}>{t('Note globale')}</h2>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <span style={{
-                  fontSize: 42, fontWeight: 900, color: '#7c3aed'
-                }}>{house.avgRating}</span>
-                <div>
-                  <div style={{ display: 'flex', gap: 3, marginBottom: 4 }}>
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} size={18} style={{ fill: i < Math.round(house.avgRating) ? '#a855f7' : '#e2e8f0', color: i < Math.round(house.avgRating) ? '#a855f7' : '#e2e8f0' }} />
-                    ))}
-                  </div>
-                  <p style={{ fontSize: 13, color: '#64748b', margin: 0 }}>{house.reviewsCount || 0} {t('avis')}</p>
+          {/* Reviews (score /10 + categories) */}
+          <div style={{ background: '#fff', borderRadius: 16, padding: 24, boxShadow: '0 1px 8px rgba(0,0,0,0.05)' }} className="space-y-5">
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: '#1e293b', margin: 0 }}>{t('Avis des clients')}</h2>
+            {house.reviewsCount > 0 ? (
+              <>
+                <ScoreBadge score={house.avgRating} count={house.reviewsCount} size="lg" />
+                <ScoreBars scores={house.scores} />
+              </>
+            ) : (
+              <p className="text-sm text-gray-400">{t("Pas encore d'avis.")}</p>
+            )}
+            {reviews.map((rev) => (
+              <div key={rev._id} className="rounded-xl border border-gray-100 p-4">
+                <div className="mb-1 flex items-center justify-between">
+                  <span className="font-semibold text-gray-900">{rev.customer?.fullName || t('Client')}</span>
+                  <span className="rounded-md bg-brand-600 px-2 py-0.5 text-sm font-bold text-white" dir="ltr">{Number(rev.score).toFixed(1)}</span>
                 </div>
+                {rev.comment && <p className="text-sm text-gray-600">{rev.comment}</p>}
               </div>
-            </div>
-          )}
+            ))}
+          </div>
         </div>
 
         {/* Right: booking card */}
@@ -227,6 +234,11 @@ export default function HouseDetailPage() {
             <div style={{ background: 'linear-gradient(135deg, #4c1d95, #7c3aed)', padding: '20px 24px' }}>
               <p style={{ color: '#e9d5ff', fontSize: 13, margin: '0 0 4px' }}>{t('Prix par nuit')}</p>
               <p style={{ fontSize: 32, fontWeight: 900, color: '#fff', margin: 0 }}>
+                {deal.discountPercent > 0 && (
+                  <span style={{ display: 'block', fontSize: 14, fontWeight: 600, color: '#fecaca' }}>
+                    <s>{new Intl.NumberFormat('fr-DZ').format(deal.original)}</s> <span dir="ltr">-{deal.discountPercent} %</span>
+                  </span>
+                )}
                 {price > 0 ? new Intl.NumberFormat('fr-DZ').format(price) : '—'}
                 <span style={{ fontSize: 14, fontWeight: 400, color: '#c4b5fd' }}> {house.currency || 'DZD'}</span>
               </p>

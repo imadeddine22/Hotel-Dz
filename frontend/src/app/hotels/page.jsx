@@ -63,6 +63,8 @@ export default function HotelsPage() {
     rating: h.avgRating ?? h.rating ?? 0,
     reviews: h.reviewsCount ?? h.reviews ?? 0,
     price: h.price ?? 0,
+    originalPrice: h.originalPrice || null,
+    discountPercent: h.discountPercent || 0,
     currency: h.currency || 'DZD',
     policies: h.policies,
     img: h.images?.[0]?.url || h.img,

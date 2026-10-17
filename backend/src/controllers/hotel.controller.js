@@ -1,3 +1,4 @@
+import { effectivePrice } from '../utils/pricing.js';
 import { parsePolicies } from '../utils/policies.js';
 import { isCountry } from '../utils/countries.js';
 import Hotel from '../models/Hotel.js';
@@ -43,13 +44,20 @@ export const getHotels = async (req, res, next) => {
       .lean();
 
     // "À partir de" price = cheapest active room of each hotel (hotels have no price of their own)
-    const minPrices = await Room.aggregate([
-      { $match: { hotel: { $in: hotels.map((h) => h._id) }, isActive: true } },
-      { $group: { _id: '$hotel', price: { $min: '$pricePerNight' } } },
-    ]);
-    const priceByHotel = new Map(minPrices.map((p) => [String(p._id), p.price]));
+    const rooms = await Room.find({ hotel: { $in: hotels.map((h) => h._id) }, isActive: true })
+      .select('hotel pricePerNight discountPercent discountUntil')
+      .lean();
+    const best = new Map(); // hotel id → cheapest room price after discount
+    for (const r of rooms) {
+      const p = effectivePrice(r);
+      const cur = best.get(String(r.hotel));
+      if (!cur || p.price < cur.price) best.set(String(r.hotel), p);
+    }
     hotels.forEach((h) => {
-      h.price = priceByHotel.get(String(h._id)) ?? null;
+      const p = best.get(String(h._id));
+      h.price = p?.price ?? null;
+      h.originalPrice = p?.discountPercent ? p.original : null;
+      h.discountPercent = p?.discountPercent || 0;
     });
 
     res.json({

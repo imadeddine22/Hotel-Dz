@@ -1,3 +1,4 @@
+import { parseDiscount } from '../utils/pricing.js';
 import Room from '../models/Room.js';
 import Hotel from '../models/Hotel.js';
 import { uploadMany, destroyImage } from '../utils/cloudinaryUpload.js';
@@ -54,6 +55,7 @@ export const createRoom = async (req, res, next) => {
 
     const room = await Room.create({
       ...req.body,
+      ...parseDiscount(req.body),
       amenities: parseArray(req.body.amenities),
       hotel: hotel._id,
       images,
@@ -79,6 +81,7 @@ export const updateRoom = async (req, res, next) => {
       if (req.body[f] !== undefined) room[f] = req.body[f];
     });
     if (req.body.amenities !== undefined) room.amenities = parseArray(req.body.amenities);
+    Object.assign(room, parseDiscount(req.body));
     if (req.files?.length) {
       const uploaded = await uploadMany(req.files, 'dzhotels/rooms');
       room.images.push(...uploaded);

@@ -5,6 +5,7 @@ import Hotel from '../models/Hotel.js';
 import House from '../models/House.js';
 import HouseForSale from '../models/HouseForSale.js';
 import Booking from '../models/Booking.js';
+import Review from '../models/Review.js';
 
 // Upsert the official wilayas on every start so new divisions (e.g. 58 → 69) and
 // Arabic names reach existing databases. Admin-added wilayas are left untouched.
@@ -33,6 +34,18 @@ const backfillCountries = async () => {
   await Booking.updateMany({ currency: { $exists: false } }, { $set: { currency: 'DZD' } });
   const n = done.reduce((sum, r) => sum + (r.modifiedCount || 0), 0);
   if (n) console.log(`🌍 ${n} listing(s) set to Algeria (DZD)`);
+  await migrateReviewScores();
+};
+
+// Reviews used to be rated 1–5: give them a score out of 10 and recompute the averages (/10)
+const migrateReviewScores = async () => {
+  const old = await Review.find({ score: { $exists: false }, rating: { $exists: true } }).select('_id rating hotel house');
+  if (!old.length) return;
+  await Review.bulkWrite(old.map((r) => ({ updateOne: { filter: { _id: r._id }, update: { $set: { score: r.rating * 2 } } } })));
+  const hotels = [...new Set(old.filter((r) => r.hotel).map((r) => String(r.hotel)))];
+  const houses = [...new Set(old.filter((r) => r.house).map((r) => String(r.house)))];
+  await Promise.all([...hotels.map((id) => Review.recalc({ hotel: id })), ...houses.map((id) => Review.recalc({ house: id }))]);
+  console.log(`⭐ ${old.length} review(s) moved to a score out of 10`);
 };
 
 /**

@@ -16,6 +16,8 @@ const normalize = (h) => ({
   rating: h.avgRating ?? 0,
   reviews: h.reviewsCount ?? 0,
   price: h.price ?? 0,
+  originalPrice: h.originalPrice || null,
+  discountPercent: h.discountPercent || 0,
   currency: h.currency || 'DZD',
   policies: h.policies,
   img: h.images?.[0]?.url,

@@ -42,8 +42,10 @@ const hotelSchema = new mongoose.Schema(
       index: true,
     },
     rejectionReason: { type: String, default: '' },
-    avgRating: { type: Number, default: 0 },
+    avgRating: { type: Number, default: 0 }, // out of 10
     reviewsCount: { type: Number, default: 0 },
+    // Category averages (/10) from reviews: cleanliness, location, value, staff, comfort
+    scores: { type: mongoose.Schema.Types.Mixed, default: {} },
   },
   { timestamps: true }
 );

@@ -9,6 +9,7 @@ import { formatDZD } from '@/lib/data';
 
 import { useT } from '@/lib/i18n/useT';
 import { dateLocale } from '@/lib/i18n/format';
+import ReviewForm from '@/components/ReviewForm';
 // Must match REQUEST_HOLD_MS in backend/src/utils/checkAvailability.js
 const REQUEST_HOLD_MS = 48 * 60 * 60 * 1000;
 
@@ -45,12 +46,14 @@ export default function MyBookingsPage() {
   const [error, setError] = useState('');
   const [justRequested, setJustRequested] = useState(false);
   const [justConfirmed, setJustConfirmed] = useState(false);
+  const [reviewed, setReviewed] = useState(new Set()); // booking ids already reviewed
 
   const load = async () => {
     setLoading(true);
     try {
-      const { data } = await api.get('/bookings/my');
+      const [{ data }, mine] = await Promise.all([api.get('/bookings/my'), api.get('/reviews/mine').catch(() => ({ data: { reviews: [] } }))]);
       setBookings(data.bookings);
+      setReviewed(new Set((mine.data.reviews || []).map((r) => String(r.booking))));
     } catch (e) {
       setError(e.message);
     } finally {
@@ -168,6 +171,12 @@ export default function MyBookingsPage() {
                         {new Date(b.checkIn).toLocaleDateString(dateLocale())} → {new Date(b.checkOut).toLocaleDateString(dateLocale())}
                         <span className="ml-2 font-bold text-brand-600">{formatDZD(b.totalPrice, b.currency)}</span>
                       </p>
+                      {/* a real stay (paid on site, or confirmed and over) can be reviewed once */}
+                      {b.status !== 'cancelled' && (b.paymentStatus === 'paid' || (b.status === 'confirmed' && new Date(b.checkOut) < new Date())) && (
+                        reviewed.has(String(b._id))
+                          ? <span className="text-xs font-semibold text-emerald-600">{t('Avis publié — merci !')}</span>
+                          : <ReviewForm booking={b} onDone={(id) => setReviewed((prev) => new Set(prev).add(String(id)))} />
+                      )}
                       {['pending', 'confirmed'].includes(b.status) && !started && (
                         <button onClick={() => cancel(b)} className="text-sm font-medium text-red-600 hover:underline">
                           {t('Annuler')}

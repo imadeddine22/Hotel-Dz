@@ -165,7 +165,7 @@ export default async function WilayaPage({ params }) {
             <Link href={`/hotels/${s.topHotel._id}`} className="font-semibold text-cyan-700 underline-offset-2 hover:underline">
               {s.topHotel.name}
             </Link>{' '}
-            <T k="({rating}/5 sur {n} avis)." vars={{ rating: Number(s.topHotel.avgRating).toFixed(1), n: s.topHotel.reviewsCount }} />
+            <T k="({rating}/10 sur {n} avis)." vars={{ rating: Number(s.topHotel.avgRating).toFixed(1), n: s.topHotel.reviewsCount }} />
           </p>
         )}
 

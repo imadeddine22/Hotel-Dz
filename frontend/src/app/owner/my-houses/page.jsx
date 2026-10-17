@@ -18,6 +18,7 @@ import CountrySelect from '@/components/CountrySelect';
 import { currencyOf } from '@/lib/countries';
 import PoliciesFields, { DEFAULT_POLICIES, policiesOf } from '@/components/PoliciesFields';
 import { MULTI_COUNTRY } from '@/lib/countries';
+import DiscountFields from '@/components/DiscountFields';
 const SERVER = getServerURL();
 function resolveImg(url) {
   if (!url) return null;
@@ -36,7 +37,7 @@ const HOUSE_TYPES = ['Villa', 'Appartement', 'Maison', 'Chalet', 'Studio', 'Dupl
 const emptyForm = {
   name: '', description: '', country: 'DZ', wilaya: '', city: '', address: '',
   type: 'Maison', starRating: 3, rooms: 1, bathrooms: 1, capacity: 2,
-  pricePerNight: '', amenities: '', lat: '', lng: '', suitableFor: [], policies: { ...DEFAULT_POLICIES },
+  pricePerNight: '', amenities: '', lat: '', lng: '', suitableFor: [], policies: { ...DEFAULT_POLICIES }, discountPercent: 0, discountUntil: '',
 };
 
 const labelStyle = { display: 'block', fontSize: 12, fontWeight: 700, color: '#64748b', marginBottom: 6, textTransform: 'uppercase' };
@@ -75,6 +76,7 @@ function MyHousesContent() {
       pricePerNight: house.pricePerNight, amenities: house.amenities?.join(', ') || '',
       suitableFor: house.suitableFor || [],
       policies: policiesOf(house),
+      discountPercent: house.discountPercent || 0, discountUntil: house.discountUntil ? String(house.discountUntil).slice(0, 10) : '',
       lat: house.coordinates?.lat ?? '', lng: house.coordinates?.lng ?? '',
       existingImages: house.images || []
     });
@@ -373,6 +375,7 @@ function MyHousesContent() {
                     accent="#7c3aed"
                   />
                 </div>
+                <DiscountFields percent={form.discountPercent} until={form.discountUntil} onChange={(d) => setForm((f) => ({ ...f, ...d }))} />
                 <PoliciesFields value={form.policies} onChange={(policies) => setForm((f) => ({ ...f, policies }))} />
                 <div style={{ gridColumn: '1/-1' }}>
                   <label style={labelStyle}>{t('Photos (la première sera la photo principale)')}</label>

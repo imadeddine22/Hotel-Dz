@@ -157,7 +157,8 @@ const ownerToken = await login('owner@hotelsdz.dz', 'owner123');
 const sara = await login('sara@example.com', 'pass123');
 check('demo accounts log in', Boolean(adminToken && ownerToken && sara));
 
-const approvedHotel = (await req('GET', '/hotels?limit=50')).data.hotels[0];
+// a hotel in request mode (instant-booking hotels confirm at once, see the policies tests)
+const approvedHotel = (await req('GET', '/hotels?limit=50')).data.hotels.find((h) => !h.policies?.instantBooking);
 const detail = await req('GET', `/hotels/${approvedHotel._id}`);
 const room = detail.data.rooms?.[0];
 check('hotel detail returns rooms', Boolean(room));
@@ -565,6 +566,56 @@ describe('Policies, instant booking and free cancellation');
 
   const sofitel = (await req('GET', '/hotels?limit=50')).data.hotels.find((x) => x.name === 'Sofitel Algiers Hamma');
   check('policies are public on listings', sofitel?.policies?.instantBooking === true);
+}
+
+describe('Scores out of 10, house reviews and deals');
+{
+  const host = await register('owner');
+  const admin = await login('admin@hotelsdz.dz', 'admin123');
+  const h = await req('POST', '/houses', {
+    token: host.token,
+    form: { name: `Maison Promo ${uid}`, description: 'Test', wilaya: 'Jijel', city: 'Jijel', type: 'Villa', rooms: 2, bathrooms: 1, capacity: 4, pricePerNight: 10000, discountPercent: 20, discountUntil: '', images: [PNG] },
+  });
+  expectStatus('owner creates a house with a deal', h, 201);
+  check('deal saved', h.data.house?.discountPercent === 20);
+  const houseId = h.data.house?._id;
+  await req('PUT', `/admin/houses/${houseId}/approve`, { token: admin });
+
+  const b = await req('POST', '/bookings/house', { token: customer.token, body: { houseId, checkIn: day(50), checkOut: day(52), guests: 2 } });
+  expectStatus('book a house on deal', b, 201);
+  check('deal applied by the server (2 nights × 8 000)', b.data.booking?.totalPrice === 16000 && b.data.booking?.discountPercent === 20, `${b.data.booking?.totalPrice}`);
+
+  // an expired deal no longer applies
+  await req('PUT', `/houses/${houseId}`, { token: host.token, body: { discountUntil: day(-2) } });
+  await req('PUT', `/admin/houses/${houseId}/approve`, { token: admin });
+  const b2 = await req('POST', '/bookings/house', { token: customer.token, body: { houseId, checkIn: day(60), checkOut: day(61) } });
+  check('expired deal = full price', b2.data.booking?.totalPrice === 10000 && b2.data.booking?.discountPercent === 0, `${b2.data.booking?.totalPrice}`);
+  expectStatus('discount over 90 % ignored', await req('PUT', `/houses/${houseId}`, { token: host.token, body: { discountPercent: 99 } }), 200);
+  check('discount stays within limits', (await req('GET', '/houses/my/list', { token: host.token })).data.houses?.find((x) => x._id === houseId)?.discountPercent === 20);
+  await req('PUT', `/admin/houses/${houseId}/approve`, { token: admin }); // editing sent it back to review
+
+  // complete the stay: owner confirms + marks paid, then the guest reviews the house
+  await req('PUT', `/bookings/${b.data.booking?._id}/confirm`, { token: host.token });
+  await req('PUT', `/bookings/${b.data.booking?._id}/paid`, { token: host.token });
+  expectStatus('score above 10 rejected', await req('POST', `/houses/${houseId}/reviews`, { token: customer.token, body: { bookingId: b.data.booking?._id, score: 11 } }), 400);
+  const rv = await req('POST', `/houses/${houseId}/reviews`, {
+    token: customer.token,
+    body: { bookingId: b.data.booking?._id, score: 9, categories: { cleanliness: 10, location: 8, value: 99, hack: 5 }, comment: 'Super maison' },
+  });
+  expectStatus('guest reviews a house', rv, 201);
+  check('invalid category scores dropped', rv.data.review?.categories?.cleanliness === 10 && rv.data.review?.categories?.value === undefined);
+  expectStatus('one review per stay', await req('POST', `/houses/${houseId}/reviews`, { token: customer.token, body: { bookingId: b.data.booking?._id, score: 5 } }), 409);
+  expectStatus('cannot review an unpaid future stay', await req('POST', `/houses/${houseId}/reviews`, { token: customer.token, body: { bookingId: b2.data.booking?._id, score: 5 } }), 403);
+  const listed = (await req('GET', `/houses/${houseId}`)).data.house;
+  check('house score out of 10 + categories', listed?.avgRating === 9 && listed?.reviewsCount === 1 && listed?.scores?.cleanliness === 10, JSON.stringify({ a: listed?.avgRating, s: listed?.scores }));
+  check('house reviews are public', (await req('GET', `/houses/${houseId}/reviews`)).data.count === 1);
+  check('guest sees which stays are reviewed', (await req('GET', '/reviews/mine', { token: customer.token })).data.reviews?.some((r) => String(r.booking) === String(b.data.booking?._id)));
+
+  // legacy 1–5 ratings count double; hotel lists show the deal on the cheapest room
+  const hotels = (await req('GET', '/hotels?limit=50')).data.hotels;
+  check('hotel scores are out of 10', hotels.every((x) => x.avgRating <= 10));
+  const meridien = hotels.find((x) => x.name === 'Le Méridien Oran');
+  check('hotel "from" price includes the running deal', meridien?.discountPercent === 15 && meridien?.originalPrice > meridien?.price, JSON.stringify({ p: meridien?.price, o: meridien?.originalPrice }));
 }
 
 describe('No online payment');

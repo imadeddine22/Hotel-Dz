@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { getHouses, getHouse, getMyHouses, createHouse, updateHouse, deleteHouse } from '../controllers/house.controller.js';
 import { protect, authorize, optionalAuth } from '../middlewares/auth.middleware.js';
 import { upload } from '../middlewares/upload.middleware.js';
+import { addReview, getReviews } from '../controllers/review.controller.js';
 
 const router = Router();
 
@@ -10,6 +11,10 @@ router.get('/', getHouses);
 
 // Owner: own houses (must be before /:id)
 router.get('/my/list', protect, authorize('owner', 'admin'), getMyHouses);
+
+// House reviews (guests who stayed)
+router.get('/:houseId/reviews', getReviews);
+router.post('/:houseId/reviews', protect, authorize('customer', 'owner', 'seller'), addReview);
 
 // Detail
 router.get('/:id', optionalAuth, getHouse);

@@ -126,7 +126,8 @@ function rating(entity) {
     '@type': 'AggregateRating',
     ratingValue: Number(entity.avgRating).toFixed(1),
     reviewCount: entity.reviewsCount,
-    bestRating: 5,
+    bestRating: 10, // scores are out of 10 (Booking.com style)
+    worstRating: 1,
   };
 }
 

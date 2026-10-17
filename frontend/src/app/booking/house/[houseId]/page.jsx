@@ -11,6 +11,7 @@ import { useAuthStore } from '@/store/authStore';
 
 import { useT } from '@/lib/i18n/useT';
 import { cancellationText } from '@/components/Policies';
+import { effectivePrice } from '@/lib/scores';
 const todayStr = () => new Date().toISOString().split('T')[0];
 const MS_DAY   = 86400000;
 
@@ -43,7 +44,8 @@ export default function HouseBookingPage() {
     ? Math.max(0, Math.round((new Date(form.checkOut) - new Date(form.checkIn)) / MS_DAY))
     : 0;
   // No online payment: the guest pays this amount on site, once the owner has accepted the request
-  const totalAmount = house ? nights * house.pricePerNight : 0;
+  const deal = house ? effectivePrice(house) : { price: 0 };
+  const totalAmount = house ? nights * deal.price : 0;
 
   const sendRequest = async (e) => {
     e.preventDefault();
@@ -176,7 +178,7 @@ export default function HouseBookingPage() {
             <div className="md:col-span-2 h-fit rounded-3xl bg-white p-7 shadow-card">
               <h2 className="mb-5 font-bold text-ink">{t('Récapitulatif')}</h2>
 
-              <Row label={t('Prix / nuit')}    value={formatDZD(house.pricePerNight, house.currency)} />
+              <Row label={t('Prix / nuit')}    value={deal.discountPercent ? `${formatDZD(deal.price, house.currency)} (-${deal.discountPercent} %)` : formatDZD(deal.price, house.currency)} />
               <Row label={t('Nuits')}          value={nights || '—'} />
               <Row label={t('Voyageurs')}      value={form.guests} />
 

@@ -1,3 +1,4 @@
+import { parseDiscount } from '../utils/pricing.js';
 import { parsePolicies } from '../utils/policies.js';
 import { isCountry } from '../utils/countries.js';
 import House from '../models/House.js';
@@ -94,6 +95,7 @@ export const createHouse = async (req, res, next) => {
       amenities: parseArray(req.body.amenities),
       suitableFor: parseArray(req.body.suitableFor),
       ...(parsePolicies(req.body.policies) && { policies: parsePolicies(req.body.policies) }),
+      ...parseDiscount(req.body),
       ...(coordinates && { coordinates }),
       owner: req.user._id,
       images,
@@ -122,6 +124,7 @@ export const updateHouse = async (req, res, next) => {
     if (req.body.suitableFor !== undefined) house.suitableFor = parseArray(req.body.suitableFor);
     const policies = parsePolicies(req.body.policies, house.policies);
     if (policies) house.policies = policies;
+    Object.assign(house, parseDiscount(req.body));
     const coordinates = parseCoordinates(req.body);
     if (coordinates) house.coordinates = coordinates;
 

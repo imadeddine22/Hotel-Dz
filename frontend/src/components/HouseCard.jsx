@@ -10,13 +10,16 @@ import { useT } from '@/lib/i18n/useT';
 import ApproxPrice from '@/components/ApproxPrice';
 import { formatDZD } from '@/lib/data';
 import { PolicyBadges } from '@/components/Policies';
+import { DealPrice, ScoreBadge } from '@/components/Score';
+import { effectivePrice } from '@/lib/scores';
 export default function HouseCard({ house, list = false }) {
   const { t, lang } = useT();
   const rawImg = house.images?.[0]?.url || house.img || null;
   const img = getImageUrl(rawImg) ||
     'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&q=80';
 
-  const price = house.pricePerNight ?? house.price ?? 0;
+  const deal = effectivePrice({ ...house, pricePerNight: house.pricePerNight ?? house.price ?? 0 });
+  const price = deal.price;
 
   return (
     <div
@@ -52,6 +55,7 @@ export default function HouseCard({ house, list = false }) {
             {t(house.city)}{house.wilaya && house.wilaya !== house.city ? `${lang === 'ar' ? '، ' : ', '}${t(house.wilaya)}` : ''}
           </p>
 
+          {house.reviewsCount > 0 && <ScoreBadge score={house.avgRating} count={house.reviewsCount} className="mt-2" />}
           <PolicyBadges policies={house.policies} className="mt-2" />
 
           {/* Details row */}
@@ -75,9 +79,7 @@ export default function HouseCard({ house, list = false }) {
 
           {/* Price */}
           <div className="mt-auto pt-4">
-            <span className="text-xl font-extrabold text-brand-500">
-              {price > 0 ? formatDZD(price, house.currency) : '—'}
-            </span>
+            {price > 0 ? <DealPrice {...deal} currency={house.currency} className="text-xl font-extrabold text-brand-500" /> : <span className="text-xl font-extrabold text-brand-500">—</span>}
             <span className="text-sm text-gray-400"> {t('/ nuit')}</span>
             <ApproxPrice amount={price} currency={house.currency} className="block text-xs text-gray-400" />
           </div>
