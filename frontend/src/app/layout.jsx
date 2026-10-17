@@ -9,7 +9,22 @@ const fredoka = localFont({
   weight: '300 700',
   display: 'swap',
   variable: '--font-fredoka',
-  fallback: ['system-ui', 'Segoe UI', 'Tahoma', 'sans-serif'],
+  // No built-in fallback here: next/font's adjusted-Arial fallback has Arabic glyphs and would
+  // win over Cairo. The full stack (Fredoka → Cairo → system fonts) lives in tailwind.config.js.
+  fallback: [],
+  adjustFontFallback: false,
+});
+
+// Cairo (variable, 200–1000, Arabic subset) for Arabic letters, which Fredoka doesn't have.
+// Listed right after Fredoka in the font stack; restricted to Arabic code points and not
+// preloaded, so French/English visitors never download it.
+const cairo = localFont({
+  src: '../../node_modules/@fontsource-variable/cairo/files/cairo-arabic-wght-normal.woff2',
+  weight: '200 1000',
+  display: 'swap',
+  variable: '--font-cairo',
+  preload: false,
+  declarations: [{ prop: 'unicode-range', value: 'U+0600-06FF, U+0750-077F, U+0870-08FF, U+FB50-FDFF, U+FE70-FEFF, U+200C-200E, U+2010-2011, U+204F, U+2E41' }],
 });
 import { JsonLd, SITE_NAME, SITE_URL } from '@/lib/seo';
 
@@ -73,7 +88,7 @@ const siteLd = [
 export default function RootLayout({ children }) {
   const lang = getLang();
   return (
-    <html lang={lang} dir={lang === 'ar' ? 'rtl' : 'ltr'} className={fredoka.variable}>
+    <html lang={lang} dir={lang === 'ar' ? 'rtl' : 'ltr'} className={`${fredoka.variable} ${cairo.variable}`}>
       <body className="font-sans antialiased">
         <UrlLangProvider lang={getUrlLang()}>
         <a href="#main-content" className="skip-link">

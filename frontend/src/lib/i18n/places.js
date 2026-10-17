@@ -74,7 +74,10 @@ export function placeName(lang, text) {
   const isArabic = ARABIC.test(text);
   if ((lang === 'ar') === isArabic) return undefined; // already in the right script
   const found = lookup(isArabic ? toLatin : toArabic, text);
-  if (!found && !loaded) loadCommuneNames(); // maybe a commune: fetch the list, listeners re-render
+  // Communes load in the browser only: if the server process cached them, the server HTML would
+  // name communes in Arabic while the first client render (list not loaded yet) wouldn't, and
+  // React would throw away the server HTML (hydration mismatch). Wilaya names work everywhere.
+  if (!found && !loaded && typeof window !== 'undefined') loadCommuneNames();
   if (!found) return undefined;
   return Array.isArray(found) ? found.join(lang === 'ar' ? '، ' : ', ') : found;
 }
