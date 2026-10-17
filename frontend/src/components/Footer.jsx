@@ -75,7 +75,8 @@ export default function Footer() {
     };
   }, []);
 
-  const heading = 'text-xs md:text-sm font-black tracking-widest text-white uppercase mb-5';
+  // Arabic falls back to a system font that looks smaller than Fredoka: one size up, no letter spacing
+  const heading = 'text-xs md:text-sm rtl:text-base rtl:md:text-lg font-black tracking-widest rtl:tracking-normal text-white uppercase mb-5';
   const link = 'hover:text-white transition';
 
   return (
@@ -88,13 +89,13 @@ export default function Footer() {
           {t('Laissez Meskan gérer vos séjours.')} <br />
           {t("Simplifiez vos réservations dès aujourd'hui.")}
         </h3>
-        <p className="text-slate-400 text-sm md:text-base font-medium mt-4 max-w-md mx-auto leading-relaxed">
+        <p className="text-slate-400 text-sm md:text-base rtl:text-base rtl:md:text-lg font-medium mt-4 max-w-md mx-auto leading-relaxed">
           {t('Inscrivez votre établissement en quelques minutes. Sans frais de service, sans commission, et touchez des milliers de clients.')}
         </p>
         <div className="mt-8">
           <Link
             href="/register?role=owner"
-            className="inline-block bg-white hover:bg-slate-50 text-slate-900 font-bold px-8 py-3.5 rounded-full text-sm transition shadow-md hover:scale-102"
+            className="inline-block bg-white hover:bg-slate-50 text-slate-900 font-bold px-8 py-3.5 rounded-full text-sm rtl:text-base transition shadow-md hover:scale-102"
           >
             {t('Commencer gratuitement')}
           </Link>
@@ -107,13 +108,13 @@ export default function Footer() {
           {COLUMNS.map((col) => (
             <nav key={col.title} aria-label={t(col.title)}>
               <h4 className={heading}>{t(col.title)}</h4>
-              <ul className="space-y-3.5 text-sm md:text-base font-semibold">
+              <ul className="space-y-3.5 text-sm md:text-base rtl:text-base rtl:md:text-lg font-semibold">
                 {col.links.map(([href, label]) => (
                   <li key={href}><Link href={href} className={link}>{t(label)}</Link></li>
                 ))}
               </ul>
               {col.title === 'Meskan' && (
-                <a href={`mailto:${SUPPORT_EMAIL}`} className="mt-5 flex items-center gap-2 text-sm md:text-base text-slate-400 hover:text-white transition">
+                <a href={`mailto:${SUPPORT_EMAIL}`} className="mt-5 flex items-center gap-2 text-sm md:text-base rtl:md:text-lg text-slate-400 hover:text-white transition">
                   <Mail className="h-4 w-4 text-teal-500 shrink-0" aria-hidden="true" />
                   <span className="truncate">{SUPPORT_EMAIL}</span>
                 </a>
@@ -126,7 +127,7 @@ export default function Footer() {
         {destinations.length > 0 && (
           <nav aria-label={t('Destinations populaires')} className="mt-12 border-t border-slate-900/60 pt-8">
             <p className={heading}>{t('Destinations populaires')}</p>
-            <ul className="flex flex-wrap gap-x-6 gap-y-3 text-sm md:text-base font-semibold">
+            <ul className="flex flex-wrap gap-x-6 gap-y-3 text-sm md:text-base rtl:text-base rtl:md:text-lg font-semibold">
               {destinations.map(([w, n]) => (
                 <li key={w}>
                   <Link href={wilayaPath(w)} className={link}>
@@ -144,7 +145,7 @@ export default function Footer() {
         </div>
 
         {/* Mini Bottom Bar */}
-        <div className="border-t border-slate-900/60 py-6 text-center text-xs md:text-sm font-bold uppercase tracking-widest text-slate-400">
+        <div className="border-t border-slate-900/60 py-6 text-center text-xs md:text-sm rtl:text-sm rtl:md:text-base font-bold uppercase tracking-widest rtl:tracking-normal text-slate-400">
           © {new Date().getFullYear()} {t('Meskan.')} {t.copyright}
         </div>
       </div>
