@@ -3,6 +3,7 @@ import { parsePolicies } from '../utils/policies.js';
 import { isCountry } from '../utils/countries.js';
 import Hotel from '../models/Hotel.js';
 import Room from '../models/Room.js';
+import { parseRoomList } from '../utils/roomList.js';
 import { uploadMany, destroyImage } from '../utils/cloudinaryUpload.js';
 import { parseCoordinates } from '../utils/parseCoordinates.js';
 import { searchRegex, wilayaRegex, placeFilter } from '../utils/searchRegex.js';
@@ -103,6 +104,10 @@ export const getMyHotels = async (req, res, next) => {
 // POST /hotels — owner creates a hotel (status: pending)
 export const createHotel = async (req, res, next) => {
   try {
+    // Room types offered (single, double…) can be sent with the hotel; validate before saving anything
+    const { rooms: roomList, error: roomError } = parseRoomList(req.body.rooms);
+    if (roomError) return res.status(400).json({ success: false, message: roomError });
+
     const images = req.files?.length ? await uploadMany(req.files, 'dzhotels/hotels') : [];
 
     const coordinates = parseCoordinates(req.body);
@@ -116,8 +121,10 @@ export const createHotel = async (req, res, next) => {
       images,
       status: 'pending',
     });
+    // create() (not insertMany) so each room's save hooks run (automatic translation)
+    const rooms = roomList.length ? await Room.create(roomList.map((r) => ({ ...r, hotel: hotel._id }))) : [];
 
-    res.status(201).json({ success: true, hotel });
+    res.status(201).json({ success: true, hotel, rooms });
   } catch (err) {
     next(err);
   }

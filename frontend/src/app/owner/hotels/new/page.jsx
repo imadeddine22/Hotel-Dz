@@ -14,6 +14,7 @@ import CountrySelect from '@/components/CountrySelect';
 import { currencyOf } from '@/lib/countries';
 import PoliciesFields, { DEFAULT_POLICIES, policiesOf } from '@/components/PoliciesFields';
 import { MULTI_COUNTRY } from '@/lib/countries';
+import RoomListFields, { newRoomRow } from '@/components/RoomListFields';
 const TYPES = ['Luxe', 'Affaires', 'Balnéaire', 'Riad', 'Boutique', 'Montagne', 'Désert', 'Appart-hôtel', 'Économique'];
 
 export default function NewHotelPage() {
@@ -25,6 +26,7 @@ export default function NewHotelPage() {
     type: 'Économique', starRating: 3, amenities: '', lat: '', lng: '', suitableFor: [], policies: { ...DEFAULT_POLICIES },
   });
   const [files, setFiles] = useState([]);
+  const [rooms, setRooms] = useState([newRoomRow('single'), newRoomRow('double')]);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
 
@@ -42,6 +44,8 @@ export default function NewHotelPage() {
         else fd.append(k, v);
       });
       files.forEach((f) => fd.append('images', f));
+      // room types are created together with the hotel
+      fd.append('rooms', JSON.stringify(rooms));
       await api.post('/hotels', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
       router.push('/owner/my-hotels');
     } catch (err) {
@@ -130,6 +134,8 @@ export default function NewHotelPage() {
             accent="#00bcd4"
           />
         </div>
+
+        <RoomListFields rooms={rooms} onChange={setRooms} currency={currencyOf(form.country)} />
 
         <PoliciesFields value={form.policies} onChange={(policies) => setForm((f) => ({ ...f, policies }))} />
 

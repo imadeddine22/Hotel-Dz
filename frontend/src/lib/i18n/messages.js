@@ -33,6 +33,8 @@ export const MESSAGES = {
   'Thank you! Your review will be published once approved': { fr: 'Merci ! Votre avis sera publié après validation.', ar: 'شكراً! سيُنشر رأيك بعد المراجعة.' },
   'Testimonial not found': { fr: 'Avis introuvable.', ar: 'الرأي غير موجود.' },
   'Message cannot be empty': { fr: 'Le message est vide.', ar: 'الرسالة فارغة.' },
+  'Invalid room list': { fr: 'Liste de chambres invalide.', ar: 'قائمة الغرف غير صالحة.' },
+  'Too many room types (20 max)': { fr: 'Trop de types de chambres (20 maximum).', ar: 'عدد أنواع الغرف كبير جداً (20 كحد أقصى).' },
   'Message is too long (2000 characters max)': { fr: 'Message trop long (2000 caractères maximum).', ar: 'الرسالة طويلة جداً (2000 حرف كحد أقصى).' },
   'Conversation not found': { fr: 'Conversation introuvable.', ar: 'المحادثة غير موجودة.' },
   'Score must be between 1 and 10': { fr: 'La note doit être entre 1 et 10.', ar: 'يجب أن يكون التقييم بين 1 و10.' },
@@ -81,6 +83,9 @@ export const MESSAGES = {
 
 // Messages that embed values: regex on the English text → template per language
 export const PATTERNS = [
+  [/^Room (\d+): price per night is required$/, { fr: 'Chambre {0} : le prix par nuit est obligatoire.', ar: 'الغرفة {0}: السعر لليلة إجباري.' }],
+  [/^Room (\d+): unknown room type$/, { fr: 'Chambre {0} : type de chambre inconnu.', ar: 'الغرفة {0}: نوع غرفة غير معروف.' }],
+  [/^Room (\d+): invalid$/, { fr: 'Chambre {0} : données invalides.', ar: 'الغرفة {0}: بيانات غير صالحة.' }],
   [/^Room capacity is (\d+) guests$/, { fr: 'Capacité de la chambre : {0} personne(s).', ar: 'سعة الغرفة: {0} أشخاص.' }],
   [/^House capacity is (\d+) guests$/, { fr: 'Capacité de la maison : {0} personne(s).', ar: 'سعة المنزل: {0} أشخاص.' }],
   [/^Booking already (\w+)$/, { fr: 'Réservation déjà traitée ({0}).', ar: 'تمت معالجة الحجز مسبقاً ({0}).' }],

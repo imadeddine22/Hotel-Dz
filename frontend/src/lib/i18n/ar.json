@@ -1169,5 +1169,14 @@
   "Plus de 50 millions DA": "أكثر من 50 مليون دج",
   "Prix croissant": "السعر: من الأقل",
   "Prix décroissant": "السعر: من الأعلى",
-  "Calculer ma mensualité": "احسب قسطي الشهري"
+  "Calculer ma mensualité": "احسب قسطي الشهري",
+  "Indiquez les types de chambres de votre hôtel. Vous pourrez ajouter des photos et des détails ensuite.": "حدّد أنواع الغرف المتوفرة في فندقك. يمكنك إضافة الصور والتفاصيل لاحقاً.",
+  "Type de chambre": "نوع الغرفة",
+  "Personnes": "الأشخاص",
+  "Nombre": "العدد",
+  "Retirer": "حذف",
+  "Ajouter un type de chambre": "أضف نوع غرفة",
+  "Chambre simple (1 personne)": "غرفة فردية (شخص واحد)",
+  "Chambre double (2 personnes)": "غرفة مزدوجة (شخصان)",
+  "Chambre familiale": "غرفة عائلية"
 }

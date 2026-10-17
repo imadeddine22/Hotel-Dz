@@ -1167,5 +1167,14 @@
   "Plus de 50 millions DA": "Over 50 million DZD",
   "Prix croissant": "Price: low to high",
   "Prix décroissant": "Price: high to low",
-  "Calculer ma mensualité": "Calculate my monthly payment"
+  "Calculer ma mensualité": "Calculate my monthly payment",
+  "Indiquez les types de chambres de votre hôtel. Vous pourrez ajouter des photos et des détails ensuite.": "List the room types your hotel offers. You can add photos and details later.",
+  "Type de chambre": "Room type",
+  "Personnes": "Guests",
+  "Nombre": "Quantity",
+  "Retirer": "Remove",
+  "Ajouter un type de chambre": "Add a room type",
+  "Chambre simple (1 personne)": "Single room (1 person)",
+  "Chambre double (2 personnes)": "Double room (2 people)",
+  "Chambre familiale": "Family room"
 }

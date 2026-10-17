@@ -688,6 +688,27 @@ describe('Arabic place search');
   check('spelling variants (ة/ه) still match', bej.length > 0);
 }
 
+describe('Rooms listed when adding a hotel');
+{
+  const hotelier = await register('owner');
+  const base = { name: `Hôtel Chambres ${uid}`, description: 'Test', wilaya: 'Biskra', city: 'Lichana', starRating: 3, type: 'Économique', images: [PNG] };
+  const rooms = [
+    { type: 'single', capacity: 1, pricePerNight: 4500, quantity: 6 },
+    { type: 'double', capacity: 2, pricePerNight: 7000, quantity: 10, hotel: 'hack', status: 'x' },
+    { type: 'family', capacity: 5, pricePerNight: 12000, quantity: 2 },
+  ];
+  const ok = await req('POST', '/hotels', { token: hotelier.token, form: { ...base, rooms } });
+  expectStatus('hotel created with its room list', ok, 201);
+  check('3 room types created', ok.data.rooms?.length === 3);
+  check('rooms belong to the new hotel (no injected fields)', ok.data.rooms?.every((r) => r.hotel === ok.data.hotel?._id));
+  check('room defaults (titles, quantities)', ok.data.rooms?.[0]?.title === 'Chambre simple' && ok.data.rooms?.[1]?.quantity === 10 && ok.data.rooms?.[2]?.capacity === 5);
+  const bad = await req('POST', '/hotels', { token: hotelier.token, form: { ...base, name: `Bad ${uid}`, rooms: [{ type: 'single', pricePerNight: 0 }] } });
+  expectStatus('room without a price rejected', bad, 400);
+  check('nothing created when a room is invalid', !(await req('GET', '/hotels/my/list', { token: hotelier.token })).data.hotels?.some((h) => h.name === `Bad ${uid}`));
+  expectStatus('unknown room type rejected', await req('POST', '/hotels', { token: hotelier.token, form: { ...base, rooms: [{ type: 'penthouse', pricePerNight: 9000 }] } }), 400);
+  expectStatus('hotel without rooms still works', await req('POST', '/hotels', { token: hotelier.token, form: { ...base, name: `Sans chambres ${uid}` } }), 201);
+}
+
 describe('No online payment');
 {
   const r = await fetch(`${API}/payments/webhook`, { method: 'POST', body: '{}' });
