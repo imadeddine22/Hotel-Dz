@@ -459,7 +459,7 @@ export default function AdminAllHousesPage() {
                   <select required style={inputStyle} value={form.wilaya}
                     onChange={(e) => setForm({ ...form, wilaya: e.target.value })}>
                     <option value="">{t('Choisir une wilaya')}</option>
-                    {regionsFor(form.country, wilayas).map((w) => <option key={w} value={w}>{w}</option>)}
+                    {regionsFor(form.country, wilayas).map((w) => <option key={w} value={w}>{t(w)}</option>)}
                   </select>
                 </div>
 

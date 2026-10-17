@@ -115,7 +115,7 @@ export default function HotelsPage() {
               >
                 <option value="">{filters.country && filters.country !== 'DZ' ? t('Toutes les régions') : t('Toutes les wilayas')}</option>
                 {regionsFor(filters.country, wilayas).map((w) => (
-                  <option key={w} value={w}>{w}</option>
+                  <option key={w} value={w}>{t(w)}</option>
                 ))}
               </select>
             </div>

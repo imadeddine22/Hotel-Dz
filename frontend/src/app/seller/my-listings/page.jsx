@@ -214,7 +214,7 @@ function SellerListingsContent() {
                   className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 font-serif font-bold text-slate-800 outline-none shadow-sm transition focus:border-emerald-500"
                 >
                   <option value="">{t('Sélectionner...')}</option>
-                  {regionsFor(form.country, wilayas)?.map((w) => <option key={w} value={w}>{w}</option>)}
+                  {regionsFor(form.country, wilayas)?.map((w) => <option key={w} value={w}>{t(w)}</option>)}
                 </select>
               </div>
               <div>

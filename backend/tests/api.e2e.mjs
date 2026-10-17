@@ -675,6 +675,19 @@ describe('Sales search filters');
   expectStatus('bad filter values do not crash', await req('GET', '/sales?rooms=abc&minArea=-5&maxArea=x'), 200);
 }
 
+describe('Arabic place search');
+{
+  const q = (path, v) => req('GET', `${path}?place=${encodeURIComponent(v)}&limit=50`);
+  const oran = (await q('/hotels', 'وهران')).data.hotels || [];
+  check('«وهران» finds Oran hotels', oran.length > 0 && oran.every((h) => h.wilaya === 'Oran'));
+  const alger = (await q('/houses', 'الجزائر')).data.houses || [];
+  check('«الجزائر» means the wilaya Alger, not the whole country', alger.length > 0 && alger.every((h) => h.wilaya === 'Alger' || /alger/i.test(h.city)));
+  const hydra = (await q('/sales', 'حيدرة')).data.listings || [];
+  check('Arabic commune name «حيدرة» finds Hydra', hydra.length > 0 && hydra.every((l) => l.city === 'Hydra'));
+  const bej = (await q('/sales', 'بجايه')).data.listings || [];
+  check('spelling variants (ة/ه) still match', bej.length > 0);
+}
+
 describe('No online payment');
 {
   const r = await fetch(`${API}/payments/webhook`, { method: 'POST', body: '{}' });

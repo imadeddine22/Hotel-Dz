@@ -231,7 +231,7 @@ export default function AdminAllSales() {
                   onClick={() => setOpenSelect(openSelect === 'wilaya' ? null : 'wilaya')}
                   className="w-full rounded-xl border border-gray-200 px-4 py-2.5 outline-none bg-white cursor-pointer flex items-center justify-between transition focus-within:border-brand-500 shadow-sm"
                 >
-                  <span className="font-serif font-bold text-slate-800">{form.wilaya || t('Sélectionner...')}</span>
+                  <span className="font-serif font-bold text-slate-800">{form.wilaya ? t(form.wilaya) : t('Sélectionner...')}</span>
                   <ChevronDown className={`h-4 w-4 text-gray-500 transition-transform ${openSelect === 'wilaya' ? 'rotate-180' : ''}`} />
                 </div>
                 {openSelect === 'wilaya' && (
@@ -250,7 +250,7 @@ export default function AdminAllSales() {
                             : 'text-slate-800 border-transparent hover:bg-slate-50/50 hover:text-teal-600'
                         }`}
                       >
-                        {w}
+                        {t(w)}
                       </button>
                     ))}
                   </div>

@@ -93,7 +93,8 @@ export default function Hero({ value = '', onSearch }) {
                   className="w-full rounded-xl border border-gray-200 py-3 text-sm font-semibold outline-none focus:border-brand-500 rtl:pr-10 rtl:pl-10 ltr:pl-10 ltr:pr-10"
                 />
                 <datalist id="hero-wilayas">
-                  {WILAYAS.map((w) => <option key={w} value={w} />)}
+                  {/* Arabic visitors pick/type Arabic names; the API maps them to the stored French names */}
+                  {WILAYAS.map((w) => <option key={w} value={lang === 'ar' ? t(w) : w} />)}
                 </datalist>
                 {text && (
                   <button

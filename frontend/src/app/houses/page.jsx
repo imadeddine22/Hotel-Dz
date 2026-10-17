@@ -127,7 +127,7 @@ export default function HousesPage() {
               style={{ borderRadius: 10, border: '1px solid #e2e8f0', padding: '8px 12px', fontSize: 13, color: '#374151', background: '#f8fafc' }}
             >
               <option value="">{filters.country && filters.country !== 'DZ' ? t('Toutes les régions') : t('Toutes les wilayas')}</option>
-              {regionsFor(filters.country, wilayas).map((w) => <option key={w} value={w}>{w}</option>)}
+              {regionsFor(filters.country, wilayas).map((w) => <option key={w} value={w}>{t(w)}</option>)}
             </select>
             <button
               onClick={fetchHouses}

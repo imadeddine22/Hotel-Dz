@@ -105,7 +105,7 @@ export default function EditHotelPage() {
             <label className="mb-1 block text-sm font-medium text-gray-700">{t('Wilaya')}</label>
             <select value={form.wilaya} onChange={(e) => set('wilaya', e.target.value)}
               className="w-full rounded-lg border border-gray-200 px-3 py-2.5 outline-none focus:border-brand-500">
-              {regionsFor(form.country, wilayas).map((w) => <option key={w} value={w}>{w}</option>)}
+              {regionsFor(form.country, wilayas).map((w) => <option key={w} value={w}>{t(w)}</option>)}
             </select>
           </div>
           <Input label={t('Ville / Commune')} value={form.city} onChange={(v) => set('city', v)} list="hotel-communes" placeholder={t('Choisissez ou saisissez une commune')} />
