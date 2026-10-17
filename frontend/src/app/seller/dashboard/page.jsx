@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
 import { Tag, Eye, Clock, CheckCircle, Plus, ArrowRight } from 'lucide-react';
 import DashboardShell from '@/components/DashboardShell';
 import api from '@/lib/api';

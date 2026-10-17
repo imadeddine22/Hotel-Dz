@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
 import { ArrowLeft, ArrowRight, Star, MessageSquarePlus, CheckCircle2, Clock } from 'lucide-react';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';

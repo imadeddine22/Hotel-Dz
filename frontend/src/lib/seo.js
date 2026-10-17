@@ -35,6 +35,24 @@ export async function apiGet(path, { revalidate = 3600, timeoutMs = 12000 } = {}
   }
 }
 
+/** Returned by apiGetListing when the API says the listing doesn't exist (vs. API unreachable). */
+export const NOT_FOUND = Symbol('not-found');
+
+/**
+ * Like apiGet, for a single listing: NOT_FOUND on a definite 400/404 (the page must answer 404,
+ * not an indexable empty page), null when the API is unreachable (transient: keep the page indexable).
+ */
+export async function apiGetListing(path, { revalidate = 3600, timeoutMs = 12000 } = {}) {
+  try {
+    const res = await fetch(`${API_URL}${path}`, { next: { revalidate }, signal: AbortSignal.timeout(timeoutMs) });
+    if (res.status === 404 || res.status === 400) return NOT_FOUND;
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
 export function absoluteImage(url) {
   if (!url) return `${SITE_URL}/hand_holding_house.png`;
   const u = typeof url === 'string' ? url : url.url;

@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
 import BrandLogo from '@/components/BrandLogo';
 import { useAuthStore } from '@/store/authStore';
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
 import { Tag, ChevronLeft, ChevronRight, MapPin, BedDouble, ChevronRight as ArrowIcon, Plus } from 'lucide-react';
 import api, { getImageUrl } from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';

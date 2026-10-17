@@ -1,26 +1,47 @@
-import { absoluteImage, apiGet, breadcrumbLd, formatDZD, JsonLd, saleLd, truncate } from '@/lib/seo';
+import { absoluteImage, apiGetListing, NOT_FOUND, breadcrumbLd, formatDZD, JsonLd, saleLd, truncate } from '@/lib/seo';
 import { wilayaPath } from '@/lib/wilayaInfo';
+import { getT, pageMeta } from '@/lib/i18n/server';
+import { localized } from '@/lib/i18n/localizeData';
 
-const getListing = (id) => apiGet(`/sales/${encodeURIComponent(id)}?noview=1`);
+import { InitialData } from '@/components/InitialData';
+
+// NOT_FOUND = doesn't exist or isn't public yet (an owner previewing a pending listing): the page
+// still renders in the browser, but must never be indexed
+const getListing = async (id) => {
+  const data = await apiGetListing(`/sales/${encodeURIComponent(id)}?noview=1`);
+  if (data === NOT_FOUND) return { notFound: true };
+  return localized(data, getT().lang); // /ar, /en: the listing's machine translation
+};
 
 export async function generateMetadata({ params }) {
-  const listing = (await getListing(params.id))?.listing;
-  if (!listing) return { title: 'Bien immobilier à vendre', alternates: { canonical: `/sales/${params.id}` } }; // API down or 404: never noindex on a transient failure
+  const data = await getListing(params.id);
+  const listing = data?.listing;
+  if (!listing) {
+    // not found / not public → noindex; API unreachable → stay indexable (transient failure)
+    return { title: 'Bien immobilier à vendre', alternates: { canonical: `/sales/${params.id}` }, robots: data?.notFound ? { index: false, follow: true } : undefined };
+  }
 
+  const { t } = getT();
+  const place = { name: listing.title, city: t(listing.city), wilaya: t(listing.wilaya) };
   const area = listing.area ? ` ${listing.area} m²` : '';
-  const title = `${listing.type}${area} à vendre à ${listing.city} — ${formatDZD(listing.price)}`;
+  const title = t('{type}{area} à vendre à {city} — {price}', { ...place, type: t(listing.type), area, price: formatDZD(listing.price) });
   const description =
     truncate(listing.description, 155) ||
-    `${listing.title} à ${listing.city} (${listing.wilaya}) : ${listing.rooms} pièce(s), ${formatDZD(listing.price)}. Réf. ${listing.reference}. Contactez le vendeur sur Meskan dz.`;
+    t('{name} à {city} ({wilaya}) : {rooms} pièce(s), {price}. Réf. {reference}. Contactez le vendeur sur Meskan dz.', {
+      ...place, rooms: listing.rooms, price: formatDZD(listing.price), reference: listing.reference,
+    });
   const images = (listing.images || []).slice(0, 1).map(absoluteImage);
 
-  return {
+  const meta = pageMeta({
+    path: `/sales/${listing._id}`,
     title,
     description,
-    alternates: { canonical: `/sales/${listing._id}` },
     robots: listing.status === 'approved' ? undefined : { index: false, follow: false },
-    openGraph: { title, description, images, type: 'website' },
-    twitter: { card: 'summary_large_image', title, description, images },
+  });
+  return {
+    ...meta,
+    openGraph: { ...meta.openGraph, images, type: 'website' },
+    twitter: { card: 'summary_large_image', title: meta.title, description: meta.description, images },
   };
 }
 
@@ -41,7 +62,7 @@ export default async function SaleLayout({ children, params }) {
           ]}
         />
       )}
-      {children}
+      <InitialData value={listing?.status === 'approved' ? { listing } : null}>{children}</InitialData>
     </>
   );
 }

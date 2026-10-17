@@ -53,7 +53,7 @@ const HIGHLIGHTS = {
   Bouira: ['la station de Tikjda', 'le parc national du Djurdjura', 'les sources de Hammam Ksenna'],
 };
 
-const slugify = (s) =>
+export const slugify = (s) =>
   s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
 export function getWilayaInfo(name) {
@@ -85,4 +85,5 @@ export function getNeighbourWilayas(name, count = 6) {
     .slice(0, count);
 }
 
-export const wilayaPath = (name) => `/destinations/${encodeURIComponent(name)}`;
+/** Canonical URL of a wilaya page: lowercase ASCII slug, e.g. /destinations/bordj-bou-arreridj */
+export const wilayaPath = (name) => `/destinations/${slugify(getWilayaInfo(name)?.name || name)}`;

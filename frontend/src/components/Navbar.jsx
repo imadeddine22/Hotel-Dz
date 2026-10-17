@@ -1,22 +1,25 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
 import { usePathname } from 'next/navigation';
 import { ChevronDown, Menu, X, Heart, User, Globe } from 'lucide-react';
 import { useAuthStore, useLangStore } from '@/store/authStore';
 import { useFavoritesStore } from '@/store/favoritesStore';
 import BrandLogo, { brandName } from '@/components/BrandLogo';
 import { useT } from '@/lib/i18n/useT';
+import { useUrlLang } from '@/components/UrlLang';
+import { localePath, splitLocale } from '@/lib/i18n/locale';
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
   const langRef = useRef(null);
-  const pathname = usePathname();
+  const pathname = splitLocale(usePathname() || '/').path; // without the /ar, /en prefix
   const user = useAuthStore((s) => s.user);
   const { setLang } = useLangStore();
   const { t, lang } = useT();
+  const urlLang = useUrlLang();
 
   const { hotelIds, houseIds, load } = useFavoritesStore();
   const [anonCount, setAnonCount] = useState(0);
@@ -63,12 +66,13 @@ export default function Navbar() {
 
   const totalFavorites = user ? (hotelIds.length + houseIds.length) : anonCount;
 
-  // Reload after switching so listings already loaded are fetched again in the new language
-  // (they are localized when received). <html dir/lang> is handled by AuthInit on every page.
+  // Public pages: go to the same page's URL in that language (/ar/hotels…), rendered by the
+  // server in it. Private pages have one URL: reload so listings are fetched again, localized.
   const changeLang = (code) => {
     if (code === lang) return;
     setLang(code);
-    window.location.reload();
+    if (urlLang) window.location.assign(localePath(code, splitLocale(pathname).path) + window.location.search);
+    else window.location.reload();
   };
 
   const dashHref =

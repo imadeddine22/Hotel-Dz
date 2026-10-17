@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
 import {
   CalendarCheck, Hotel, Users, Wallet, Store,
   TrendingUp, TrendingDown, CheckSquare, Building2, ArrowUpRight, Home, Tag,

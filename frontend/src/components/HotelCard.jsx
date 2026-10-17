@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
 import { MapPin, Star, ThumbsUp, Bed, ChevronRight, Check } from 'lucide-react';
 import { formatDZD } from '@/lib/data';
 import FavoriteButton from '@/components/FavoriteButton';

@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
 import { MapPin, BedDouble, Bath, Users } from 'lucide-react';
 import FavoriteButton from '@/components/FavoriteButton';
 

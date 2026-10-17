@@ -2,7 +2,7 @@
 
 import { statusLabel } from '@/lib/statusLabels';
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
 import { Plus, MapPin, Trash2, Pencil } from 'lucide-react';
 import DashboardShell from '@/components/DashboardShell';
 import api, { getImageUrl } from '@/lib/api';

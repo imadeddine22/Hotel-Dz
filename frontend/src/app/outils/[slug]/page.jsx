@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
 import { notFound } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -9,6 +9,7 @@ import { breadcrumbLd, faqLd, JsonLd, SITE_URL } from '@/lib/seo';
 import { getTool, TOOLS } from '../tools';
 
 import T from '@/components/T';
+import { pageMeta } from '@/lib/i18n/server';
 const UPDATED = '2026-10-16';
 
 // Per-tool editorial content: intro answer block, method and FAQ.
@@ -107,12 +108,7 @@ export function generateStaticParams() {
 export function generateMetadata({ params }) {
   const c = CONTENT[params.slug];
   if (!c) return {};
-  return {
-    title: c.metaTitle,
-    description: c.description,
-    alternates: { canonical: `/outils/${params.slug}` },
-    openGraph: { title: c.metaTitle, description: c.description, url: `${SITE_URL}/outils/${params.slug}` },
-  };
+  return pageMeta({ path: `/outils/${params.slug}`, title: c.metaTitle, description: c.description });
 }
 
 export default function ToolPage({ params }) {

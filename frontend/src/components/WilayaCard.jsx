@@ -1,8 +1,9 @@
 'use client';
 
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
 import { Hotel, Home, ArrowRight } from 'lucide-react';
 
+import { wilayaPath } from '@/lib/wilayaInfo';
 import { useT } from '@/lib/i18n/useT';
 const GRADIENTS = [
   'linear-gradient(135deg, #0891b2 0%, #06b6d4 50%, #22d3ee 100%)',
@@ -31,7 +32,7 @@ export default function WilayaCard({ name, index = 0 }) {
 
   return (
     <Link
-      href={`/destinations/${encodeURIComponent(name)}`}
+      href={wilayaPath(name)}
       className="group"
       style={{
         display: 'block',

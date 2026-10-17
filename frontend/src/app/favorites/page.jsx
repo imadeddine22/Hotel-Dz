@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
 import { useRouter } from 'next/navigation';
 import { Heart, Hotel, Home, Trash2 } from 'lucide-react';
 import Navbar from '@/components/Navbar';

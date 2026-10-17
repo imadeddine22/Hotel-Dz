@@ -5,19 +5,23 @@ import { useLangStore } from '@/store/authStore';
 import { TRANSLATIONS } from '@/lib/data';
 import { DEFAULT_LANG, isRtl, translate } from './index';
 import { onPlacesLoaded, placesLoaded } from './places';
+import { useUrlLang } from '@/components/UrlLang';
 
 /**
  * const { t, lang } = useT();  t('Mes réservations')  t('Hôtels à {place}', { place })
  *
- * Renders French on the server and on the very first client render (the saved language
- * lives in localStorage, which the server can't see), then switches to the user's language
- * right after mount. This avoids React hydration mismatches.
+ * Public pages: the language comes from the URL (/ar/…, /en/…, French root), identical on the
+ * server and the client, so the server HTML is already translated.
+ * Private pages (no language in the URL): French on the server and the first client render
+ * (the saved language lives in localStorage, which the server can't see), then the user's
+ * language right after mount. Both avoid React hydration mismatches.
  */
 export function useT() {
+  const urlLang = useUrlLang();
   const stored = useLangStore((s) => s.lang);
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
-  const lang = mounted ? stored || DEFAULT_LANG : DEFAULT_LANG;
+  const lang = urlLang || (mounted ? stored || DEFAULT_LANG : DEFAULT_LANG);
   // Commune names load on first use: re-render once they arrive so t('Hydra') → «حيدرة»
   const [placesReady, setPlacesReady] = useState(placesLoaded);
   useEffect(() => (placesLoaded() ? setPlacesReady(true) : onPlacesLoaded(() => setPlacesReady(true))), []);

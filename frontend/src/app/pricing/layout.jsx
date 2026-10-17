@@ -1,8 +1,11 @@
-export const metadata = {
-  title: { default: 'Tarifs pour propriétaires et vendeurs', template: '%s | Meskan dz' },
-  description: "Publiez votre hôtel, votre maison à louer ou votre bien à vendre sur Meskan dz. Découvrez nos formules et leurs tarifs en dinars.",
-  alternates: { canonical: '/pricing' },
-};
+import { pageMeta } from '@/lib/i18n/server';
+export function generateMetadata() {
+  return pageMeta({
+    path: '/pricing',
+    title: 'Tarifs pour propriétaires et vendeurs',
+    description: "Publiez votre hôtel, votre maison à louer ou votre bien à vendre sur Meskan dz. Découvrez nos formules et leurs tarifs en dinars.",
+  });
+}
 
 export default function Layout({ children }) {
   return children;

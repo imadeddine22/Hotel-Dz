@@ -10,6 +10,7 @@ import LocationMap from '@/components/LocationMap';
 import api, { getImageUrl, resolveImg } from '@/lib/api';
 
 import { useT } from '@/lib/i18n/useT';
+import { useInitialData } from '@/components/InitialData';
 const MOCK = {
   name: 'Villa Yasmine', city: 'Alger', wilaya: 'Alger', type: 'Villa',
   rooms: 4, bathrooms: 2, capacity: 8, pricePerNight: 15000,
@@ -23,20 +24,22 @@ const MOCK = {
 export default function HouseDetailPage() {
   const { t, lang } = useT();
   const { id } = useParams();
-  const [house, setHouse] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const initial = useInitialData();
+  const [house, setHouse] = useState(initial?.house ?? null);
+  const [loading, setLoading] = useState(!initial?.house);
   const [activeImg, setActiveImg] = useState(0);
   const [mock, setMock] = useState(false);
 
   useEffect(() => {
     (async () => {
-      setLoading(true);
       try {
         const { data } = await api.get(`/houses/${id}`);
         setHouse(data.house);
       } catch {
-        setHouse({ ...MOCK, _id: id });
-        setMock(true);
+        if (!initial?.house) {
+          setHouse({ ...MOCK, _id: id });
+          setMock(true);
+        }
       } finally {
         setLoading(false);
       }

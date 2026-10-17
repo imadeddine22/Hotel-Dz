@@ -1,9 +1,10 @@
 'use client';
 
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
 import BrandLogo from '@/components/BrandLogo';
 import { Mail, Phone, MapPin } from 'lucide-react';
 import { WILAYA_LIST } from '@/lib/wilayas';
+import { wilayaPath } from '@/lib/wilayaInfo';
 import { useT } from '@/lib/i18n/useT';
 
 const POPULAR = ['Alger', 'Oran', 'Constantine', 'Annaba', 'Béjaïa', 'Tlemcen', 'Tipaza', 'Jijel', 'Sétif', 'Ghardaïa', 'Tamanrasset', 'Djanet'];
@@ -53,6 +54,7 @@ export default function Footer() {
               <li><Link href="/sales" className="hover:text-white transition">{t.navSales}</Link></li>
               <li><Link href="/destinations" className="hover:text-white transition">{t.navDestinations}</Link></li>
               <li><Link href="/outils" className="hover:text-white transition">{lang === 'ar' ? 'أدوات مجانية' : t('Outils gratuits')}</Link></li>
+              <li><Link href="/comparatif" className="hover:text-white transition">{t('Meskan dz vs Booking, Airbnb, Ouedkniss')}</Link></li>
             </ul>
           </div>
 
@@ -113,7 +115,7 @@ export default function Footer() {
           <p className="text-[10px] font-black tracking-widest text-white uppercase mb-4">{lang === 'ar' ? 'وجهات شائعة' : t('Destinations populaires')}</p>
           <ul className="flex flex-wrap gap-x-5 gap-y-2 text-xs font-semibold">
             {POPULAR.map((w) => (
-              <li key={w}><Link href={`/destinations/${encodeURIComponent(w)}`} className="hover:text-white transition">{lang === 'ar' ? `فنادق ${WILAYA_LIST.find((x) => x.name === w)?.arabic || w}` : t('Hôtels à {w}', { w })}</Link></li>
+              <li key={w}><Link href={wilayaPath(w)} className="hover:text-white transition">{lang === 'ar' ? `فنادق ${WILAYA_LIST.find((x) => x.name === w)?.arabic || w}` : t('Hôtels à {w}', { w })}</Link></li>
             ))}
           </ul>
         </nav>

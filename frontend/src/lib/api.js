@@ -1,5 +1,7 @@
 import axios from 'axios';
 import { translateMessage } from './i18n/messages';
+import { localize } from './i18n/localizeData';
+import { isLocalizable, splitLocale } from './i18n/locale';
 
 const PRODUCTION_API = 'https://backend-yikc.onrender.com/api/v1';
 const PRODUCTION_SERVER = 'https://backend-yikc.onrender.com';
@@ -44,7 +46,12 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// The page's language: the URL prefix (/ar/…, /en/…; French root) on public pages, else the
+// saved choice (private pages have a single URL)
 const currentLang = () => {
+  const { lang } = splitLocale(window.location.pathname);
+  if (lang) return lang;
+  if (isLocalizable(window.location.pathname)) return 'fr';
   try {
     return JSON.parse(localStorage.getItem('dz-lang-storage'))?.state?.lang || 'fr';
   } catch {
@@ -55,27 +62,6 @@ const currentLang = () => {
 // Owner/seller/admin screens edit the original text: never hand them a translation,
 // or saving the form would overwrite the original with it.
 const EDITING_PATHS = /\/(my\/list|seller\/|admin\/|owner\/)/;
-const LOCALIZED_FIELDS = ['name', 'title', 'description', 'amenities', 'comment'];
-
-/**
- * Listings carry machine translations (`translations: { ar: { name, description, … }, en: … }`,
- * filled by the backend). Swap them in for the visitor's language, keeping the original in `_original`.
- */
-function localize(node, lang, depth = 0) {
-  if (!node || typeof node !== 'object' || depth > 6) return;
-  if (Array.isArray(node)) return node.forEach((n) => localize(n, lang, depth + 1));
-  const tr = node.translations?.[lang];
-  if (tr && node.sourceLang !== lang) {
-    node._original = {};
-    for (const f of LOCALIZED_FIELDS) {
-      if (tr[f] !== undefined && tr[f] !== null && tr[f] !== '') {
-        node._original[f] = node[f];
-        node[f] = tr[f];
-      }
-    }
-  }
-  for (const v of Object.values(node)) if (v && typeof v === 'object') localize(v, lang, depth + 1);
-}
 
 api.interceptors.response.use(
   (res) => {

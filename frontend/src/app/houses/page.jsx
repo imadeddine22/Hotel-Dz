@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Search, SlidersHorizontal, BedDouble, Bath, Users, Home, LayoutGrid, List } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -9,6 +9,7 @@ import api from '@/lib/api';
 import { useWilayas } from '@/hooks/useWilayas';
 
 import { useT } from '@/lib/i18n/useT';
+import { useInitialData } from '@/components/InitialData';
 const TYPES = ['Villa', 'Appartement', 'Maison', 'Chalet', 'Studio', 'Duplex', 'Riad', 'Ferme'];
 // Static WILAYAS list removed, loaded dynamically via useWilayas hook.
 
@@ -27,13 +28,16 @@ export default function HousesPage() {
   const { t } = useT();
   const { wilayas } = useWilayas();
   const [filters, setFilters] = useState({ wilaya: '', type: '', q: '', sort: '' });
-  const [houses, setHouses] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const initial = useInitialData();
+  const [houses, setHouses] = useState(initial?.houses ?? []);
+  const [loading, setLoading] = useState(!initial?.houses);
   const [usingMock, setUsingMock] = useState(false);
   const [view, setView] = useState('grid');
 
+  const silentFirstFetch = useRef(Boolean(initial));
   const fetchHouses = async () => {
-    setLoading(true);
+    if (!silentFirstFetch.current) setLoading(true);
+    silentFirstFetch.current = false;
     try {
       const params = Object.fromEntries(Object.entries(filters).filter(([, v]) => v));
       const { data } = await api.get('/houses', { params });
@@ -79,7 +83,7 @@ export default function HousesPage() {
               <Home size={22} />
             </span>
             <h1 style={{ fontSize: 30, fontWeight: 800, color: '#fff', margin: 0 }}>
-              {t('Locations de Maisons')}
+              {t('Maisons et appartements à louer')}
             </h1>
           </div>
           <p style={{ color: '#e9d5ff', marginBottom: 24, fontSize: 15 }}>

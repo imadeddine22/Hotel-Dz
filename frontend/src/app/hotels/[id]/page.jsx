@@ -14,14 +14,16 @@ import { ROOM_TYPE_LABELS } from '@/lib/statusLabels';
 import { formatDZD } from '@/lib/data';
 
 import { useT } from '@/lib/i18n/useT';
+import { useInitialData } from '@/components/InitialData';
 export default function HotelDetailPage() {
   const { t } = useT();
   const { id } = useParams();
   const router = useRouter();
-  const [hotel, setHotel] = useState(null);
-  const [rooms, setRooms] = useState([]);
+  const initial = useInitialData();
+  const [hotel, setHotel] = useState(initial?.hotel ?? null);
+  const [rooms, setRooms] = useState(initial?.rooms ?? []);
   const [reviews, setReviews] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!initial?.hotel);
   const [bedFilter, setBedFilter] = useState('all'); // 'all' | '1' | '2' | '3plus'
 
   // Bucket a room into the beds filter groups (1 / 2 / 3+).
@@ -39,7 +41,6 @@ export default function HotelDetailPage() {
 
   useEffect(() => {
     (async () => {
-      setLoading(true);
       try {
         const { data } = await api.get(`/hotels/${id}`);
         setHotel(data.hotel);
@@ -50,8 +51,11 @@ export default function HotelDetailPage() {
         } catch { /* no reviews */ }
       } catch {
         // Not found, not approved or API unreachable: show "introuvable" instead of a fake hotel
-        setHotel(null);
-        setRooms([]);
+        // (unless the server already rendered it: keep that)
+        if (!initial?.hotel) {
+          setHotel(null);
+          setRooms([]);
+        }
       } finally {
         setLoading(false);
       }

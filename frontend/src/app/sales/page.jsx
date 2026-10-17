@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
 import { MapPin, Search, ChevronDown, Eye, Home, ArrowUp, ArrowDown, Tag, RefreshCw } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -10,6 +10,7 @@ import { formatDZD } from '@/lib/data';
 import { useWilayas } from '@/hooks/useWilayas';
 
 import { useT } from '@/lib/i18n/useT';
+import { useInitialData } from '@/components/InitialData';
 const PROPERTY_TYPES = [
   'Appartement',
   'Bureau',
@@ -37,11 +38,12 @@ const PRICE_RANGES = [
 
 export default function SalesPage() {
   const { t } = useT();
-  const [listings, setListings] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [total, setTotal] = useState(0);
+  const initial = useInitialData();
+  const [listings, setListings] = useState(initial?.listings ?? []);
+  const [loading, setLoading] = useState(!initial?.listings);
+  const [total, setTotal] = useState(initial?.total ?? 0);
   const [page, setPage] = useState(1);
-  const [pages, setPages] = useState(1);
+  const [pages, setPages] = useState(initial?.pages ?? 1);
   const { wilayas } = useWilayas();
 
   // Applied filters
@@ -77,8 +79,10 @@ export default function SalesPage() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const silentFirstFetch = useRef(Boolean(initial));
   const fetchListings = async () => {
-    setLoading(true);
+    if (!silentFirstFetch.current) setLoading(true);
+    silentFirstFetch.current = false;
     try {
       const params = { page, limit: 12 };
       if (filters.wilaya) params.city = filters.wilaya; // Using city query parameter for wilaya matching

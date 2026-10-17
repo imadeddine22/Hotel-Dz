@@ -1,9 +1,8 @@
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
-import { useParams } from 'next/navigation';
 import { Search, SlidersHorizontal, Hotel, Home, MapPin, ArrowLeft, Loader2 } from 'lucide-react';
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import HotelCard from '@/components/HotelCard';
@@ -14,10 +13,8 @@ import { useT } from '@/lib/i18n/useT';
 const HOTEL_TYPES = ['Luxe', 'Affaires', 'Balnéaire', 'Riad', 'Boutique', 'Montagne', 'Désert', 'Appart-hôtel', 'Économique'];
 const HOUSE_TYPES = ['Villa', 'Appartement', 'Maison', 'Chalet', 'Studio', 'Duplex', 'Riad', 'Ferme'];
 
-export default function WilayaClient({ children }) {
+export default function WilayaClient({ wilayaName, children }) {
   const { t } = useT();
-  const params = useParams();
-  const wilayaName = decodeURIComponent(params.wilaya);
 
   const [hotels, setHotels] = useState([]);
   const [houses, setHouses] = useState([]);
@@ -145,7 +142,7 @@ export default function WilayaClient({ children }) {
             </span>
             <div>
               <h1 style={{ fontSize: 30, fontWeight: 800, color: '#fff', margin: 0 }}>
-                {wilayaName}
+                {t(wilayaName)}
               </h1>
               <p style={{ color: '#cffafe', fontSize: 14, marginTop: 4 }}>
                 {loading ? t('Chargement...') : t('{h} hôtel(s) · {m} maison(s)', { h: hotels.length, m: houses.length })}
@@ -267,7 +264,7 @@ export default function WilayaClient({ children }) {
         ) : totalResults === 0 ? (
           <div style={{ textAlign: 'center', padding: '60px 0', color: '#94a3b8' }}>
             <MapPin size={48} style={{ marginBottom: 12, opacity: 0.3 }} />
-            <p style={{ fontSize: 16, fontWeight: 600 }}>{t('Aucune propriété trouvée à')} {wilayaName}</p>
+            <p style={{ fontSize: 16, fontWeight: 600 }}>{t('Aucune propriété trouvée à')} {t(wilayaName)}</p>
             <p style={{ fontSize: 14 }}>{t('Modifiez vos filtres ou revenez plus tard')}</p>
           </div>
         ) : (

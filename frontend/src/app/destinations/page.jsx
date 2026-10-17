@@ -7,7 +7,7 @@ import Footer from '@/components/Footer';
 import api from '@/lib/api';
 import { formatDZD } from '@/lib/data';
 import dynamic from 'next/dynamic';
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
 
 import { useT } from '@/lib/i18n/useT';
 // Dynamically load Map component to prevent window references and SSR hydrations mismatches
@@ -186,7 +186,7 @@ export default function DestinationsPage() {
                 <Compass className="h-6 w-6 animate-spin-slow" />
               </span>
               <div>
-                <h1 className="text-xl font-black text-slate-800 tracking-tight">{t('Recherche géolocalisée')}</h1>
+                <h1 className="text-xl font-black text-slate-800 tracking-tight">{t('Destinations en Algérie')}</h1>
                 <p className="text-xs text-slate-400 font-medium">{t('Découvrez les hébergements en location les plus proches')}</p>
               </div>
             </div>

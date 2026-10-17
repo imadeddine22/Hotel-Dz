@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
 import BrandLogo from '@/components/BrandLogo';
 import { usePathname, useRouter } from 'next/navigation';
 import {

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { ChevronDown, ChevronUp, HelpCircle } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
 import api from '@/lib/api';
 
 import { useT } from '@/lib/i18n/useT';

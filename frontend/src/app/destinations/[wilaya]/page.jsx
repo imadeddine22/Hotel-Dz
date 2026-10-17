@@ -1,10 +1,13 @@
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
+import { permanentRedirect } from 'next/navigation';
 import WilayaClient from './WilayaClient';
 import { apiGet, breadcrumbLd, faqLd, formatDZD, JsonLd, SITE_URL } from '@/lib/seo';
 import { getWilayaInfo, getNeighbourWilayas, wilayaPath } from '@/lib/wilayaInfo';
 
 import T from '@/components/T';
 import { translate } from '@/lib/i18n';
+import { getT, pageMeta } from '@/lib/i18n/server';
+import { localePath } from '@/lib/i18n/locale';
 const median = (nums) => {
   const s = nums.filter((n) => n > 0).sort((a, b) => a - b);
   if (!s.length) return 0;
@@ -78,21 +81,22 @@ export async function generateMetadata({ params }) {
   const s = await getWilayaStats(displayName);
   const total = s.hotels + s.houses + s.sales;
 
+  const { t } = getT();
+  const place = t(displayName);
   const parts = [];
-  if (s.hotels) parts.push(`${s.hotels} hôtels`);
-  if (s.houses) parts.push(`${s.houses} maisons à louer`);
-  if (s.sales) parts.push(`${s.sales} biens à vendre`);
+  if (s.hotels) parts.push(t(s.hotels > 1 ? '{n} hôtels' : '{n} hôtel', { n: s.hotels }));
+  if (s.houses) parts.push(t(s.houses > 1 ? '{n} maisons à louer' : '{n} maison à louer', { n: s.houses }));
+  if (s.sales) parts.push(t(s.sales > 1 ? '{n} biens à vendre' : '{n} bien à vendre', { n: s.sales }));
 
-  return {
-    title: `Hôtels, locations et maisons à vendre à ${displayName}`,
+  return pageMeta({
+    path: wilayaPath(displayName),
+    title: t('Hôtels, locations et maisons à vendre à {name}', { name: place }),
     description: parts.length
-      ? `${parts.join(', ')} à ${displayName}. Comparez les prix, lisez les avis et réservez gratuitement en ligne, paiement sur place, sur Meskan dz.`
-      : `Trouvez un hôtel, une maison à louer ou un bien à acheter à ${displayName}. Réservation en ligne gratuite et paiement sur place sur Meskan dz.`,
-    alternates: { canonical: wilayaPath(displayName) },
+      ? t('{parts} à {name}. Comparez les prix, lisez les avis et réservez gratuitement en ligne, paiement sur place, sur Meskan dz.', { parts: parts.join(', '), name: place })
+      : t('Trouvez un hôtel, une maison à louer ou un bien à acheter à {name}. Réservation en ligne gratuite et paiement sur place sur Meskan dz.', { name: place }),
     // Unknown wilaya, or no listings and no editorial content: keep it out of the index.
     robots: !info || (s.reachable && total === 0 && !info.highlights.length) ? { index: false, follow: true } : undefined,
-    openGraph: { url: `${SITE_URL}${wilayaPath(displayName)}` },
-  };
+  });
 }
 
 export default async function WilayaPage({ params }) {
@@ -100,11 +104,13 @@ export default async function WilayaPage({ params }) {
   const info = getWilayaInfo(name);
   const displayName = info?.name || name;
   const s = await getWilayaStats(displayName);
+  // One URL per wilaya: /destinations/Béjaïa, /destinations/BEJAIA… → 301 /destinations/bejaia
+  if (info && `/destinations/${params.wilaya}` !== wilayaPath(info.name)) permanentRedirect(localePath(getT().lang, wilayaPath(info.name)));
   const faqs = buildFaqs(displayName, info, s);
   const neighbours = getNeighbourWilayas(displayName);
 
   return (
-    <WilayaClient>
+    <WilayaClient wilayaName={displayName}>
       <JsonLd
         data={[
           breadcrumbLd([

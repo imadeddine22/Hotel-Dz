@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
 import { Calculator, TrendingUp, Wallet } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -6,18 +6,20 @@ import { breadcrumbLd, JsonLd, SITE_URL } from '@/lib/seo';
 import { TOOLS } from './tools';
 
 import T from '@/components/T';
+import { pageMeta } from '@/lib/i18n/server';
 const ICONS = {
   'simulateur-credit-immobilier': Calculator,
   'rentabilite-locative': TrendingUp,
   'budget-sejour': Wallet,
 };
 
-export const metadata = {
-  title: 'Outils gratuits : crédit immobilier, rentabilité, budget voyage',
-  description:
-    "Calculateurs gratuits en dinars pour acheter, louer ou voyager en Algérie : simulateur de crédit immobilier, rentabilité locative et budget de séjour.",
-  alternates: { canonical: '/outils' },
-};
+export function generateMetadata() {
+  return pageMeta({
+    path: '/outils',
+    title: 'Outils gratuits : crédit immobilier, rentabilité, budget voyage',
+    description: "Calculateurs gratuits en dinars pour acheter, louer ou voyager en Algérie : simulateur de crédit immobilier, rentabilité locative et budget de séjour.",
+  });
+}
 
 export default function ToolsHub() {
   return (

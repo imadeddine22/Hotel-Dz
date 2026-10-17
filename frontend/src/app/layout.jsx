@@ -14,32 +14,35 @@ const fredoka = localFont({
 import { JsonLd, SITE_NAME, SITE_URL } from '@/lib/seo';
 
 import T from '@/components/T';
+import { UrlLangProvider } from '@/components/UrlLang';
+import { translate } from '@/lib/i18n';
+import { getLang, getUrlLang, pageMeta } from '@/lib/i18n/server';
 const DESCRIPTION =
-  "Réservez un hôtel, louez une maison ou achetez un bien immobilier dans les 69 wilayas d'Algérie. Annonces vérifiées, réservation gratuite et paiement sur place.";
+  "Hôtels, maisons à louer et biens à vendre dans les 69 wilayas d'Algérie. Annonces vérifiées, réservation gratuite, paiement sur place.";
 
-export const metadata = {
-  metadataBase: new URL(SITE_URL),
-  title: {
-    default: "Meskan dz — Hôtels, locations et immobilier en Algérie",
-    template: '%s | Meskan dz',
-  },
-  description: DESCRIPTION,
-  applicationName: SITE_NAME,
-  alternates: { canonical: '/' },
-  openGraph: {
-    type: 'website',
-    siteName: SITE_NAME,
-    locale: 'fr_DZ',
-    alternateLocale: ['ar_DZ'],
-    url: SITE_URL,
-    title: "Meskan dz — Hôtels, locations et immobilier en Algérie",
-    description: DESCRIPTION,
-    images: [{ url: '/hand_holding_house.png', alt: 'Meskan dz' }],
-  },
-  twitter: { card: 'summary_large_image' },
-  robots: { index: true, follow: true, 'max-image-preview': 'large' },
-  formatDetection: { telephone: false },
-};
+const HOME_TITLE = 'Meskan dz — Hôtels, locations et immobilier en Algérie';
+
+// Per language: /ar and /en are their own indexable versions (canonical + hreflang)
+export function generateMetadata() {
+  const lang = getLang();
+  const brand = translate(lang, SITE_NAME);
+  const home = pageMeta({ path: '/', title: HOME_TITLE, description: DESCRIPTION });
+  return {
+    metadataBase: new URL(SITE_URL),
+    ...home,
+    title: { default: home.title, template: `%s | ${brand}` },
+    applicationName: brand,
+    openGraph: {
+      ...home.openGraph,
+      type: 'website',
+      siteName: brand,
+      images: [{ url: '/hand_holding_house.png', alt: brand }],
+    },
+    twitter: { card: 'summary_large_image' },
+    robots: { index: true, follow: true, 'max-image-preview': 'large' },
+    formatDetection: { telephone: false },
+  };
+}
 
 export const viewport = {
   width: 'device-width',
@@ -63,14 +66,16 @@ const siteLd = [
     '@type': 'WebSite',
     name: SITE_NAME,
     url: SITE_URL,
-    inLanguage: ['fr', 'ar'],
+    inLanguage: ['fr', 'ar', 'en'],
   },
 ];
 
 export default function RootLayout({ children }) {
+  const lang = getLang();
   return (
-    <html lang="fr" className={fredoka.variable}>
+    <html lang={lang} dir={lang === 'ar' ? 'rtl' : 'ltr'} className={fredoka.variable}>
       <body className="font-sans antialiased">
+        <UrlLangProvider lang={getUrlLang()}>
         <a href="#main-content" className="skip-link">
           <T>Aller au contenu principal</T>
         </a>
@@ -79,6 +84,7 @@ export default function RootLayout({ children }) {
         <div id="main-content" tabIndex={-1} className="outline-none">
           {children}
         </div>
+        </UrlLangProvider>
       </body>
     </html>
   );

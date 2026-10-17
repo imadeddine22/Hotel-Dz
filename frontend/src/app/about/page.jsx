@@ -1,15 +1,17 @@
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
 import { Building2, ShieldCheck, Banknote, MapPin, Star, Users } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
 import T from '@/components/T';
-export const metadata = {
-  title: 'À propos',
-  alternates: { canonical: '/about' },
-  description:
-    "Meskan dz connecte les hôteliers algériens aux voyageurs : réservation simple et gratuite, paiement sur place, hôtels vérifiés dans les 69 wilayas.",
-};
+import { pageMeta } from '@/lib/i18n/server';
+export function generateMetadata() {
+  return pageMeta({
+    path: '/about',
+    title: 'À propos',
+    description: "Meskan dz connecte les hôteliers algériens aux voyageurs : réservation simple et gratuite, paiement sur place, hôtels vérifiés dans les 69 wilayas.",
+  });
+}
 
 const VALUES = [
   {

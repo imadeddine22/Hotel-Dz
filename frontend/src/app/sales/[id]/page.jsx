@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
 import { MapPin, Phone, Mail, ArrowLeft, Eye, Home, Ruler, DoorOpen, Bath, Tag, ChevronLeft, ChevronRight, User } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -10,12 +10,14 @@ import api, { getImageUrl } from '@/lib/api';
 import { formatDZD } from '@/lib/data';
 
 import { useT } from '@/lib/i18n/useT';
+import { useInitialData } from '@/components/InitialData';
 export default function SaleDetailPage() {
   const { t } = useT();
   const { id } = useParams();
   const router = useRouter();
-  const [listing, setListing] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const initial = useInitialData();
+  const [listing, setListing] = useState(initial?.listing ?? null);
+  const [loading, setLoading] = useState(!initial?.listing);
   const [imgIdx, setImgIdx] = useState(0);
 
   useEffect(() => {
@@ -24,7 +26,7 @@ export default function SaleDetailPage() {
         const { data } = await api.get(`/sales/${id}`);
         setListing(data.listing);
       } catch {
-        router.push('/sales');
+        if (!initial?.listing) router.push('/sales');
       } finally {
         setLoading(false);
       }

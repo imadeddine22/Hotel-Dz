@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Search, SlidersHorizontal } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -11,19 +11,23 @@ import { useWilayas } from '@/hooks/useWilayas';
 import HotelsMap from '@/components/HotelsMap';
 
 import { useT } from '@/lib/i18n/useT';
+import { useInitialData } from '@/components/InitialData';
 const TYPES = ['Luxe', 'Affaires', 'Balnéaire', 'Riad', 'Boutique', 'Montagne', 'Désert', 'Appart-hôtel', 'Économique'];
 
 export default function HotelsPage() {
   const { t } = useT();
   const { wilayas } = useWilayas();
   const [filters, setFilters] = useState({ wilaya: '', type: '', minStars: '', q: '' });
-  const [hotels, setHotels] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const initial = useInitialData();
+  const [hotels, setHotels] = useState(initial?.hotels ?? []);
+  const [loading, setLoading] = useState(!initial?.hotels);
   const [usingMock, setUsingMock] = useState(false);
   const [activeHotelId, setActiveHotelId] = useState(null);
 
+  const silentFirstFetch = useRef(Boolean(initial));
   const fetchHotels = async () => {
-    setLoading(true);
+    if (!silentFirstFetch.current) setLoading(true);
+    silentFirstFetch.current = false;
     try {
       const params = Object.fromEntries(Object.entries(filters).filter(([, v]) => v));
       const { data } = await api.get('/hotels', { params });
@@ -72,7 +76,7 @@ export default function HotelsPage() {
           
           {/* Header & Filters (Sticky) */}
           <div className="sticky top-0 z-10 border-b border-gray-100 bg-white p-4 sm:p-6 shadow-sm">
-            <h1 className="mb-4 text-2xl font-extrabold text-ink">{t('Trouvez votre hôtel de rêve')}</h1>
+            <h1 className="mb-4 text-2xl font-extrabold text-ink">{t('Hôtels en Algérie')}</h1>
             
             <div className="flex flex-wrap items-center gap-3">
               <div className="flex flex-1 min-w-[200px] items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 bg-gray-50 focus-within:border-brand-500 focus-within:bg-white transition-colors">

@@ -2,6 +2,7 @@ import { apiGet, SITE_URL } from '@/lib/seo';
 import { getWilayaInfo, wilayaPath } from '@/lib/wilayaInfo';
 import { WILAYAS } from '@/lib/wilayas';
 import { TOOLS } from '@/app/outils/tools';
+import { LOCALES, localePath } from '@/lib/i18n/locale';
 
 export const revalidate = 3600;
 
@@ -33,6 +34,7 @@ export default async function sitemap() {
     { path: '/sales', priority: 0.9, changeFrequency: 'daily' },
     { path: '/destinations', priority: 0.8, changeFrequency: 'weekly' },
     { path: '/outils', priority: 0.7, changeFrequency: 'monthly' },
+    { path: '/comparatif', priority: 0.6, changeFrequency: 'monthly' },
     ...TOOLS.map((t) => ({ path: `/outils/${t.slug}`, priority: 0.7, changeFrequency: 'monthly' })),
     { path: '/pricing', priority: 0.5, changeFrequency: 'monthly' },
     { path: '/about', priority: 0.4, changeFrequency: 'yearly' },
@@ -56,5 +58,12 @@ export default async function sitemap() {
       priority: 0.7,
     }));
 
-  return [...staticPages, ...wilayaPages, ...entries(hotels, 'hotels'), ...entries(houses, 'houses'), ...entries(sales, 'sales')];
+  const all = [...staticPages, ...wilayaPages, ...entries(hotels, 'hotels'), ...entries(houses, 'houses'), ...entries(sales, 'sales')];
+  // Every page in its 3 languages (/…, /ar/…, /en/…), each listing all versions as hreflang alternates
+  return all.flatMap((entry) => {
+    const path = entry.url.slice(SITE_URL.length) || '/';
+    const languages = Object.fromEntries(LOCALES.map((l) => [l, `${SITE_URL}${localePath(l, path)}`]));
+    languages['x-default'] = languages.fr;
+    return LOCALES.map((l) => ({ ...entry, url: languages[l], alternates: { languages } }));
+  });
 }
