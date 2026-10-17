@@ -5,10 +5,10 @@ import { useT } from '@/lib/i18n/useT';
 const ICON = { dark: '/brand/meskan-mark.png', light: '/brand/meskan-mark-white.png' };
 
 /** Brand name as shown in each language. */
-export const brandName = (lang) => (lang === 'ar' ? 'مسكن' : 'Meskan dz');
+export const brandName = (lang) => (lang === 'ar' ? 'مسكن' : 'Meskan');
 
 /**
- * Logo = icon + brand name as live text («مسكن» in Arabic, "Meskan dz" otherwise).
+ * Logo = icon + brand name as live text («مسكن» in Arabic, "Meskan" otherwise).
  * `className` sets the icon height (e.g. "h-10"), `textClassName` the name's size.
  * Pass alt="" when the surrounding link/element already names the brand.
  */
