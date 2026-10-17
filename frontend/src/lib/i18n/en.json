@@ -1129,5 +1129,13 @@
   "Votre message…": "Your message…",
   "Envoyer": "Send",
   "{n} message(s) non lu(s)": "{n} unread message(s)",
-  "Contacter": "Contact"
+  "Contacter": "Contact",
+  "Explorer": "Explore",
+  "Mon compte": "My account",
+  "Maisons à louer": "Houses for rent",
+  "Biens à vendre": "Properties for sale",
+  "Favoris": "Favorites",
+  "Mon profil": "My profile",
+  "Tarifs": "Pricing",
+  "Aide et contact": "Help and contact"
 }

@@ -1,124 +1,142 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from '@/components/LocaleLink';
 import BrandLogo from '@/components/BrandLogo';
-import { Mail, Phone, MapPin } from 'lucide-react';
-import { WILAYA_LIST } from '@/lib/wilayas';
+import { Mail } from 'lucide-react';
+import api from '@/lib/api';
 import { wilayaPath } from '@/lib/wilayaInfo';
 import { useT } from '@/lib/i18n/useT';
 
-const POPULAR = ['Alger', 'Oran', 'Constantine', 'Annaba', 'Béjaïa', 'Tlemcen', 'Tipaza', 'Jijel', 'Sétif', 'Ghardaïa', 'Tamanrasset', 'Djanet'];
+// Every link goes to a page that exists and has content (no duplicates of the navbar's
+// login, no placeholder contact details).
+const COLUMNS = [
+  {
+    title: 'Explorer',
+    links: [
+      ['/hotels', 'Hôtels'],
+      ['/houses', 'Maisons à louer'],
+      ['/sales', 'Biens à vendre'],
+      ['/destinations', 'Destinations'],
+    ],
+  },
+  {
+    title: 'Mon compte',
+    links: [
+      ['/my-bookings', 'Mes réservations'],
+      ['/messages', 'Messages'],
+      ['/favorites', 'Favoris'],
+      ['/profile', 'Mon profil'],
+    ],
+  },
+  {
+    title: 'Propriétaires',
+    links: [
+      ['/register?role=owner', 'Publier une annonce'],
+      ['/pricing', 'Tarifs'],
+    ],
+  },
+  {
+    title: 'Meskan',
+    links: [
+      ['/about', 'À propos'],
+      ['/contact', 'Aide et contact'],
+      ['/outils', 'Outils gratuits'],
+      ['/comparatif', 'Meskan vs Booking, Airbnb, Ouedkniss'],
+    ],
+  },
+];
+
+const SUPPORT_EMAIL = 'support@hotelsdz.dz';
+
+// Wilayas that really have listings (hotels + houses), most listings first; fetched once per page load
+let destinationsPromise = null;
+const loadDestinations = () =>
+  (destinationsPromise ||= Promise.all([
+    api.get('/hotels', { params: { limit: 50 } }).catch(() => ({ data: { hotels: [] } })),
+    api.get('/houses', { params: { limit: 50 } }).catch(() => ({ data: { houses: [] } })),
+  ]).then(([h, m]) => {
+    const count = new Map();
+    for (const x of [...(h.data.hotels || []), ...(m.data.houses || [])]) {
+      if (x.wilaya) count.set(x.wilaya, (count.get(x.wilaya) || 0) + 1);
+    }
+    return [...count.entries()].sort((a, b) => b[1] - a[1]).slice(0, 12);
+  }));
 
 export default function Footer() {
-  const { t, lang } = useT();
+  const { t } = useT();
+  const [destinations, setDestinations] = useState([]);
+
+  useEffect(() => {
+    let active = true;
+    loadDestinations().then((list) => active && setDestinations(list));
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const heading = 'text-xs md:text-sm font-black tracking-widest text-white uppercase mb-5';
+  const link = 'hover:text-white transition';
 
   return (
     <footer className="relative bg-slate-950 text-slate-400 overflow-hidden pt-24 md:pt-36 rounded-t-[50%_40px] md:rounded-t-[50%_100px] border-t border-slate-900">
-      
       {/* ─── Soft Radial Glow inside the Dome ─── */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[100%] md:w-[60%] aspect-square bg-[radial-gradient(ellipse_at_top,rgba(20,184,166,0.1),transparent_50%)] pointer-events-none rounded-full"></div>
-      
+
       <div className="relative z-10 max-w-7xl mx-auto px-4 text-center pb-16">
         <h3 className="text-3xl md:text-5xl font-black font-serif text-white tracking-tight leading-tight">
           {t('Laissez Meskan gérer vos séjours.')} <br />
-          {lang === 'ar' ? 'ابدأ اليوم مجاناً وسهّل عملياتك' : t('Simplifiez vos réservations dès aujourd\'hui.')}
+          {t("Simplifiez vos réservations dès aujourd'hui.")}
         </h3>
         <p className="text-slate-400 text-sm md:text-base font-medium mt-4 max-w-md mx-auto leading-relaxed">
-          {lang === 'ar' 
-            ? 'سجّل فندقك أو منزلك في دقائق معدودة. بدون عمولات، وبأمان تام.' 
-            : t('Inscrivez votre établissement en quelques minutes. Sans frais de service, sans commission, et touchez des milliers de clients.')}
+          {t('Inscrivez votre établissement en quelques minutes. Sans frais de service, sans commission, et touchez des milliers de clients.')}
         </p>
         <div className="mt-8">
           <Link
-            href="/register"
+            href="/register?role=owner"
             className="inline-block bg-white hover:bg-slate-50 text-slate-900 font-bold px-8 py-3.5 rounded-full text-sm transition shadow-md hover:scale-102"
           >
-            {lang === 'ar' ? 'ابدأ مجاناً' : t('Commencer gratuitement')}
+            {t('Commencer gratuitement')}
           </Link>
         </div>
       </div>
 
-      {/* Main Footer Links & Information */}
+      {/* Main Footer Links */}
       <div className="relative z-10 max-w-7xl mx-auto px-4 pt-10 border-t border-slate-900">
-        <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-4 items-start">
-          
-          {/* Column 1: Navigation */}
-          <div>
-            <h4 className="text-xs md:text-sm font-black tracking-widest text-white uppercase mb-5">
-              {lang === 'ar' ? 'التصفح' : t('Navigation')}
-            </h4>
-            <ul className="space-y-3.5 text-sm md:text-base font-semibold">
-              <li><Link href="/" className="hover:text-white transition">{t.navHome}</Link></li>
-              <li><Link href="/hotels" className="hover:text-white transition">{t.navHotels}</Link></li>
-              <li><Link href="/houses" className="hover:text-white transition">{t.navHouses}</Link></li>
-              <li><Link href="/sales" className="hover:text-white transition">{t.navSales}</Link></li>
-              <li><Link href="/destinations" className="hover:text-white transition">{t.navDestinations}</Link></li>
-              <li><Link href="/outils" className="hover:text-white transition">{lang === 'ar' ? 'أدوات مجانية' : t('Outils gratuits')}</Link></li>
-              <li><Link href="/comparatif" className="hover:text-white transition">{t('Meskan vs Booking, Airbnb, Ouedkniss')}</Link></li>
-            </ul>
-          </div>
-
-          {/* Column 2: Espace Client */}
-          <div>
-            <h4 className="text-xs md:text-sm font-black tracking-widest text-white uppercase mb-5">
-              {lang === 'ar' ? 'حساب الزبون' : t('Espace Client')}
-            </h4>
-            <ul className="space-y-3.5 text-sm md:text-base font-semibold">
-              <li><Link href="/my-bookings" className="hover:text-white transition">{t.myBookings}</Link></li>
-              <li><Link href="/favorites" className="hover:text-white transition">{t.favorites}</Link></li>
-              <li><Link href="/profile" className="hover:text-white transition">{t.mySpace}</Link></li>
-            </ul>
-          </div>
-
-          {/* Column 3: Espace Propriétaire */}
-          <div>
-            <h4 className="text-xs md:text-sm font-black tracking-widest text-white uppercase mb-5">
-              {lang === 'ar' ? 'الملاك' : t('Propriétaires')}
-            </h4>
-            <ul className="space-y-3.5 text-sm md:text-base font-semibold">
-              <li><Link href="/pricing" className="hover:text-white transition">{t.navPricing}</Link></li>
-              <li><Link href="/register" className="hover:text-white transition">{t.becomeOwner}</Link></li>
-              <li><Link href="/login" className="hover:text-white transition">{t.login}</Link></li>
-            </ul>
-          </div>
-
-          {/* Column 4: Contact & Info */}
-          <div>
-            <h4 className="text-xs md:text-sm font-black tracking-widest text-white uppercase mb-5 font-sans">
-              {lang === 'ar' ? 'معلومات الاتصال' : t('Contact & Info')}
-            </h4>
-            <ul className="space-y-3.5 text-sm md:text-base font-semibold mb-4">
-              <li><Link href="/about" className="hover:text-white transition">{lang === 'ar' ? 'عن الموقع' : t('À propos')}</Link></li>
-              <li><Link href="/contact" className="hover:text-white transition">{t.helpCenter}</Link></li>
-            </ul>
-            
-            {/* Real Website Information */}
-            <div className="pt-4 border-t border-slate-900/60 space-y-2.5 text-sm md:text-base text-slate-400">
-              <div className="flex items-center gap-2">
-                <Mail className="h-3.5 w-3.5 text-teal-500 shrink-0" />
-                <span className="truncate">{t('support@hotelsdz.dz')}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Phone className="h-3.5 w-3.5 text-teal-500 shrink-0" />
-                <span>+213 (0) 21 00 00 00</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <MapPin className="h-3.5 w-3.5 text-teal-500 shrink-0" />
-                <span>{t('Alger Centre, Alger')}</span>
-              </div>
-            </div>
-          </div>
-
+        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4 items-start">
+          {COLUMNS.map((col) => (
+            <nav key={col.title} aria-label={t(col.title)}>
+              <h4 className={heading}>{t(col.title)}</h4>
+              <ul className="space-y-3.5 text-sm md:text-base font-semibold">
+                {col.links.map(([href, label]) => (
+                  <li key={href}><Link href={href} className={link}>{t(label)}</Link></li>
+                ))}
+              </ul>
+              {col.title === 'Meskan' && (
+                <a href={`mailto:${SUPPORT_EMAIL}`} className="mt-5 flex items-center gap-2 text-sm md:text-base text-slate-400 hover:text-white transition">
+                  <Mail className="h-4 w-4 text-teal-500 shrink-0" aria-hidden="true" />
+                  <span className="truncate">{SUPPORT_EMAIL}</span>
+                </a>
+              )}
+            </nav>
+          ))}
         </div>
 
-        <nav aria-label={lang === 'ar' ? 'وجهات شائعة' : t('Destinations populaires')} className="mt-12 border-t border-slate-900/60 pt-8">
-          <p className="text-xs md:text-sm font-black tracking-widest text-white uppercase mb-5">{lang === 'ar' ? 'وجهات شائعة' : t('Destinations populaires')}</p>
-          <ul className="flex flex-wrap gap-x-6 gap-y-3 text-sm md:text-base font-semibold">
-            {POPULAR.map((w) => (
-              <li key={w}><Link href={wilayaPath(w)} className="hover:text-white transition">{lang === 'ar' ? `فنادق ${WILAYA_LIST.find((x) => x.name === w)?.arabic || w}` : t('Hôtels à {w}', { w })}</Link></li>
-            ))}
-          </ul>
-        </nav>
+        {/* Destinations with listings only (no links to empty wilaya pages) */}
+        {destinations.length > 0 && (
+          <nav aria-label={t('Destinations populaires')} className="mt-12 border-t border-slate-900/60 pt-8">
+            <p className={heading}>{t('Destinations populaires')}</p>
+            <ul className="flex flex-wrap gap-x-6 gap-y-3 text-sm md:text-base font-semibold">
+              {destinations.map(([w, n]) => (
+                <li key={w}>
+                  <Link href={wilayaPath(w)} className={link}>
+                    {t(w)} <span className="font-normal text-slate-500">({n})</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        )}
 
         {/* ─── Massive Branding Watermark Logo at the Bottom ─── */}
         <div aria-hidden="true" className="mt-16 flex justify-center select-none opacity-[0.06] transition duration-700 hover:opacity-[0.1]">
@@ -129,7 +147,6 @@ export default function Footer() {
         <div className="border-t border-slate-900/60 py-6 text-center text-xs md:text-sm font-bold uppercase tracking-widest text-slate-400">
           © {new Date().getFullYear()} {t('Meskan.')} {t.copyright}
         </div>
-
       </div>
     </footer>
   );
