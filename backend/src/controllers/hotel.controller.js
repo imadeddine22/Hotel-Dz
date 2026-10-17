@@ -1,3 +1,4 @@
+import { parsePolicies } from '../utils/policies.js';
 import { isCountry } from '../utils/countries.js';
 import Hotel from '../models/Hotel.js';
 import Room from '../models/Room.js';
@@ -101,6 +102,7 @@ export const createHotel = async (req, res, next) => {
       ...pick(req.body, EDITABLE),
       amenities: parseArray(req.body.amenities),
       suitableFor: parseArray(req.body.suitableFor),
+      ...(parsePolicies(req.body.policies) && { policies: parsePolicies(req.body.policies) }),
       ...(coordinates && { coordinates }),
       owner: req.user._id,
       images,
@@ -127,6 +129,8 @@ export const updateHotel = async (req, res, next) => {
     });
     if (req.body.amenities !== undefined) hotel.amenities = parseArray(req.body.amenities);
     if (req.body.suitableFor !== undefined) hotel.suitableFor = parseArray(req.body.suitableFor);
+    const policies = parsePolicies(req.body.policies, hotel.policies);
+    if (policies) hotel.policies = policies;
     const coordinates = parseCoordinates(req.body);
     if (coordinates) hotel.coordinates = coordinates;
 

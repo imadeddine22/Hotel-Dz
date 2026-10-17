@@ -1,4 +1,5 @@
 import Booking from '../models/Booking.js';
+import { DEFAULT_POLICIES, freeCancellationDeadline } from '../utils/policies.js';
 import Room from '../models/Room.js';
 import Hotel from '../models/Hotel.js';
 import House from '../models/House.js';
@@ -49,12 +50,47 @@ const notifyOwnerOfRequest = async (booking) => {
   );
 };
 
+/** Status and cancellation terms of a new booking, from the property's policies. */
+const bookingTerms = (property, checkIn) => {
+  const p = { ...DEFAULT_POLICIES, ...(property?.policies?.toObject ? property.policies.toObject() : property?.policies) };
+  return {
+    status: p.instantBooking ? 'confirmed' : 'pending',
+    instant: Boolean(p.instantBooking),
+    freeCancellationUntil: freeCancellationDeadline(checkIn, p.freeCancellationDays),
+  };
+};
+
+/** New booking: a request waits for the owner; an instant booking is confirmed to both sides. */
+const announceBooking = async (booking) => {
+  if (!booking.instant) return notifyOwnerOfRequest(booking);
+  const Model = booking.propertyType === 'house' ? House : Hotel;
+  const [property, full] = await Promise.all([
+    Model.findById(booking.house || booking.hotel).populate('owner', 'email fullName'),
+    Booking.findById(booking._id).populate('customer', 'email fullName'),
+  ]);
+  const when = `du ${fmtDate(booking.checkIn)} au ${fmtDate(booking.checkOut)} (${booking.nights} nuit(s), ${fmtDZD(booking.totalPrice, booking.currency)})`;
+  notify(
+    property?.owner?.email,
+    `Nouvelle réservation confirmée — ${property?.name}`,
+    `<p>Bonjour ${property?.owner?.fullName || ''},</p>
+     <p>Réservation instantanée pour <strong>${property?.name}</strong> ${when}. Elle est déjà confirmée ; le paiement se fait sur place à l'arrivée.</p>
+     <p><a href="${CLIENT_URL}/owner/bookings">Voir la réservation</a></p>`
+  );
+  notify(
+    full?.customer?.email,
+    `✅ Réservation confirmée — ${property?.name}`,
+    `<p>Bonjour ${full?.customer?.fullName || ''},</p>
+     <p>Votre réservation à <strong>${property?.name}</strong> ${when} est confirmée. Montant à régler sur place à l'arrivée.</p>
+     <p><a href="${CLIENT_URL}/my-bookings">Voir mes réservations</a></p>`
+  );
+};
+
 // POST /bookings  (customer) — hotel room booking
 export const createBooking = async (req, res, next) => {
   try {
     const { roomId, checkIn, checkOut, guests = 1 } = req.body;
 
-    const room = await Room.findById(roomId).populate('hotel', 'name status currency');
+    const room = await Room.findById(roomId).populate('hotel', 'name status currency policies');
     if (!room || !room.isActive) {
       return res.status(404).json({ success: false, message: 'Room not available' });
     }
@@ -97,11 +133,11 @@ export const createBooking = async (req, res, next) => {
       guests,
       totalPrice,
       currency: room.hotel.currency || 'DZD',
-      status: 'pending',
+      ...bookingTerms(room.hotel, start),
       paymentStatus: 'unpaid',
     });
 
-    notifyOwnerOfRequest(booking).catch(() => {});
+    announceBooking(booking).catch(() => {});
     res.status(201).json({ success: true, booking });
   } catch (err) {
     next(err);
@@ -155,11 +191,11 @@ export const createHouseBooking = async (req, res, next) => {
       guests,
       totalPrice,
       currency: house.currency || 'DZD',
-      status: 'pending',
+      ...bookingTerms(house, start),
       paymentStatus: 'unpaid',
     });
 
-    notifyOwnerOfRequest(booking).catch(() => {});
+    announceBooking(booking).catch(() => {});
     res.status(201).json({ success: true, booking });
   } catch (err) {
     next(err);
@@ -228,6 +264,8 @@ export const cancelBooking = async (req, res, next) => {
     }
 
     booking.status = 'cancelled';
+    booking.cancelledBy = isAdmin ? 'admin' : isCustomer ? 'customer' : 'owner';
+    booking.lateCancellation = isCustomer && !isAdmin && (!booking.freeCancellationUntil || new Date() > booking.freeCancellationUntil);
     if (booking.paymentStatus === 'paid') booking.paymentStatus = 'refunded';
     await booking.save();
 

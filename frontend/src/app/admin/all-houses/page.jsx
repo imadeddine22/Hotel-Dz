@@ -10,13 +10,15 @@ import api, { getImageUrl, resolveImg } from '@/lib/api';
 import { useT } from '@/lib/i18n/useT';
 import CountrySelect from '@/components/CountrySelect';
 import { currencyOf } from '@/lib/countries';
+import PoliciesFields, { DEFAULT_POLICIES, policiesOf } from '@/components/PoliciesFields';
+import { MULTI_COUNTRY } from '@/lib/countries';
 // Was referenced but never defined → the page crashed on render. Same list as the House model enum.
 const HOUSE_TYPES = ['Villa', 'Appartement', 'Maison', 'Chalet', 'Studio', 'Duplex', 'Riad', 'Ferme'];
 
 const emptyForm = {
   name: '', description: '', country: 'DZ', wilaya: '', city: '', address: '',
   type: 'Maison', starRating: 3, rooms: 1, bathrooms: 1, capacity: 2,
-  pricePerNight: '', amenities: '', status: 'approved', lat: '', lng: '', suitableFor: [],
+  pricePerNight: '', amenities: '', status: 'approved', lat: '', lng: '', suitableFor: [], policies: { ...DEFAULT_POLICIES },
   owner: '',
 };
 
@@ -54,6 +56,7 @@ export default function AdminAllHousesPage() {
       pricePerNight: house.pricePerNight, status: house.status,
       amenities: house.amenities?.join(', ') || '',
       suitableFor: house.suitableFor || [],
+      policies: policiesOf(house),
       lat: house.coordinates?.lat ?? '', lng: house.coordinates?.lng ?? '',
       existingImages: house.images || [],
       owner: house.owner?._id || house.owner || '',
@@ -117,6 +120,7 @@ export default function AdminAllHousesPage() {
       const payload = new FormData();
       Object.entries(form).forEach(([k, v]) => {
         if (k === 'suitableFor') payload.append(k, v.join(','));
+        else if (k === 'policies') payload.append(k, JSON.stringify(v));
         else payload.append(k, v);
       });
       if (files) {
@@ -434,10 +438,12 @@ export default function AdminAllHousesPage() {
                 </div>
 
                 <div>
-                  <div>
+                  {MULTI_COUNTRY && (
+<div>
                   <label style={labelStyle}>{t('Pays *')}</label>
                   <CountrySelect value={form.country} onChange={(c) => setForm((f) => ({ ...f, country: c, wilaya: '' }))} style={inputStyle} />
                 </div>
+)}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <label style={labelStyle}>{t('Wilaya *')}</label>
                     <button
@@ -530,6 +536,7 @@ export default function AdminAllHousesPage() {
                   />
                 </div>
 
+                <PoliciesFields value={form.policies} onChange={(policies) => setForm((f) => ({ ...f, policies }))} />
                 <div style={{ gridColumn: '1/-1' }}>
                   <label style={labelStyle}>{t('Photos (la première sera la photo principale)')}</label>
                   <ImageUploader 

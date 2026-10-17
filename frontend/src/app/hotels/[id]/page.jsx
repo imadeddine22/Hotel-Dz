@@ -15,6 +15,7 @@ import { formatDZD } from '@/lib/data';
 
 import { useT } from '@/lib/i18n/useT';
 import { useInitialData } from '@/components/InitialData';
+import Policies, { PolicyBadges } from '@/components/Policies';
 export default function HotelDetailPage() {
   const { t } = useT();
   const { id } = useParams();
@@ -94,6 +95,7 @@ export default function HotelDetailPage() {
             {hotel.starRating} ★ · {t(hotel.type)}
           </span>
           <h1 className="text-3xl font-extrabold text-white sm:text-4xl">{hotel.name}</h1>
+          <PolicyBadges policies={hotel.policies} className="mt-2" />
           <p className="flex items-center gap-1 text-gray-200">
             <MapPin className="h-4 w-4" /> {t(hotel.city)}, {t(hotel.wilaya)}
           </p>
@@ -127,6 +129,10 @@ export default function HotelDetailPage() {
               <MapPin className="h-4 w-4" /> {hotel.address || t(`${hotel.city}, ${hotel.wilaya}`)}
             </p>
             <LocationMap lat={hotel.coordinates?.lat} lng={hotel.coordinates?.lng} label={hotel.name} accent="#00bcd4" />
+          </div>
+
+          <div className="mb-8">
+            <Policies policies={hotel.policies} />
           </div>
 
           <h2 className="mb-3 text-xl font-bold text-ink">{t('Chambres disponibles')}</h2>

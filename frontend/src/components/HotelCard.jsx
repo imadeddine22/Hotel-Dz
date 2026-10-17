@@ -8,6 +8,7 @@ import { getImageUrl } from '@/lib/api';
 
 import { useT } from '@/lib/i18n/useT';
 import ApproxPrice from '@/components/ApproxPrice';
+import { PolicyBadges } from '@/components/Policies';
 export default function HotelCard({ hotel, list = false, onHover }) {
   const { t } = useT();
   const rawImg = hotel.images?.[0]?.url || hotel.img || null;
@@ -45,6 +46,7 @@ export default function HotelCard({ hotel, list = false, onHover }) {
                 <Star className="h-3.5 w-3.5" /> {t(hotel.type)}
               </div>
               <h3 className="text-xl font-extrabold text-ink leading-tight">{hotel.name}</h3>
+              <PolicyBadges policies={hotel.policies} className="mt-1.5" />
               
               <div className="mt-3 flex items-center gap-2">
                 <span className="flex items-center gap-1 rounded bg-[#f5df4d] px-2 py-0.5 text-sm font-bold text-ink">
@@ -111,6 +113,7 @@ export default function HotelCard({ hotel, list = false, onHover }) {
 
         <div className="flex flex-1 flex-col p-4">
           <h3 className="text-lg font-bold text-ink">{hotel.name}</h3>
+          <PolicyBadges policies={hotel.policies} className="mt-1" />
           <p className="mt-1 flex items-center gap-1 text-sm text-gray-500">
             <MapPin className="h-4 w-4 text-brand-500" /> {t(hotel.city)}
             <span className="text-gray-300">•</span>

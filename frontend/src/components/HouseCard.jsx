@@ -9,6 +9,7 @@ import { getImageUrl } from '@/lib/api';
 import { useT } from '@/lib/i18n/useT';
 import ApproxPrice from '@/components/ApproxPrice';
 import { formatDZD } from '@/lib/data';
+import { PolicyBadges } from '@/components/Policies';
 export default function HouseCard({ house, list = false }) {
   const { t, lang } = useT();
   const rawImg = house.images?.[0]?.url || house.img || null;
@@ -50,6 +51,8 @@ export default function HouseCard({ house, list = false }) {
             <MapPin className="h-4 w-4 text-brand-500" />
             {t(house.city)}{house.wilaya && house.wilaya !== house.city ? `${lang === 'ar' ? '، ' : ', '}${t(house.wilaya)}` : ''}
           </p>
+
+          <PolicyBadges policies={house.policies} className="mt-2" />
 
           {/* Details row */}
           <div className="mt-3 flex items-center gap-3 text-xs text-gray-500">

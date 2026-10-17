@@ -13,6 +13,7 @@ import CommuneDatalist from '@/components/CommuneDatalist';
 import { useT } from '@/lib/i18n/useT';
 import CountrySelect from '@/components/CountrySelect';
 import { currencyOf } from '@/lib/countries';
+import { MULTI_COUNTRY } from '@/lib/countries';
 const PROPERTY_TYPES = ['Appartement', 'Villa', 'Maison', 'Duplex', 'Studio', 'Terrain', 'Local commercial', 'Ferme', 'Chalet', 'Immeuble'];
 
 const STATUS_BADGE = {
@@ -199,11 +200,13 @@ function SellerListingsContent() {
             </div>
 
             <div className="grid gap-4 md:grid-cols-3">
-              <div>
+              {MULTI_COUNTRY && (
+<div>
                 <label htmlFor="sale-country" className="mb-1 block text-sm font-semibold text-gray-700">{t('Pays *')}</label>
                 <CountrySelect id="sale-country" value={form.country} onChange={(c) => setForm((f) => ({ ...f, country: c, wilaya: '' }))}
                   className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 font-serif font-bold text-slate-800 outline-none shadow-sm transition focus:border-emerald-500" />
               </div>
+)}
               <div>
                 <label htmlFor="sale-wilaya" className="mb-1 block text-sm font-semibold text-gray-700">{t('Wilaya *')}</label>
                 <select

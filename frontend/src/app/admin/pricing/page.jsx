@@ -5,6 +5,7 @@ import api from '@/lib/api';
 import { Save, RefreshCw, AlertCircle, CheckCircle } from 'lucide-react';
 
 import { useT } from '@/lib/i18n/useT';
+import { MULTI_COUNTRY } from '@/lib/countries';
 export default function AdminPricingPage() {
   const { t } = useT();
   const [form, setForm] = useState({
@@ -177,6 +178,7 @@ export default function AdminPricingPage() {
             </div>
 
             {/* Exchange rates: only for the indicative "≈ X DZD" next to Tunisian / Moroccan prices */}
+            {MULTI_COUNTRY && (
             <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
               <h2 className="text-lg font-bold text-slate-900">{t('Taux de change (affichage indicatif)')}</h2>
               <p className="mt-1 text-sm text-slate-500">{t('Valeur de 1 unité en dinars algériens. Sert seulement à afficher « ≈ X DZD » à côté des prix en Tunisie et au Maroc ; les réservations restent dans la monnaie de l’annonce.')}</p>
@@ -197,6 +199,7 @@ export default function AdminPricingPage() {
                 ))}
               </div>
             </div>
+            )}
 
             {/* Actions */}
             <div className="flex gap-4 pt-2">

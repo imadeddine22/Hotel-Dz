@@ -44,6 +44,7 @@ export default function MyBookingsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [justRequested, setJustRequested] = useState(false);
+  const [justConfirmed, setJustConfirmed] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -60,11 +61,18 @@ export default function MyBookingsPage() {
   useEffect(() => {
     load();
     // Coming from the booking form (?requested=1): confirm the request was sent
-    setJustRequested(new URLSearchParams(window.location.search).get('requested') === '1');
+    const q = new URLSearchParams(window.location.search);
+    setJustRequested(q.get('requested') === '1');
+    setJustConfirmed(q.get('confirmed') === '1'); // instant booking
   }, []);
 
-  const cancel = async (id) => {
-    if (!confirm(t('Voulez-vous vraiment annuler cette réservation ?'))) return;
+  const cancel = async (b) => {
+    const free = b.freeCancellationUntil && new Date() <= new Date(b.freeCancellationUntil);
+    const msg = free || b.status === 'pending'
+      ? t('Voulez-vous vraiment annuler cette réservation ?')
+      : t("Le délai d'annulation gratuite est dépassé. Annuler quand même ? Prévenez l'établissement par politesse.");
+    if (!confirm(msg)) return;
+    const id = b._id;
     try {
       await api.put(`/bookings/${id}/cancel`);
       load();
@@ -78,6 +86,15 @@ export default function MyBookingsPage() {
       <Navbar />
       <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
         <h1 className="mb-6 text-2xl font-extrabold text-ink">{t('Mes réservations')}</h1>
+
+        {justConfirmed && (
+          <div role="status" className="mb-6 flex gap-3 rounded-2xl border border-green-100 bg-green-50 px-5 py-4 text-sm text-green-800">
+            <CheckCircle2 className="h-5 w-5 shrink-0" aria-hidden="true" />
+            <p>
+              <strong>{t('Réservation confirmée !')}</strong> {t("Réservation instantanée : pas besoin d'attendre le propriétaire. Vous paierez directement sur place à l'arrivée.")}
+            </p>
+          </div>
+        )}
 
         {justRequested && (
           <div role="status" className="mb-6 flex gap-3 rounded-2xl border border-green-100 bg-green-50 px-5 py-4 text-sm text-green-800">
@@ -132,6 +149,16 @@ export default function MyBookingsPage() {
                     {shown === 'rejected' && (
                       <p className="mt-2 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700">{t('Motif du refus :')} {b.rejectionReason}</p>
                     )}
+                    {['pending', 'confirmed'].includes(b.status) && !started && (
+                      <p className="mt-2 text-xs text-gray-500">
+                        {b.freeCancellationUntil && new Date() <= new Date(b.freeCancellationUntil)
+                          ? t("Annulation gratuite jusqu'au {date}", { date: new Date(b.freeCancellationUntil).toLocaleDateString(dateLocale()) })
+                          : t("Délai d'annulation gratuite dépassé")}
+                      </p>
+                    )}
+                    {b.status === 'cancelled' && b.lateCancellation && (
+                      <p className="mt-2 text-xs text-amber-700">{t('Annulation tardive (après le délai gratuit)')}</p>
+                    )}
                     {shown === 'expired' && (
                       <p className="mt-2 text-xs text-gray-500">{t('Le propriétaire n\'a pas répondu à temps : les dates ne sont plus réservées.')}</p>
                     )}
@@ -142,7 +169,7 @@ export default function MyBookingsPage() {
                         <span className="ml-2 font-bold text-brand-600">{formatDZD(b.totalPrice, b.currency)}</span>
                       </p>
                       {['pending', 'confirmed'].includes(b.status) && !started && (
-                        <button onClick={() => cancel(b._id)} className="text-sm font-medium text-red-600 hover:underline">
+                        <button onClick={() => cancel(b)} className="text-sm font-medium text-red-600 hover:underline">
                           {t('Annuler')}
                         </button>
                       )}

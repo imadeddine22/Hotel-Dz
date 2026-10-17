@@ -10,6 +10,7 @@ import { formatDZD } from '@/lib/data';
 import { useAuthStore } from '@/store/authStore';
 
 import { useT } from '@/lib/i18n/useT';
+import { cancellationText } from '@/components/Policies';
 const todayStr = () => new Date().toISOString().split('T')[0];
 const MS_DAY   = 86400000;
 
@@ -55,13 +56,13 @@ export default function HouseBookingPage() {
     }
     setSubmitting(true);
     try {
-      await api.post('/bookings/house', {
+      const { data } = await api.post('/bookings/house', {
         houseId,
         checkIn:  form.checkIn,
         checkOut: form.checkOut,
         guests:   Number(form.guests),
       });
-      router.push('/my-bookings?requested=1');
+      router.push(data?.booking?.status === 'confirmed' ? '/my-bookings?confirmed=1' : '/my-bookings?requested=1');
     } catch (err) {
       setError(err.response?.data?.message || err.message);
       setSubmitting(false);
@@ -153,7 +154,7 @@ export default function HouseBookingPage() {
                 ) : (
                   <span className="flex items-center justify-center gap-2">
                     <Send className="h-5 w-5" />
-                    {t('Envoyer la demande de réservation')}
+                    {house?.policies?.instantBooking ? t('Réserver maintenant') : t('Envoyer la demande de réservation')}
                   </span>
                 )}
               </button>
@@ -162,7 +163,11 @@ export default function HouseBookingPage() {
               <div className="mt-4 flex gap-2 rounded-xl bg-brand-50 px-4 py-3 text-xs leading-relaxed text-gray-600">
                 <Info className="mt-0.5 h-4 w-4 shrink-0 text-brand-500" aria-hidden="true" />
                 <p>
-                  {t('Aucun paiement en ligne. Le propriétaire accepte ou refuse votre demande (sous 48 h au plus), puis vous réglez')} {nights > 0 ? formatDZD(totalAmount) : t('le séjour')} {t('directement sur place à l\'arrivée.')}
+                  {house?.policies?.instantBooking
+                    ? t('Réservation instantanée : elle est confirmée immédiatement, sans attendre le propriétaire. Vous réglez')
+                    : t('Aucun paiement en ligne. Le propriétaire accepte ou refuse votre demande (sous 48 h au plus), puis vous réglez')}{' '}
+                  {nights > 0 ? formatDZD(totalAmount, house?.currency) : t('le séjour')} {t('directement sur place à l\'arrivée.')}
+                  <span className="mt-1 block font-semibold">{cancellationText(t, house?.policies)}</span>
                 </p>
               </div>
             </form>

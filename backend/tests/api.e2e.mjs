@@ -491,47 +491,80 @@ describe('Home page testimonials (moderated)');
   expectStatus('deleted testimonial is gone', await req('DELETE', `/testimonials/${tid}`, { token: admin }), 404);
 }
 
-describe('Countries and currencies');
+describe('Countries and currencies (Algeria only for now)');
 {
   const seller = await register('owner');
   const make = (extra) =>
     req('POST', '/hotels', {
       token: seller.token,
-      form: { name: `Hôtel Pays ${uid}`, description: 'Test', city: 'Sousse', address: 'Rue 1', starRating: 3, type: 'Boutique', images: [PNG], ...extra },
+      form: { name: `Hôtel Pays ${uid}`, description: 'Test', city: 'Oran', address: 'Rue 1', starRating: 3, type: 'Boutique', images: [PNG], ...extra },
     });
-  const tn = await make({ country: 'TN', wilaya: 'sousse', currency: 'DZD' });
-  expectStatus('owner creates a hotel in Tunisia', tn, 201);
-  check('currency follows the country (TND), not the client', tn.data.hotel?.currency === 'TND', tn.data.hotel?.currency);
-  check('region stored in its official spelling', tn.data.hotel?.wilaya === 'Sousse', tn.data.hotel?.wilaya);
-  expectStatus('region from another country rejected', await make({ country: 'TN', wilaya: 'Oran' }), 400);
+  const dz = await make({ wilaya: 'oran', currency: 'TND' });
+  expectStatus('owner creates a hotel (Algeria by default)', dz, 201);
+  check('no country = Algeria', dz.data.hotel?.country === 'DZ');
+  check('currency follows the country (DZD), not the client', dz.data.hotel?.currency === 'DZD', dz.data.hotel?.currency);
+  check('wilaya stored in its official spelling', dz.data.hotel?.wilaya === 'Oran', dz.data.hotel?.wilaya);
+  expectStatus('Tunisia not open yet', await make({ country: 'TN', wilaya: 'Sousse' }), 400);
   expectStatus('unknown country rejected', await make({ country: 'FR', wilaya: 'Paris' }), 400);
-  const dz = await make({ wilaya: 'Oran', city: 'Oran' });
-  check('no country = Algeria in DZD', dz.data.hotel?.country === 'DZ' && dz.data.hotel?.currency === 'DZD');
   const moved = await req('PUT', `/hotels/${dz.data.hotel?._id}`, { token: seller.token, body: { country: 'MA', wilaya: 'Marrakech' } });
-  check('moving a listing to Morocco switches it to MAD', moved.data.hotel?.currency === 'MAD', moved.data.hotel?.currency);
+  expectStatus('moving a listing to a closed country rejected', moved, 400);
+  check('closed-country filter is ignored', (await req('GET', '/hotels?country=TN&limit=50')).data.hotels?.every((h) => h.country === 'DZ'));
+  check('every listing is Algerian, in DZD', (await req('GET', '/houses?limit=50')).data.houses?.every((h) => h.country === 'DZ' && h.currency === 'DZD'));
 
-  const onlyTn = await req('GET', '/hotels?country=TN&limit=50');
-  check('country filter', onlyTn.data.hotels?.length >= 1 && onlyTn.data.hotels.every((h) => h.country === 'TN'));
-  const byName = await req('GET', `/houses?place=${encodeURIComponent('المغرب')}`);
-  check('searching a country name (Arabic) finds its listings', byName.data.houses?.length >= 1 && byName.data.houses.every((h) => h.country === 'MA'));
-  check('existing listings are Algerian', (await req('GET', '/houses?country=DZ&limit=50')).data.houses?.every((h) => h.currency === 'DZD'));
-
-  // Booking a Tunisian room is priced and stored in TND
-  const tnHotel = onlyTn.data.hotels.find((h) => h.name === 'Dar Sousse Médina');
-  const tnRooms = (await req('GET', `/hotels/${tnHotel?._id}/rooms`)).data;
-  check('room list carries the hotel currency', tnRooms.currency === 'TND');
-  const tnBooking = await req('POST', '/bookings', { token: customer.token, body: { roomId: tnRooms.rooms?.[0]?._id, checkIn: day(80), checkOut: day(82), guests: 1 } });
-  expectStatus('book a room in Tunisia', tnBooking, 201);
-  check('booking keeps the TND currency', tnBooking.data.booking?.currency === 'TND', tnBooking.data.booking?.currency);
-  check('booking total in TND', tnBooking.data.booking?.totalPrice === 2 * tnRooms.rooms[0].pricePerNight);
-  check('payment stays on site', tnBooking.data.booking?.paymentMethod === 'on_site');
+  const anyRoom = (await req('GET', `/hotels/${(await req('GET', '/hotels?limit=1')).data.hotels[0]._id}/rooms`)).data;
+  check('room list carries the hotel currency', anyRoom.currency === 'DZD');
+  const bk = await req('POST', '/bookings', { token: customer.token, body: { roomId: anyRoom.rooms?.[0]?._id, checkIn: day(80), checkOut: day(82), guests: 1 } });
+  expectStatus('book a room', bk, 201);
+  check('booking stores its currency', bk.data.booking?.currency === 'DZD');
+  check('payment stays on site', bk.data.booking?.paymentMethod === 'on_site');
 
   const admin = await login('admin@hotelsdz.dz', 'admin123');
   const rates = await req('PUT', '/pricing/prices', { token: admin, body: { exchangeRates: { TND: 44.5, MAD: -3 } } });
-  check('admin sets exchange rates (invalid ones ignored)', rates.data.settings?.exchangeRates?.TND === 44.5 && rates.data.settings?.exchangeRates?.MAD > 0);
-  check('exchange rates are public', (await req('GET', '/pricing/prices')).data.settings?.exchangeRates?.TND === 44.5);
+  check('exchange rates kept for later (invalid ones ignored)', rates.data.settings?.exchangeRates?.TND === 44.5 && rates.data.settings?.exchangeRates?.MAD > 0);
   const stats = await req('GET', '/admin/stats', { token: admin });
-  check('admin revenue is split by currency', stats.data.stats ? typeof stats.data.stats.revenueByCurrency === 'object' : typeof stats.data.revenueByCurrency === 'object');
+  check('admin revenue is split by currency', typeof (stats.data.stats || stats.data).revenueByCurrency === 'object');
+}
+
+describe('Policies, instant booking and free cancellation');
+{
+  const host = await register('owner');
+  const admin = await login('admin@hotelsdz.dz', 'admin123');
+  const policies = { instantBooking: true, freeCancellationDays: 5, checkInFrom: '15:00', checkOutUntil: '25:99', petsAllowed: 'true', hack: 1 };
+  const h = await req('POST', '/houses', {
+    token: host.token,
+    form: { name: `Maison Règles ${uid}`, description: 'Test', wilaya: 'Tipaza', city: 'Tipaza', type: 'Villa', rooms: 2, bathrooms: 1, capacity: 4, pricePerNight: 8000, policies, images: [PNG] },
+  });
+  expectStatus('owner creates a house with policies', h, 201);
+  const p = h.data.house?.policies || {};
+  check('policies saved', p.instantBooking === true && p.freeCancellationDays === 5 && p.checkInFrom === '15:00' && p.petsAllowed === true);
+  check('invalid policy values fall back to defaults', p.checkOutUntil === '12:00' && p.hack === undefined, JSON.stringify(p));
+  const houseId = h.data.house?._id;
+  await req('PUT', `/admin/houses/${houseId}/approve`, { token: admin });
+
+  const instant = await req('POST', '/bookings/house', { token: customer.token, body: { houseId, checkIn: day(30), checkOut: day(32), guests: 2 } });
+  expectStatus('instant booking accepted', instant, 201);
+  check('instant booking is confirmed at once', instant.data.booking?.status === 'confirmed' && instant.data.booking?.instant === true);
+  const deadline = new Date(instant.data.booking?.freeCancellationUntil);
+  check('free cancellation deadline = check-in minus 5 days', Math.round((new Date(day(30)) - deadline) / 86400000) === 5, String(deadline));
+  check('instant booking blocks the dates', (await req('POST', '/bookings/house', { token: customer.token, body: { houseId, checkIn: day(31), checkOut: day(33) } })).status === 409);
+  const c1 = await req('PUT', `/bookings/${instant.data.booking?._id}/cancel`, { token: customer.token });
+  check('cancel before the deadline is free', c1.data.booking?.status === 'cancelled' && c1.data.booking?.lateCancellation === false && c1.data.booking?.cancelledBy === 'customer');
+
+  const soon = await req('POST', '/bookings/house', { token: customer.token, body: { houseId, checkIn: day(2), checkOut: day(3) } });
+  const c2 = await req('PUT', `/bookings/${soon.data.booking?._id}/cancel`, { token: customer.token });
+  check('cancel after the deadline is flagged late', c2.data.booking?.lateCancellation === true);
+
+  // switching back to request mode: new bookings wait for the owner again
+  const upd = await req('PUT', `/houses/${houseId}`, { token: host.token, body: { policies: { instantBooking: false } } });
+  check('owner edits policies (others kept)', upd.data.house?.policies?.instantBooking === false && upd.data.house?.policies?.freeCancellationDays === 5);
+  await req('PUT', `/admin/houses/${houseId}/approve`, { token: admin }); // editing sends it back to review
+  const req2 = await req('POST', '/bookings/house', { token: customer.token, body: { houseId, checkIn: day(40), checkOut: day(41) } });
+  check('request mode: booking waits for the owner', req2.data.booking?.status === 'pending' && req2.data.booking?.instant === false);
+  const byOwner = await req('PUT', `/bookings/${req2.data.booking?._id}/cancel`, { token: host.token });
+  check('owner cancellation is never "late"', byOwner.data.booking?.cancelledBy === 'owner' && byOwner.data.booking?.lateCancellation === false);
+
+  const sofitel = (await req('GET', '/hotels?limit=50')).data.hotels.find((x) => x.name === 'Sofitel Algiers Hamma');
+  check('policies are public on listings', sofitel?.policies?.instantBooking === true);
 }
 
 describe('No online payment');

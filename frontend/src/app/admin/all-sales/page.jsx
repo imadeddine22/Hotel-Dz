@@ -10,6 +10,7 @@ import ImageUploader from '@/components/ImageUploader';
 import { useT } from '@/lib/i18n/useT';
 import CountrySelect from '@/components/CountrySelect';
 import { currencyOf } from '@/lib/countries';
+import { MULTI_COUNTRY } from '@/lib/countries';
 const PROPERTY_TYPES = ['Appartement', 'Villa', 'Maison', 'Duplex', 'Studio', 'Terrain', 'Local commercial', 'Ferme', 'Chalet', 'Immeuble'];
 
 const STATUS_OPTIONS = [
@@ -217,11 +218,13 @@ export default function AdminAllSales() {
             </div>
 
             <div className="grid gap-4 md:grid-cols-3">
-              <div>
+              {MULTI_COUNTRY && (
+<div>
                 <label className="mb-1 block text-sm font-semibold text-gray-700">{t('Pays *')}</label>
                 <CountrySelect value={form.country} onChange={(c) => setForm((f) => ({ ...f, country: c, wilaya: '' }))}
                   className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 font-serif font-bold text-slate-800 outline-none shadow-sm" />
               </div>
+)}
               <div className="relative">
                 <label className="mb-1 block text-sm font-semibold text-gray-700">{t('Wilaya *')}</label>
                 <div 

@@ -12,7 +12,7 @@ import HotelsMap from '@/components/HotelsMap';
 
 import { useT } from '@/lib/i18n/useT';
 import { useInitialData } from '@/components/InitialData';
-import { COUNTRY_LIST, countryName } from '@/lib/countries';
+import { COUNTRY_LIST, MULTI_COUNTRY, countryName } from '@/lib/countries';
 import { regionsFor } from '@/hooks/useWilayas';
 const TYPES = ['Luxe', 'Affaires', 'Balnéaire', 'Riad', 'Boutique', 'Montagne', 'Désert', 'Appart-hôtel', 'Économique'];
 
@@ -64,6 +64,7 @@ export default function HotelsPage() {
     reviews: h.reviewsCount ?? h.reviews ?? 0,
     price: h.price ?? 0,
     currency: h.currency || 'DZD',
+    policies: h.policies,
     img: h.images?.[0]?.url || h.img,
     amenities: h.amenities || [],
     coordinates: h.coordinates || null,
@@ -93,7 +94,8 @@ export default function HotelsPage() {
                 />
               </div>
 
-              <select
+              {MULTI_COUNTRY && (
+<select
                 value={filters.country}
                 onChange={(e) => setFilters({ ...filters, country: e.target.value, wilaya: '' })}
                 aria-label={t('Pays')}
@@ -102,6 +104,7 @@ export default function HotelsPage() {
                 <option value="">{t('Tous les pays')}</option>
                 {COUNTRY_LIST.map((c) => <option key={c.code} value={c.code}>{countryName(c.code, lang)}</option>)}
               </select>
+)}
 
               <select
                 value={filters.wilaya}

@@ -148,6 +148,8 @@ export default function OwnerBookingsPage() {
                     <td className="p-4">
                       <span className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold ${STATUS[b.shown].cls}`}>{t(STATUS[b.shown].label)}</span>
                       {b.paymentStatus === 'paid' && <div className="mt-1 text-xs font-medium text-emerald-600">{t('Payé')}</div>}
+                      {b.instant && <div className="mt-1 text-xs font-medium text-amber-600">{t('Réservation instantanée')}</div>}
+                      {b.lateCancellation && <div className="mt-1 text-xs font-medium text-amber-700">{t('Annulation tardive (après le délai gratuit)')}</div>}
                       {b.shown === 'rejected' && <div className="mt-1 max-w-[180px] text-xs text-gray-400">{b.rejectionReason}</div>}
                     </td>
                     <td className="p-4">

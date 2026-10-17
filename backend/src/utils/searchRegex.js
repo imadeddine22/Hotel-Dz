@@ -1,4 +1,4 @@
-import { COUNTRIES } from './countries.js';
+import { COUNTRIES, ENABLED_COUNTRIES } from './countries.js';
 /**
  * Helpers for building safe case-insensitive RegExp filters from query strings.
  *
@@ -51,7 +51,7 @@ export const exactRegex = (value) => new RegExp(`^${escapeRegex(String(value).tr
 export const placeFilter = (value) => {
   // A country name ("Tunisie", "تونس", "Morocco") means every listing of that country
   const key = stripAccents(String(value || '').trim()).toLowerCase();
-  const country = Object.values(COUNTRIES).find((c) =>
+  const country = Object.values(COUNTRIES).filter((c) => ENABLED_COUNTRIES.includes(c.code)).find((c) =>
     [c.name, c.english, c.code].some((n) => stripAccents(n).toLowerCase() === key) || c.arabic === String(value || '').trim()
   );
   if (country) return { country: country.code };

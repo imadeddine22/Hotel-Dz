@@ -1,4 +1,4 @@
-import { COUNTRY_CODES, DEFAULT_COUNTRY, currencyOf, findRegion } from './countries.js';
+import { COUNTRY_CODES, DEFAULT_COUNTRY, ENABLED_COUNTRIES, currencyOf, findRegion } from './countries.js';
 
 /**
  * Adds `country` and `currency` to a listing schema (Hotel, House, HouseForSale).
@@ -16,6 +16,9 @@ export function countryPlugin(schema) {
   schema.pre('validate', function (next) {
     if (!this.country) this.country = DEFAULT_COUNTRY;
     this.currency = currencyOf(this.country);
+    if (this.isModified('country') && !ENABLED_COUNTRIES.includes(this.country)) {
+      this.invalidate('country', 'Listings are not open in this country yet');
+    }
     if (this.wilaya && (this.isModified('wilaya') || this.isModified('country'))) {
       const region = findRegion(this.country, this.wilaya);
       if (region) this.wilaya = region;

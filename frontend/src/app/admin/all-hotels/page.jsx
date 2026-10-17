@@ -10,6 +10,8 @@ import { formatDZD } from '@/lib/data';
 import { useT } from '@/lib/i18n/useT';
 import CountrySelect from '@/components/CountrySelect';
 import { currencyOf } from '@/lib/countries';
+import PoliciesFields, { DEFAULT_POLICIES, policiesOf } from '@/components/PoliciesFields';
+import { MULTI_COUNTRY } from '@/lib/countries';
 export default function AdminAllHotelsPage() {
   const { t } = useT();
   const { wilayas, addWilaya } = useWilayas();
@@ -36,7 +38,7 @@ export default function AdminAllHotelsPage() {
 
   const emptyForm = {
     name: '', description: '', country: 'DZ', wilaya: '', city: '', address: '',
-    starRating: 3, type: 'Économique', amenities: '', status: 'approved', lat: '', lng: '', suitableFor: [],
+    starRating: 3, type: 'Économique', amenities: '', status: 'approved', lat: '', lng: '', suitableFor: [], policies: { ...DEFAULT_POLICIES },
     owner: ''
   };
   const [form, setForm] = useState(emptyForm);
@@ -59,6 +61,7 @@ export default function AdminAllHotelsPage() {
       starRating: hotel.starRating, status: hotel.status,
       amenities: hotel.amenities?.join(', ') || '',
       suitableFor: hotel.suitableFor || [],
+      policies: policiesOf(hotel),
       lat: hotel.coordinates?.lat ?? '', lng: hotel.coordinates?.lng ?? '',
       owner: hotel.owner?._id || hotel.owner || ''
     });
@@ -123,6 +126,7 @@ export default function AdminAllHotelsPage() {
       const payload = new FormData();
       Object.entries(form).forEach(([k, v]) => {
         if (k === 'suitableFor') payload.append(k, v.join(','));
+        else if (k === 'policies') payload.append(k, JSON.stringify(v));
         else payload.append(k, v);
       });
       
@@ -387,10 +391,12 @@ export default function AdminAllHotelsPage() {
                   </select>
                 </div>
                 <div>
-                  <div>
+                  {MULTI_COUNTRY && (
+<div>
                   <label style={labelStyle}>{t('Pays *')}</label>
                   <CountrySelect value={form.country} onChange={(c) => setForm((f) => ({ ...f, country: c, wilaya: '' }))} style={inputStyle} />
                 </div>
+)}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <label style={labelStyle}>{t('Wilaya *')}</label>
                     <button
@@ -461,6 +467,7 @@ export default function AdminAllHotelsPage() {
                   />
                 </div>
               </div>
+              <PoliciesFields value={form.policies} onChange={(policies) => setForm((f) => ({ ...f, policies }))} />
               <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', paddingTop: 4 }}>
                 <button type="button"
                   onClick={() => { setShowModal(false); setFormError(''); setForm(emptyForm); setEditingId(null); }}

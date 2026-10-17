@@ -11,6 +11,7 @@ import api, { getImageUrl, resolveImg } from '@/lib/api';
 
 import { useT } from '@/lib/i18n/useT';
 import { useInitialData } from '@/components/InitialData';
+import Policies, { PolicyBadges } from '@/components/Policies';
 const MOCK = {
   name: 'Villa Yasmine', city: 'Alger', wilaya: 'Alger', type: 'Villa',
   rooms: 4, bathrooms: 2, capacity: 8, pricePerNight: 15000,
@@ -89,6 +90,7 @@ export default function HouseDetailPage() {
             {t(house.type || 'Maison')}
           </span>
           <h1 style={{ fontSize: 34, fontWeight: 800, color: '#fff', margin: '0 0 6px' }}>{house.name}</h1>
+          <PolicyBadges policies={house.policies} className="mb-2" />
           <p style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#e2e8f0', fontSize: 15, margin: 0 }}>
             <MapPin size={16} /> {t(house.city)}{house.wilaya && house.wilaya !== house.city ? `${lang === 'ar' ? '، ' : ', '}${t(house.wilaya)}` : ''}
           </p>
@@ -187,6 +189,10 @@ export default function HouseDetailPage() {
               label={house.name}
               accent="#7c3aed"
             />
+          </div>
+
+          <div style={{ marginBottom: 24 }}>
+            <Policies policies={house.policies} />
           </div>
 
           {/* Rating */}

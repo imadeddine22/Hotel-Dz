@@ -12,6 +12,8 @@ import api from '@/lib/api';
 import { useT } from '@/lib/i18n/useT';
 import CountrySelect from '@/components/CountrySelect';
 import { currencyOf } from '@/lib/countries';
+import PoliciesFields, { DEFAULT_POLICIES, policiesOf } from '@/components/PoliciesFields';
+import { MULTI_COUNTRY } from '@/lib/countries';
 const TYPES = ['Luxe', 'Affaires', 'Balnéaire', 'Riad', 'Boutique', 'Montagne', 'Désert', 'Appart-hôtel', 'Économique'];
 
 export default function EditHotelPage() {
@@ -39,6 +41,7 @@ export default function EditHotelPage() {
           amenities: (h.amenities || []).join(', '),
           lat: h.coordinates?.lat ?? '', lng: h.coordinates?.lng ?? '',
           suitableFor: h.suitableFor || [],
+          policies: policiesOf(h),
           existingImages: h.images || []
         });
       } catch (err) {
@@ -60,6 +63,7 @@ export default function EditHotelPage() {
       const fd = new FormData();
       Object.entries(form).forEach(([k, v]) => {
         if (k === 'suitableFor') fd.append(k, v.join(','));
+        else if (k === 'policies') fd.append(k, JSON.stringify(v));
         else fd.append(k, v);
       });
       files.forEach((f) => fd.append('images', f));
@@ -90,11 +94,13 @@ export default function EditHotelPage() {
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <div>
+          {MULTI_COUNTRY && (
+<div>
             <label className="mb-1 block text-sm font-medium text-gray-700">{t('Pays')}</label>
             <CountrySelect value={form.country} onChange={(c) => setForm((f) => ({ ...f, country: c, wilaya: regionsFor(c, wilayas)[0] || '' }))}
               className="w-full rounded-lg border border-gray-200 px-3 py-2.5 outline-none focus:border-brand-500" />
           </div>
+)}
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">{t('Wilaya')}</label>
             <select value={form.wilaya} onChange={(e) => set('wilaya', e.target.value)}
@@ -152,6 +158,8 @@ export default function EditHotelPage() {
             accent="#00bcd4"
           />
         </div>
+
+        <PoliciesFields value={form.policies} onChange={(policies) => setForm((f) => ({ ...f, policies }))} />
 
         <div>
           <label className="mb-1 block text-sm font-medium text-gray-700">{t('Photos (la première sera la photo principale)')}</label>

@@ -16,6 +16,8 @@ import { getServerURL } from '@/lib/api';
 import { useT } from '@/lib/i18n/useT';
 import CountrySelect from '@/components/CountrySelect';
 import { currencyOf } from '@/lib/countries';
+import PoliciesFields, { DEFAULT_POLICIES, policiesOf } from '@/components/PoliciesFields';
+import { MULTI_COUNTRY } from '@/lib/countries';
 const SERVER = getServerURL();
 function resolveImg(url) {
   if (!url) return null;
@@ -34,7 +36,7 @@ const HOUSE_TYPES = ['Villa', 'Appartement', 'Maison', 'Chalet', 'Studio', 'Dupl
 const emptyForm = {
   name: '', description: '', country: 'DZ', wilaya: '', city: '', address: '',
   type: 'Maison', starRating: 3, rooms: 1, bathrooms: 1, capacity: 2,
-  pricePerNight: '', amenities: '', lat: '', lng: '', suitableFor: [],
+  pricePerNight: '', amenities: '', lat: '', lng: '', suitableFor: [], policies: { ...DEFAULT_POLICIES },
 };
 
 const labelStyle = { display: 'block', fontSize: 12, fontWeight: 700, color: '#64748b', marginBottom: 6, textTransform: 'uppercase' };
@@ -72,6 +74,7 @@ function MyHousesContent() {
       rooms: house.rooms, bathrooms: house.bathrooms, capacity: house.capacity,
       pricePerNight: house.pricePerNight, amenities: house.amenities?.join(', ') || '',
       suitableFor: house.suitableFor || [],
+      policies: policiesOf(house),
       lat: house.coordinates?.lat ?? '', lng: house.coordinates?.lng ?? '',
       existingImages: house.images || []
     });
@@ -106,6 +109,7 @@ function MyHousesContent() {
       const payload = new FormData();
       Object.entries(form).forEach(([k, v]) => {
         if (k === 'suitableFor') payload.append(k, v.join(','));
+        else if (k === 'policies') payload.append(k, JSON.stringify(v));
         else payload.append(k, v);
       });
       if (files) {
@@ -282,10 +286,12 @@ function MyHousesContent() {
                   </select>
                 </div>
                 <div>
-                  <div>
+                  {MULTI_COUNTRY && (
+<div>
                   <label style={labelStyle}>{t('Pays *')}</label>
                   <CountrySelect value={form.country} onChange={(c) => setForm((f) => ({ ...f, country: c, wilaya: '' }))} style={inputStyle} />
                 </div>
+)}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <label style={labelStyle}>{t('Wilaya *')}</label>
                     <button
@@ -367,6 +373,7 @@ function MyHousesContent() {
                     accent="#7c3aed"
                   />
                 </div>
+                <PoliciesFields value={form.policies} onChange={(policies) => setForm((f) => ({ ...f, policies }))} />
                 <div style={{ gridColumn: '1/-1' }}>
                   <label style={labelStyle}>{t('Photos (la première sera la photo principale)')}</label>
                   <ImageUploader 

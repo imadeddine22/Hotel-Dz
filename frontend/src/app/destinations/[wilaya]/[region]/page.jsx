@@ -3,7 +3,7 @@ import Link from '@/components/LocaleLink';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { apiGet, breadcrumbLd, faqLd, formatDZD, JsonLd, absoluteImage } from '@/lib/seo';
-import { COUNTRIES, countryName } from '@/lib/countries';
+import { COUNTRIES, ENABLED_COUNTRIES, countryName } from '@/lib/countries';
 import { destinationPath, slugify } from '@/lib/wilayaInfo';
 import { getT, pageMeta } from '@/lib/i18n/server';
 import { localePath } from '@/lib/i18n/locale';
@@ -14,7 +14,7 @@ import { localized } from '@/lib/i18n/localizeData';
 
 function resolve(params) {
   const country = COUNTRIES[String(params.wilaya || '').toUpperCase()];
-  if (!country || country.code === 'DZ') return null;
+  if (!country || country.code === 'DZ' || !ENABLED_COUNTRIES.includes(country.code)) return null;
   const region = country.regions.find((r) => slugify(r.name) === params.region);
   return region ? { country, region } : null;
 }

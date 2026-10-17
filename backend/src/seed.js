@@ -16,6 +16,7 @@ import Booking from './models/Booking.js';
 import Review from './models/Review.js';
 import Message from './models/Message.js';
 import Testimonial from './models/Testimonial.js';
+import { ENABLED_COUNTRIES } from './utils/countries.js';
 
 const img = (id) => ({
   url: `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=1200&q=80`,
@@ -124,7 +125,12 @@ export const seedDatabase = async () => {
   }
   console.log(`🏠 Houses: ${HOUSES.length} (4 approved, 2 pending)`);
 
-  // --- Outside Algeria: prices in the local currency (TND, MAD) ---
+  // --- Booking policies on a few demo listings (instant booking, free cancellation) ---
+  await Hotel.updateOne({ name: 'Sofitel Algiers Hamma' }, { policies: { checkInFrom: '15:00', checkOutUntil: '12:00', freeCancellationDays: 3, instantBooking: true, childrenAllowed: true, petsAllowed: false, smokingAllowed: false } });
+  await House.updateOne({ name: 'Villa Yasmine' }, { policies: { checkInFrom: '16:00', checkOutUntil: '11:00', freeCancellationDays: 7, instantBooking: false, childrenAllowed: true, petsAllowed: true, smokingAllowed: false } });
+
+  // --- Outside Algeria (only when those countries are open): prices in TND / MAD ---
+  if (ENABLED_COUNTRIES.includes('TN')) {
   const tnHotel = await Hotel.create({
     owner: owner._id,
     name: 'Dar Sousse Médina',
@@ -133,12 +139,14 @@ export const seedDatabase = async () => {
     coordinates: { lat: 35.8256, lng: 10.6411 },
     images: [img('1551882547-ff40c63fe5fa')], amenities: ['Wifi', 'Climatisation', 'Petit-déjeuner'],
     starRating: 4, type: 'Boutique', status: 'approved',
+    policies: { checkInFrom: '15:00', checkOutUntil: '11:00', freeCancellationDays: 3, instantBooking: true, petsAllowed: true },
   });
   for (const rt of [
     { type: 'double', title: 'Chambre Double', pricePerNight: 180, capacity: 2, bedsCount: 2, quantity: 6 },
     { type: 'suite', title: 'Suite Médina', pricePerNight: 320, capacity: 3, bedsCount: 2, quantity: 2 },
   ]) await Room.create({ ...rt, hotel: tnHotel._id, images: [img('1551882547-ff40c63fe5fa')], amenities: ['Wifi', 'TV'] });
-  await House.create({
+  }
+  if (ENABLED_COUNTRIES.includes('MA')) await House.create({
     owner: owner._id,
     name: 'Riad Jardin Marrakech',
     description: 'Riad traditionnel avec patio et piscine, à cinq minutes de la place Jemaa el-Fna.',
@@ -146,8 +154,9 @@ export const seedDatabase = async () => {
     coordinates: { lat: 31.6295, lng: -7.9811 },
     images: [img('1539437829697-1b4ed5aebd19')], amenities: ['Wifi', 'Piscine', 'Climatisation'],
     type: 'Riad', rooms: 4, bathrooms: 3, capacity: 8, pricePerNight: 1400, status: 'approved',
+    policies: { checkInFrom: '16:00', checkOutUntil: '10:00', freeCancellationDays: 7, childrenAllowed: true, smokingAllowed: false },
   });
-  console.log('🌍 Abroad: 1 hotel in Tunisia (TND), 1 house in Morocco (MAD)');
+  if (ENABLED_COUNTRIES.length > 1) console.log(`🌍 Abroad: demo listings for ${ENABLED_COUNTRIES.filter((c) => c !== 'DZ').join(', ')}`);
 
   // --- Contact messages ---
   await Message.create(MESSAGES);

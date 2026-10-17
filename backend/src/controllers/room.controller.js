@@ -33,7 +33,7 @@ export const getRoomsByHotel = async (req, res, next) => {
 // GET /rooms/:id
 export const getRoom = async (req, res, next) => {
   try {
-    const room = await Room.findById(req.params.id).populate('hotel', 'name wilaya city country currency');
+    const room = await Room.findById(req.params.id).populate('hotel', 'name wilaya city country currency policies');
     if (!room) return res.status(404).json({ success: false, message: 'Room not found' });
     res.json({ success: true, room });
   } catch (err) {

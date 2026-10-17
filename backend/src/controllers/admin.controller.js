@@ -1,3 +1,4 @@
+import { parsePolicies } from '../utils/policies.js';
 import User from '../models/User.js';
 import Hotel from '../models/Hotel.js';
 import Room from '../models/Room.js';
@@ -311,6 +312,7 @@ export const createHotelByAdmin = async (req, res, next) => {
     const coordinates = parseCoordinates(req.body);
     const hotel = await Hotel.create({
       ...req.body,
+      policies: parsePolicies(req.body.policies),
       amenities: parseArray(req.body.amenities),
       ...(coordinates && { coordinates }),
       owner: req.body.owner || req.user._id,
@@ -335,6 +337,8 @@ export const updateHotelByAdmin = async (req, res, next) => {
       if (req.body[f] !== undefined) hotel[f] = req.body[f];
     });
     if (req.body.amenities !== undefined) hotel.amenities = parseArray(req.body.amenities);
+    const hotelPolicies = parsePolicies(req.body.policies, hotel.policies);
+    if (hotelPolicies) hotel.policies = hotelPolicies;
     const hotelCoords = parseCoordinates(req.body);
     if (hotelCoords) hotel.coordinates = hotelCoords;
 
@@ -391,6 +395,7 @@ export const createHouseByAdmin = async (req, res, next) => {
     const coordinates = parseCoordinates(req.body);
     const house = await House.create({
       ...req.body,
+      policies: parsePolicies(req.body.policies),
       amenities: parseArray(req.body.amenities),
       ...(coordinates && { coordinates }),
       owner: req.body.owner || req.user._id,
@@ -415,6 +420,8 @@ export const updateHouseByAdmin = async (req, res, next) => {
       if (req.body[f] !== undefined) house[f] = req.body[f];
     });
     if (req.body.amenities !== undefined) house.amenities = parseArray(req.body.amenities);
+    const housePolicies = parsePolicies(req.body.policies, house.policies);
+    if (housePolicies) house.policies = housePolicies;
     const houseCoords = parseCoordinates(req.body);
     if (houseCoords) house.coordinates = houseCoords;
 

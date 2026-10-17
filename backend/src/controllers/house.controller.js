@@ -1,3 +1,4 @@
+import { parsePolicies } from '../utils/policies.js';
 import { isCountry } from '../utils/countries.js';
 import House from '../models/House.js';
 import { uploadMany, destroyImage } from '../utils/cloudinaryUpload.js';
@@ -92,6 +93,7 @@ export const createHouse = async (req, res, next) => {
       ...pick(req.body, EDITABLE),
       amenities: parseArray(req.body.amenities),
       suitableFor: parseArray(req.body.suitableFor),
+      ...(parsePolicies(req.body.policies) && { policies: parsePolicies(req.body.policies) }),
       ...(coordinates && { coordinates }),
       owner: req.user._id,
       images,
@@ -118,6 +120,8 @@ export const updateHouse = async (req, res, next) => {
     });
     if (req.body.amenities !== undefined) house.amenities = parseArray(req.body.amenities);
     if (req.body.suitableFor !== undefined) house.suitableFor = parseArray(req.body.suitableFor);
+    const policies = parsePolicies(req.body.policies, house.policies);
+    if (policies) house.policies = policies;
     const coordinates = parseCoordinates(req.body);
     if (coordinates) house.coordinates = coordinates;
 

@@ -10,7 +10,7 @@ import { useWilayas } from '@/hooks/useWilayas';
 
 import { useT } from '@/lib/i18n/useT';
 import { useInitialData } from '@/components/InitialData';
-import { COUNTRY_LIST, countryName } from '@/lib/countries';
+import { COUNTRY_LIST, MULTI_COUNTRY, countryName } from '@/lib/countries';
 import { regionsFor } from '@/hooks/useWilayas';
 const TYPES = ['Villa', 'Appartement', 'Maison', 'Chalet', 'Studio', 'Duplex', 'Riad', 'Ferme'];
 // Static WILAYAS list removed, loaded dynamically via useWilayas hook.
@@ -65,6 +65,7 @@ export default function HousesPage() {
     rooms: h.rooms, bathrooms: h.bathrooms, capacity: h.capacity,
     pricePerNight: h.pricePerNight ?? h.price ?? 0,
     currency: h.currency || 'DZD',
+    policies: h.policies,
     images: h.images || (h.img ? [{ url: h.img }] : []),
   });
 
@@ -108,7 +109,8 @@ export default function HousesPage() {
                 style={{ flex: 1, border: 'none', outline: 'none', fontSize: 14, background: 'transparent', color: '#1e293b' }}
               />
             </div>
-            <select
+            {MULTI_COUNTRY && (
+<select
               value={filters.country}
               onChange={(e) => setFilters({ ...filters, country: e.target.value, wilaya: '' })}
               aria-label={t('Pays')}
@@ -117,6 +119,7 @@ export default function HousesPage() {
               <option value="">{t('Tous les pays')}</option>
               {COUNTRY_LIST.map((c) => <option key={c.code} value={c.code}>{countryName(c.code, lang)}</option>)}
             </select>
+)}
             <select
               value={filters.wilaya}
               onChange={(e) => setFilters({ ...filters, wilaya: e.target.value })}

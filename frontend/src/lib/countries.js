@@ -48,7 +48,15 @@ export const COUNTRIES = {
   },
 };
 
-export const COUNTRY_LIST = Object.values(COUNTRIES);
+// Countries open to listings and searches. Meskan dz focuses on Algeria for now; Tunisia and
+// Morocco are ready: open them with NEXT_PUBLIC_ENABLED_COUNTRIES=DZ,TN,MA (and ENABLED_COUNTRIES
+// on the backend). With a single country, country pickers and filters are hidden.
+export const ENABLED_COUNTRIES = (process.env.NEXT_PUBLIC_ENABLED_COUNTRIES || 'DZ')
+  .split(',')
+  .map((c) => c.trim().toUpperCase())
+  .filter((c) => COUNTRIES[c]);
+export const COUNTRY_LIST = ENABLED_COUNTRIES.map((c) => COUNTRIES[c]);
+export const MULTI_COUNTRY = COUNTRY_LIST.length > 1;
 export const DEFAULT_COUNTRY = 'DZ';
 
 export const currencyOf = (code) => COUNTRIES[code]?.currency || 'DZD';
