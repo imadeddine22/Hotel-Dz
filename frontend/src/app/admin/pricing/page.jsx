@@ -12,6 +12,7 @@ export default function AdminPricingPage() {
     growthYearlyPrice: '',
     proMonthlyPrice: '',
     proYearlyPrice: '',
+    exchangeRates: { TND: '', MAD: '' },
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -29,6 +30,7 @@ export default function AdminPricingPage() {
           growthYearlyPrice: data.settings.growthYearlyPrice || '',
           proMonthlyPrice: data.settings.proMonthlyPrice || '',
           proYearlyPrice: data.settings.proYearlyPrice || '',
+          exchangeRates: { TND: data.settings.exchangeRates?.TND || '', MAD: data.settings.exchangeRates?.MAD || '' },
         });
       }
     } catch (err) {
@@ -171,6 +173,28 @@ export default function AdminPricingPage() {
                     placeholder={t('Ex: 69000')}
                   />
                 </div>
+              </div>
+            </div>
+
+            {/* Exchange rates: only for the indicative "≈ X DZD" next to Tunisian / Moroccan prices */}
+            <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+              <h2 className="text-lg font-bold text-slate-900">{t('Taux de change (affichage indicatif)')}</h2>
+              <p className="mt-1 text-sm text-slate-500">{t('Valeur de 1 unité en dinars algériens. Sert seulement à afficher « ≈ X DZD » à côté des prix en Tunisie et au Maroc ; les réservations restent dans la monnaie de l’annonce.')}</p>
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                {[['TND', t('1 dinar tunisien (TND) = ? DZD')], ['MAD', t('1 dirham marocain (MAD) = ? DZD')]].map(([cur, label]) => (
+                  <div key={cur}>
+                    <label htmlFor={`rate-${cur}`} className="mb-1.5 block text-sm font-bold text-slate-700">{label}</label>
+                    <input
+                      id={`rate-${cur}`}
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={form.exchangeRates[cur]}
+                      onChange={(e) => setForm((prev) => ({ ...prev, exchangeRates: { ...prev.exchangeRates, [cur]: e.target.value } }))}
+                      className="w-full rounded-xl border border-slate-200 px-4 py-3 font-semibold text-slate-800 shadow-sm outline-none transition focus:border-purple-500"
+                    />
+                  </div>
+                ))}
               </div>
             </div>
 

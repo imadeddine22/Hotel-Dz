@@ -30,7 +30,7 @@ export function generateMetadata() {
   return {
     metadataBase: new URL(SITE_URL),
     ...home,
-    title: { default: home.title, template: `%s | ${brand}` },
+    title: { default: home.title.absolute, template: `%s | ${brand}` },
     applicationName: brand,
     openGraph: {
       ...home.openGraph,

@@ -9,6 +9,7 @@ import FavoriteButton from '@/components/FavoriteButton';
 
 import { getServerURL } from '@/lib/api';
 import { useT } from '@/lib/i18n/useT';
+import { formatDZD } from '@/lib/data';
 
 const SERVER = getServerURL();
 function resolveImg(url) {
@@ -147,7 +148,7 @@ export default function FeaturedHouses({ selectedCity }) {
                             {h.capacity && <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}><Users size={13} /> {h.capacity} {t('pers.')}</span>}
                           </div>
                           <span style={{ fontSize: 14, fontWeight: 800, color: '#cbd5e1' }}>
-                            {price > 0 ? new Intl.NumberFormat('fr-DZ').format(price) + ' DZD' : '—'}
+                            {price > 0 ? formatDZD(price, h.currency) : '—'}
                             <span style={{ fontWeight: 400, fontSize: 11 }}>{t('/nuit')}</span>
                           </span>
                         </div>

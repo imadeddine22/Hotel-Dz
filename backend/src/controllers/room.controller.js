@@ -20,8 +20,11 @@ const ownsHotel = (req, hotel) =>
 // GET /hotels/:hotelId/rooms
 export const getRoomsByHotel = async (req, res, next) => {
   try {
-    const rooms = await Room.find({ hotel: req.params.hotelId, isActive: true });
-    res.json({ success: true, count: rooms.length, rooms });
+    const [rooms, hotel] = await Promise.all([
+      Room.find({ hotel: req.params.hotelId, isActive: true }),
+      Hotel.findById(req.params.hotelId).select('currency'),
+    ]);
+    res.json({ success: true, count: rooms.length, currency: hotel?.currency || 'DZD', rooms });
   } catch (err) {
     next(err);
   }
@@ -30,7 +33,7 @@ export const getRoomsByHotel = async (req, res, next) => {
 // GET /rooms/:id
 export const getRoom = async (req, res, next) => {
   try {
-    const room = await Room.findById(req.params.id).populate('hotel', 'name wilaya city');
+    const room = await Room.findById(req.params.id).populate('hotel', 'name wilaya city country currency');
     if (!room) return res.status(404).json({ success: false, message: 'Room not found' });
     res.json({ success: true, room });
   } catch (err) {

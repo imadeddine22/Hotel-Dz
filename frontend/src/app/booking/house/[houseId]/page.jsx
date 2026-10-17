@@ -171,7 +171,7 @@ export default function HouseBookingPage() {
             <div className="md:col-span-2 h-fit rounded-3xl bg-white p-7 shadow-card">
               <h2 className="mb-5 font-bold text-ink">{t('Récapitulatif')}</h2>
 
-              <Row label={t('Prix / nuit')}    value={formatDZD(house.pricePerNight)} />
+              <Row label={t('Prix / nuit')}    value={formatDZD(house.pricePerNight, house.currency)} />
               <Row label={t('Nuits')}          value={nights || '—'} />
               <Row label={t('Voyageurs')}      value={form.guests} />
 
@@ -182,7 +182,7 @@ export default function HouseBookingPage() {
               <div className="flex items-center justify-between">
                 <span className="font-bold text-ink">{t('Total à régler sur place')}</span>
                 <span className="text-xl font-extrabold text-brand-600">
-                  {nights > 0 ? formatDZD(totalAmount) : '—'}
+                  {nights > 0 ? formatDZD(totalAmount, house.currency) : '—'}
                 </span>
               </div>
 

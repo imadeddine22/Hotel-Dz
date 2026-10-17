@@ -96,7 +96,8 @@ export const getStats = async (req, res, next) => {
       // Revenue = bookings the owners marked as paid on site
       Booking.aggregate([
         { $match: { paymentStatus: 'paid' } },
-        { $group: { _id: null, total: { $sum: '$totalPrice' } } },
+        // one total per currency: dinars and dirhams are never added together
+        { $group: { _id: { $ifNull: ['$currency', 'DZD'] }, total: { $sum: '$totalPrice' } } },
       ]),
       Review.countDocuments(),
       House.countDocuments({ status: 'approved' }),
@@ -113,7 +114,7 @@ export const getStats = async (req, res, next) => {
 
     // Grouped by payment date (older paid bookings have no paidAt → fall back to updatedAt)
     const monthlyRevenue = await Booking.aggregate([
-      { $match: { paymentStatus: 'paid' } },
+      { $match: { paymentStatus: 'paid', currency: { $in: ['DZD', null] } } }, // chart in DZD
       { $addFields: { paidOn: { $ifNull: ['$paidAt', '$updatedAt'] } } },
       { $match: { paidOn: { $gte: sixMonthsAgo } } },
       {
@@ -176,7 +177,8 @@ export const getStats = async (req, res, next) => {
         pendingSales,
         bookings,
         reviews,
-        revenue: paidPayments[0]?.total || 0,
+        revenue: paidPayments.find((r) => r._id === 'DZD')?.total || 0,
+        revenueByCurrency: Object.fromEntries(paidPayments.map((r) => [r._id, r.total])),
         charts: {
           monthlyRevenue,
           monthlyBookings,
@@ -328,7 +330,7 @@ export const updateHotelByAdmin = async (req, res, next) => {
     const hotel = await Hotel.findById(req.params.id);
     if (!hotel) return res.status(404).json({ success: false, message: 'Hotel not found' });
 
-    const fields = ['name', 'description', 'wilaya', 'city', 'address', 'type', 'starRating', 'status'];
+    const fields = ['name', 'description', 'country', 'wilaya', 'city', 'address', 'type', 'starRating', 'status'];
     fields.forEach((f) => {
       if (req.body[f] !== undefined) hotel[f] = req.body[f];
     });
@@ -408,7 +410,7 @@ export const updateHouseByAdmin = async (req, res, next) => {
     const house = await House.findById(req.params.id);
     if (!house) return res.status(404).json({ success: false, message: 'House not found' });
 
-    const fields = ['name', 'description', 'wilaya', 'city', 'address', 'type', 'rooms', 'bathrooms', 'capacity', 'pricePerNight', 'status'];
+    const fields = ['name', 'description', 'country', 'wilaya', 'city', 'address', 'type', 'rooms', 'bathrooms', 'capacity', 'pricePerNight', 'status'];
     fields.forEach((f) => {
       if (req.body[f] !== undefined) house[f] = req.body[f];
     });

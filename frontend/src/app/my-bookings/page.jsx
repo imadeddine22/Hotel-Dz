@@ -139,7 +139,7 @@ export default function MyBookingsPage() {
                     <div className="mt-auto flex items-end justify-between pt-3">
                       <p className="text-sm text-gray-500">
                         {new Date(b.checkIn).toLocaleDateString(dateLocale())} → {new Date(b.checkOut).toLocaleDateString(dateLocale())}
-                        <span className="ml-2 font-bold text-brand-600">{formatDZD(b.totalPrice)}</span>
+                        <span className="ml-2 font-bold text-brand-600">{formatDZD(b.totalPrice, b.currency)}</span>
                       </p>
                       {['pending', 'confirmed'].includes(b.status) && !started && (
                         <button onClick={() => cancel(b._id)} className="text-sm font-medium text-red-600 hover:underline">

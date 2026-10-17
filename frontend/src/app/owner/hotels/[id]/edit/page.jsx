@@ -5,11 +5,13 @@ import { useRouter, useParams } from 'next/navigation';
 import DashboardShell from '@/components/DashboardShell';
 import MapPicker from '@/components/MapPicker';
 import ImageUploader from '@/components/ImageUploader';
-import { useWilayas } from '@/hooks/useWilayas';
+import { useWilayas, regionsFor } from '@/hooks/useWilayas';
 import CommuneDatalist from '@/components/CommuneDatalist';
 import api from '@/lib/api';
 
 import { useT } from '@/lib/i18n/useT';
+import CountrySelect from '@/components/CountrySelect';
+import { currencyOf } from '@/lib/countries';
 const TYPES = ['Luxe', 'Affaires', 'Balnéaire', 'Riad', 'Boutique', 'Montagne', 'Désert', 'Appart-hôtel', 'Économique'];
 
 export default function EditHotelPage() {
@@ -30,7 +32,7 @@ export default function EditHotelPage() {
         const { data } = await api.get(`/hotels/${id}`, { localize: false });
         const h = data.hotel;
         setForm({
-          name: h.name, description: h.description || '', wilaya: h.wilaya,
+          name: h.name, description: h.description || '', country: h.country || 'DZ', wilaya: h.wilaya,
           city: h.city, address: h.address || '', type: h.type,
           // Must be loaded too: the form re-sends every field, so missing ones were overwritten on save
           starRating: h.starRating ?? 3,
@@ -89,10 +91,15 @@ export default function EditHotelPage() {
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700">{t('Pays')}</label>
+            <CountrySelect value={form.country} onChange={(c) => setForm((f) => ({ ...f, country: c, wilaya: regionsFor(c, wilayas)[0] || '' }))}
+              className="w-full rounded-lg border border-gray-200 px-3 py-2.5 outline-none focus:border-brand-500" />
+          </div>
+          <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">{t('Wilaya')}</label>
             <select value={form.wilaya} onChange={(e) => set('wilaya', e.target.value)}
               className="w-full rounded-lg border border-gray-200 px-3 py-2.5 outline-none focus:border-brand-500">
-              {wilayas.map((w) => <option key={w} value={w}>{w}</option>)}
+              {regionsFor(form.country, wilayas).map((w) => <option key={w} value={w}>{w}</option>)}
             </select>
           </div>
           <Input label={t('Ville / Commune')} value={form.city} onChange={(v) => set('city', v)} list="hotel-communes" placeholder={t('Choisissez ou saisissez une commune')} />

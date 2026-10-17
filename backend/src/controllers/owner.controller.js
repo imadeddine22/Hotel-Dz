@@ -23,9 +23,13 @@ export const getOwnerStats = async (req, res, next) => {
 
     const totalBookings = bookings.length;
     // Unpaid (pending) bookings are not revenue yet
-    const totalRevenue = bookings
-      .filter((b) => b.paymentStatus === 'paid')
-      .reduce((sum, b) => sum + (b.totalPrice || 0), 0);
+    // One total per currency (a hotel in Tunis is paid in TND): never add them together
+    const revenueByCurrency = {};
+    for (const b of bookings.filter((x) => x.paymentStatus === 'paid')) {
+      const cur = b.currency || 'DZD';
+      revenueByCurrency[cur] = (revenueByCurrency[cur] || 0) + (b.totalPrice || 0);
+    }
+    const totalRevenue = revenueByCurrency.DZD || 0;
 
     res.status(200).json({
       success: true,
@@ -33,6 +37,7 @@ export const getOwnerStats = async (req, res, next) => {
       totalHouses,
       totalBookings,
       totalRevenue,
+      revenueByCurrency,
     });
   } catch (error) {
     next(error);

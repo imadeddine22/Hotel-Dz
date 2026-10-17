@@ -9,7 +9,7 @@ const MS_PER_DAY = 1000 * 60 * 60 * 24;
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000';
 
 const fmtDate = (d) => new Date(d).toLocaleDateString('fr-DZ');
-const fmtDZD = (n) => `${Number(n || 0).toLocaleString('fr-DZ')} DZD`;
+const fmtDZD = (n, currency = 'DZD') => `${Number(n || 0).toLocaleString('fr-DZ')} ${currency}`;
 
 /** Fire-and-forget email: a missing/failed SMTP must never break the booking flow. */
 const notify = (to, subject, html) =>
@@ -44,7 +44,7 @@ const notifyOwnerOfRequest = async (booking) => {
     `Nouvelle demande de réservation — ${property?.name}`,
     `<p>Bonjour ${property?.owner?.fullName || ''},</p>
      <p>Vous avez reçu une demande de réservation pour <strong>${property?.name}</strong>
-     du ${fmtDate(booking.checkIn)} au ${fmtDate(booking.checkOut)} (${booking.nights} nuit(s), ${fmtDZD(booking.totalPrice)}).</p>
+     du ${fmtDate(booking.checkIn)} au ${fmtDate(booking.checkOut)} (${booking.nights} nuit(s), ${fmtDZD(booking.totalPrice, booking.currency)}).</p>
      <p><a href="${CLIENT_URL}/owner/bookings">Accepter ou refuser la demande</a> — sans réponse sous 48 h, les dates sont libérées.</p>`
   );
 };
@@ -54,7 +54,7 @@ export const createBooking = async (req, res, next) => {
   try {
     const { roomId, checkIn, checkOut, guests = 1 } = req.body;
 
-    const room = await Room.findById(roomId).populate('hotel', 'name status');
+    const room = await Room.findById(roomId).populate('hotel', 'name status currency');
     if (!room || !room.isActive) {
       return res.status(404).json({ success: false, message: 'Room not available' });
     }
@@ -96,6 +96,7 @@ export const createBooking = async (req, res, next) => {
       nights,
       guests,
       totalPrice,
+      currency: room.hotel.currency || 'DZD',
       status: 'pending',
       paymentStatus: 'unpaid',
     });
@@ -153,6 +154,7 @@ export const createHouseBooking = async (req, res, next) => {
       nights,
       guests,
       totalPrice,
+      currency: house.currency || 'DZD',
       status: 'pending',
       paymentStatus: 'unpaid',
     });
@@ -265,7 +267,7 @@ export const confirmBooking = async (req, res, next) => {
       `✅ Réservation confirmée — ${property?.name}`,
       `<p>Bonjour ${booking.customer?.fullName || ''},</p>
        <p>Votre réservation à <strong>${property?.name}</strong> du ${fmtDate(booking.checkIn)} au ${fmtDate(booking.checkOut)}
-       est confirmée. Montant à régler sur place à l'arrivée : <strong>${fmtDZD(booking.totalPrice)}</strong>.</p>
+       est confirmée. Montant à régler sur place à l'arrivée : <strong>${fmtDZD(booking.totalPrice, booking.currency)}</strong>.</p>
        <p><a href="${CLIENT_URL}/my-bookings">Voir mes réservations</a></p>`
     );
     res.json({ success: true, booking });

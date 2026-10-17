@@ -124,6 +124,31 @@ export const seedDatabase = async () => {
   }
   console.log(`🏠 Houses: ${HOUSES.length} (4 approved, 2 pending)`);
 
+  // --- Outside Algeria: prices in the local currency (TND, MAD) ---
+  const tnHotel = await Hotel.create({
+    owner: owner._id,
+    name: 'Dar Sousse Médina',
+    description: 'Hôtel de charme au cœur de la médina de Sousse, à dix minutes de la plage.',
+    country: 'TN', wilaya: 'Sousse', city: 'Sousse', address: 'Médina, Sousse, Tunisie',
+    coordinates: { lat: 35.8256, lng: 10.6411 },
+    images: [img('1551882547-ff40c63fe5fa')], amenities: ['Wifi', 'Climatisation', 'Petit-déjeuner'],
+    starRating: 4, type: 'Boutique', status: 'approved',
+  });
+  for (const rt of [
+    { type: 'double', title: 'Chambre Double', pricePerNight: 180, capacity: 2, bedsCount: 2, quantity: 6 },
+    { type: 'suite', title: 'Suite Médina', pricePerNight: 320, capacity: 3, bedsCount: 2, quantity: 2 },
+  ]) await Room.create({ ...rt, hotel: tnHotel._id, images: [img('1551882547-ff40c63fe5fa')], amenities: ['Wifi', 'TV'] });
+  await House.create({
+    owner: owner._id,
+    name: 'Riad Jardin Marrakech',
+    description: 'Riad traditionnel avec patio et piscine, à cinq minutes de la place Jemaa el-Fna.',
+    country: 'MA', wilaya: 'Marrakech', city: 'Marrakech', address: 'Médina, Marrakech, Maroc',
+    coordinates: { lat: 31.6295, lng: -7.9811 },
+    images: [img('1539437829697-1b4ed5aebd19')], amenities: ['Wifi', 'Piscine', 'Climatisation'],
+    type: 'Riad', rooms: 4, bathrooms: 3, capacity: 8, pricePerNight: 1400, status: 'approved',
+  });
+  console.log('🌍 Abroad: 1 hotel in Tunisia (TND), 1 house in Morocco (MAD)');
+
   // --- Contact messages ---
   await Message.create(MESSAGES);
   console.log(`✉️  Messages: ${MESSAGES.length}`);

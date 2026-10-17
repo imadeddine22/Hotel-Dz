@@ -16,6 +16,7 @@ const normalize = (h) => ({
   rating: h.avgRating ?? 0,
   reviews: h.reviewsCount ?? 0,
   price: h.price ?? 0,
+  currency: h.currency || 'DZD',
   img: h.images?.[0]?.url,
   amenities: h.amenities || [],
 });

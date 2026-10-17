@@ -1,3 +1,4 @@
+import { COUNTRIES } from './countries.js';
 /**
  * Helpers for building safe case-insensitive RegExp filters from query strings.
  *
@@ -48,6 +49,12 @@ export const exactRegex = (value) => new RegExp(`^${escapeRegex(String(value).tr
  * commune/city ("Tichy", "Hydra"), so match either field, accent-insensitively.
  */
 export const placeFilter = (value) => {
+  // A country name ("Tunisie", "تونس", "Morocco") means every listing of that country
+  const key = stripAccents(String(value || '').trim()).toLowerCase();
+  const country = Object.values(COUNTRIES).find((c) =>
+    [c.name, c.english, c.code].some((n) => stripAccents(n).toLowerCase() === key) || c.arabic === String(value || '').trim()
+  );
+  if (country) return { country: country.code };
   const rx = wilayaRegex(value);
   return rx ? { $or: [{ wilaya: rx }, { city: rx }] } : undefined;
 };

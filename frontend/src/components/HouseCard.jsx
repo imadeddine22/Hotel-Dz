@@ -7,6 +7,8 @@ import FavoriteButton from '@/components/FavoriteButton';
 import { getImageUrl } from '@/lib/api';
 
 import { useT } from '@/lib/i18n/useT';
+import ApproxPrice from '@/components/ApproxPrice';
+import { formatDZD } from '@/lib/data';
 export default function HouseCard({ house, list = false }) {
   const { t, lang } = useT();
   const rawImg = house.images?.[0]?.url || house.img || null;
@@ -37,7 +39,7 @@ export default function HouseCard({ house, list = false }) {
           </span>
           {/* Price badge */}
           <span className="absolute right-3 top-3 rounded-full bg-brand-500 px-2.5 py-1 text-xs font-bold text-white shadow">
-            {price > 0 ? new Intl.NumberFormat('fr-DZ').format(price) + ' DZD' : t('Sur demande')}
+            {price > 0 ? formatDZD(price, house.currency) : t('Sur demande')}
           </span>
         </div>
 
@@ -71,9 +73,10 @@ export default function HouseCard({ house, list = false }) {
           {/* Price */}
           <div className="mt-auto pt-4">
             <span className="text-xl font-extrabold text-brand-500">
-              {price > 0 ? new Intl.NumberFormat('fr-DZ').format(price) + ' DZD' : '—'}
+              {price > 0 ? formatDZD(price, house.currency) : '—'}
             </span>
             <span className="text-sm text-gray-400"> {t('/ nuit')}</span>
+            <ApproxPrice amount={price} currency={house.currency} className="block text-xs text-gray-400" />
           </div>
         </div>
       </Link>

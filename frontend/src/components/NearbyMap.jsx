@@ -129,7 +129,7 @@ export default function NearbyMap({ properties, userPos, activeId, onPropertyHov
             </div>
             <h4 class="font-bold text-gray-900 text-sm">${p.name}</h4>
             <div class="text-xs text-gray-500 mt-0.5">${p.city}</div>
-            <div class="mt-1.5 font-extrabold text-sm" style="color: ${color};">${p.price ? p.price.toLocaleString('fr-DZ') + ' DZD' : ''}</div>
+            <div class="mt-1.5 font-extrabold text-sm" style="color: ${color};">${p.price ? p.price.toLocaleString('fr-DZ') + ' ' + (p.currency || 'DZD') : ''}</div>
             ${distText}
           </div>
         `;

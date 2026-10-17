@@ -4,15 +4,17 @@ import { useEffect, useState } from 'react';
 import { MapPin, Star, Trash2, Home, CheckCircle, XCircle, Plus, X, BedDouble, Bath, Users, Pencil, Eye } from 'lucide-react';
 import MapPicker from '@/components/MapPicker';
 import ImageUploader from '@/components/ImageUploader';
-import { useWilayas } from '@/hooks/useWilayas';
+import { useWilayas, regionsFor } from '@/hooks/useWilayas';
 import api, { getImageUrl, resolveImg } from '@/lib/api';
 
 import { useT } from '@/lib/i18n/useT';
+import CountrySelect from '@/components/CountrySelect';
+import { currencyOf } from '@/lib/countries';
 // Was referenced but never defined → the page crashed on render. Same list as the House model enum.
 const HOUSE_TYPES = ['Villa', 'Appartement', 'Maison', 'Chalet', 'Studio', 'Duplex', 'Riad', 'Ferme'];
 
 const emptyForm = {
-  name: '', description: '', wilaya: '', city: '', address: '',
+  name: '', description: '', country: 'DZ', wilaya: '', city: '', address: '',
   type: 'Maison', starRating: 3, rooms: 1, bathrooms: 1, capacity: 2,
   pricePerNight: '', amenities: '', status: 'approved', lat: '', lng: '', suitableFor: [],
   owner: '',
@@ -46,7 +48,7 @@ export default function AdminAllHousesPage() {
 
   const openEdit = (house) => {
     setForm({
-      name: house.name, description: house.description || '', wilaya: house.wilaya,
+      name: house.name, description: house.description || '', country: house.country || 'DZ', wilaya: house.wilaya,
       city: house.city, address: house.address || '', type: house.type, starRating: house.starRating || 3,
       rooms: house.rooms, bathrooms: house.bathrooms, capacity: house.capacity,
       pricePerNight: house.pricePerNight, status: house.status,
@@ -291,7 +293,7 @@ export default function AdminAllHousesPage() {
                 </div>
                 {h.pricePerNight > 0 && (
                   <p style={{ fontSize: 13, fontWeight: 700, color: '#1e293b', marginTop: 6 }}>
-                    {h.pricePerNight.toLocaleString('fr-DZ')} {t('DZD')}<span style={{ fontWeight: 400, color: '#94a3b8', fontSize: 11 }}>{t('/nuit')}</span>
+                    {h.pricePerNight.toLocaleString('fr-DZ')} {h.currency || 'DZD'}<span style={{ fontWeight: 400, color: '#94a3b8', fontSize: 11 }}>{t('/nuit')}</span>
                   </p>
                 )}
                 <div className="admin-hotel-card-footer">
@@ -432,7 +434,11 @@ export default function AdminAllHousesPage() {
                 </div>
 
                 <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                  <label style={labelStyle}>{t('Pays *')}</label>
+                  <CountrySelect value={form.country} onChange={(c) => setForm((f) => ({ ...f, country: c, wilaya: '' }))} style={inputStyle} />
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <label style={labelStyle}>{t('Wilaya *')}</label>
                     <button
                       type="button"
@@ -445,7 +451,7 @@ export default function AdminAllHousesPage() {
                   <select required style={inputStyle} value={form.wilaya}
                     onChange={(e) => setForm({ ...form, wilaya: e.target.value })}>
                     <option value="">{t('Choisir une wilaya')}</option>
-                    {wilayas.map((w) => <option key={w} value={w}>{w}</option>)}
+                    {regionsFor(form.country, wilayas).map((w) => <option key={w} value={w}>{w}</option>)}
                   </select>
                 </div>
 
@@ -480,7 +486,7 @@ export default function AdminAllHousesPage() {
                 </div>
 
                 <div>
-                  <label style={labelStyle}>{t('Prix/nuit (DZD) *')}</label>
+                  <label style={labelStyle}>{t('Prix/nuit')} ({currencyOf(form.country)}) *</label>
                   <input type="number" min="0" required style={inputStyle} placeholder={t('ex: 5000')} value={form.pricePerNight}
                     onChange={(e) => setForm({ ...form, pricePerNight: e.target.value })} />
                 </div>
@@ -643,7 +649,7 @@ export default function AdminAllHousesPage() {
               <div>
                 <p className="text-xs text-gray-400 font-bold uppercase">{t('Prix / Nuit')}</p>
                 <p className="text-lg font-extrabold text-purple-600">
-                  {viewingHouse.pricePerNight ? `${viewingHouse.pricePerNight.toLocaleString('fr-DZ')} DZD` : '—'}
+                  {viewingHouse.pricePerNight ? `${viewingHouse.pricePerNight.toLocaleString('fr-DZ')} ${viewingHouse.currency || 'DZD'}` : '—'}
                 </p>
               </div>
               <div>

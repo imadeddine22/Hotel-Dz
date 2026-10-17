@@ -7,6 +7,7 @@ import FavoriteButton from '@/components/FavoriteButton';
 import { getImageUrl } from '@/lib/api';
 
 import { useT } from '@/lib/i18n/useT';
+import ApproxPrice from '@/components/ApproxPrice';
 export default function HotelCard({ hotel, list = false, onHover }) {
   const { t } = useT();
   const rawImg = hotel.images?.[0]?.url || hotel.img || null;
@@ -56,27 +57,30 @@ export default function HotelCard({ hotel, list = false, onHover }) {
 
             <div className="mt-4">
               <p className="text-sm text-gray-400 mb-1 flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /> {t(hotel.city)}</p>
-              <p className="font-bold text-red-600 text-sm">{t('Save 15% (Book by')} {new Date(Date.now() + 864000000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })})</p>
+              {hotel.price > 0 && (
+                <p className="text-sm text-gray-500">
+                  {t('À partir de')} <span className="text-lg font-extrabold text-brand-600">{formatDZD(hotel.price, hotel.currency)}</span> {t('/ nuit')}
+                  <ApproxPrice amount={hotel.price} currency={hotel.currency} className="block text-xs text-gray-400" />
+                </p>
+              )}
             </div>
           </div>
 
           {/* Right: Amenities & Action */}
           <div className="flex w-full md:w-[220px] shrink-0 flex-col bg-gray-50/50">
             <div className="flex-1 p-4 pb-0">
-              <h4 className="font-bold text-ink mb-3 text-sm">{t('Package Includes')}</h4>
+              <h4 className="font-bold text-ink mb-3 text-sm">{t('Équipements')}</h4>
               <ul className="flex flex-col gap-2.5 text-sm font-medium text-gray-600">
                 <li className="flex items-center gap-2.5"><Bed className="h-4 w-4 text-gray-400" /> {t('Lodging')}</li>
-                <li className="flex items-center gap-2.5"><Check className="h-4 w-4 text-gray-400" /> {t('WiFi Gratuit')}</li>
-                <li className="flex items-center gap-2.5"><Check className="h-4 w-4 text-gray-400" /> {t('Petit-déjeuner')}</li>
-                {hotel.amenities?.slice(0,2).map((am, i) => (
-                  <li key={i} className="flex items-center gap-2.5"><Check className="h-4 w-4 text-gray-400" /> {am}</li>
+                {hotel.amenities?.slice(0, 4).map((am, i) => (
+                  <li key={i} className="flex items-center gap-2.5"><Check className="h-4 w-4 text-gray-400" /> {t(am)}</li>
                 ))}
               </ul>
             </div>
             
             <div className="p-4 mt-auto">
                <div className="w-full flex items-center justify-center gap-2 rounded bg-brand-500 py-3 text-sm font-bold text-white transition hover:bg-brand-600">
-                  {t('CHECK PRICE')} <ChevronRight className="h-4 w-4" />
+                  {t('Voir les chambres')} <ChevronRight className="h-4 w-4" />
                </div>
             </div>
           </div>
@@ -125,8 +129,9 @@ export default function HotelCard({ hotel, list = false, onHover }) {
             {hotel.price > 0 ? (
               <>
                 <span className="text-xs text-gray-500">{t('À partir de')} </span>
-                <span className="text-xl font-extrabold text-brand-600">{formatDZD(hotel.price)}</span>
+                <span className="text-xl font-extrabold text-brand-600">{formatDZD(hotel.price, hotel.currency)}</span>
                 <span className="text-sm text-gray-400"> {t('/ nuit')}</span>
+                <ApproxPrice amount={hotel.price} currency={hotel.currency} className="block text-xs text-gray-400" />
               </>
             ) : (
               <span className="text-sm font-semibold text-brand-600">{t('Voir les chambres')}</span>

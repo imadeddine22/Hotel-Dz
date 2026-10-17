@@ -321,8 +321,13 @@ let newHotelId;
   const stats = await req('GET', '/owner/stats', { token: ownerToken });
   expectStatus('owner stats', stats, 200);
   const ob = await req('GET', '/bookings/owner', { token: ownerToken });
-  const paidRevenue = (ob.data.bookings || []).filter((b) => b.paymentStatus === 'paid' && b.status !== 'cancelled').reduce((s, b) => s + b.totalPrice, 0);
-  check('owner revenue counts only paid bookings', stats.data.totalRevenue === paidRevenue, `stats=${stats.data.totalRevenue} paid=${paidRevenue}`);
+  // Revenue is per currency: dinars and Tunisian dinars are never added together
+  const paidBy = {};
+  for (const b of (ob.data.bookings || []).filter((x) => x.paymentStatus === 'paid' && x.status !== 'cancelled')) {
+    paidBy[b.currency || 'DZD'] = (paidBy[b.currency || 'DZD'] || 0) + b.totalPrice;
+  }
+  check('owner revenue counts only paid bookings (DZD)', stats.data.totalRevenue === (paidBy.DZD || 0), `stats=${stats.data.totalRevenue} paid=${paidBy.DZD}`);
+  check('owner revenue is split by currency', JSON.stringify(stats.data.revenueByCurrency) === JSON.stringify(paidBy) || Object.entries(paidBy).every(([c, v]) => stats.data.revenueByCurrency?.[c] === v), JSON.stringify(stats.data.revenueByCurrency));
   check('owner bookings include customer contact', ob.data.bookings?.[0]?.customer?.email !== undefined);
   const ob2 = await req('GET', '/bookings/owner', { token: owner2.token });
   check("owner doesn't see other owners' bookings", (ob2.data.bookings || []).length === 0);
@@ -484,6 +489,49 @@ describe('Home page testimonials (moderated)');
 
   expectStatus('admin deletes', await req('DELETE', `/testimonials/${tid}`, { token: admin }), 200);
   expectStatus('deleted testimonial is gone', await req('DELETE', `/testimonials/${tid}`, { token: admin }), 404);
+}
+
+describe('Countries and currencies');
+{
+  const seller = await register('owner');
+  const make = (extra) =>
+    req('POST', '/hotels', {
+      token: seller.token,
+      form: { name: `Hôtel Pays ${uid}`, description: 'Test', city: 'Sousse', address: 'Rue 1', starRating: 3, type: 'Boutique', images: [PNG], ...extra },
+    });
+  const tn = await make({ country: 'TN', wilaya: 'sousse', currency: 'DZD' });
+  expectStatus('owner creates a hotel in Tunisia', tn, 201);
+  check('currency follows the country (TND), not the client', tn.data.hotel?.currency === 'TND', tn.data.hotel?.currency);
+  check('region stored in its official spelling', tn.data.hotel?.wilaya === 'Sousse', tn.data.hotel?.wilaya);
+  expectStatus('region from another country rejected', await make({ country: 'TN', wilaya: 'Oran' }), 400);
+  expectStatus('unknown country rejected', await make({ country: 'FR', wilaya: 'Paris' }), 400);
+  const dz = await make({ wilaya: 'Oran', city: 'Oran' });
+  check('no country = Algeria in DZD', dz.data.hotel?.country === 'DZ' && dz.data.hotel?.currency === 'DZD');
+  const moved = await req('PUT', `/hotels/${dz.data.hotel?._id}`, { token: seller.token, body: { country: 'MA', wilaya: 'Marrakech' } });
+  check('moving a listing to Morocco switches it to MAD', moved.data.hotel?.currency === 'MAD', moved.data.hotel?.currency);
+
+  const onlyTn = await req('GET', '/hotels?country=TN&limit=50');
+  check('country filter', onlyTn.data.hotels?.length >= 1 && onlyTn.data.hotels.every((h) => h.country === 'TN'));
+  const byName = await req('GET', `/houses?place=${encodeURIComponent('المغرب')}`);
+  check('searching a country name (Arabic) finds its listings', byName.data.houses?.length >= 1 && byName.data.houses.every((h) => h.country === 'MA'));
+  check('existing listings are Algerian', (await req('GET', '/houses?country=DZ&limit=50')).data.houses?.every((h) => h.currency === 'DZD'));
+
+  // Booking a Tunisian room is priced and stored in TND
+  const tnHotel = onlyTn.data.hotels.find((h) => h.name === 'Dar Sousse Médina');
+  const tnRooms = (await req('GET', `/hotels/${tnHotel?._id}/rooms`)).data;
+  check('room list carries the hotel currency', tnRooms.currency === 'TND');
+  const tnBooking = await req('POST', '/bookings', { token: customer.token, body: { roomId: tnRooms.rooms?.[0]?._id, checkIn: day(80), checkOut: day(82), guests: 1 } });
+  expectStatus('book a room in Tunisia', tnBooking, 201);
+  check('booking keeps the TND currency', tnBooking.data.booking?.currency === 'TND', tnBooking.data.booking?.currency);
+  check('booking total in TND', tnBooking.data.booking?.totalPrice === 2 * tnRooms.rooms[0].pricePerNight);
+  check('payment stays on site', tnBooking.data.booking?.paymentMethod === 'on_site');
+
+  const admin = await login('admin@hotelsdz.dz', 'admin123');
+  const rates = await req('PUT', '/pricing/prices', { token: admin, body: { exchangeRates: { TND: 44.5, MAD: -3 } } });
+  check('admin sets exchange rates (invalid ones ignored)', rates.data.settings?.exchangeRates?.TND === 44.5 && rates.data.settings?.exchangeRates?.MAD > 0);
+  check('exchange rates are public', (await req('GET', '/pricing/prices')).data.settings?.exchangeRates?.TND === 44.5);
+  const stats = await req('GET', '/admin/stats', { token: admin });
+  check('admin revenue is split by currency', stats.data.stats ? typeof stats.data.stats.revenueByCurrency === 'object' : typeof stats.data.revenueByCurrency === 'object');
 }
 
 describe('No online payment');

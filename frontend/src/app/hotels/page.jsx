@@ -12,12 +12,14 @@ import HotelsMap from '@/components/HotelsMap';
 
 import { useT } from '@/lib/i18n/useT';
 import { useInitialData } from '@/components/InitialData';
+import { COUNTRY_LIST, countryName } from '@/lib/countries';
+import { regionsFor } from '@/hooks/useWilayas';
 const TYPES = ['Luxe', 'Affaires', 'Balnéaire', 'Riad', 'Boutique', 'Montagne', 'Désert', 'Appart-hôtel', 'Économique'];
 
 export default function HotelsPage() {
-  const { t } = useT();
+  const { t, lang } = useT();
   const { wilayas } = useWilayas();
-  const [filters, setFilters] = useState({ wilaya: '', type: '', minStars: '', q: '' });
+  const [filters, setFilters] = useState({ country: '', wilaya: '', type: '', minStars: '', q: '' });
   const initial = useInitialData();
   const [hotels, setHotels] = useState(initial?.hotels ?? []);
   const [loading, setLoading] = useState(!initial?.hotels);
@@ -50,7 +52,7 @@ export default function HotelsPage() {
   useEffect(() => {
     fetchHotels();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters.type, filters.wilaya]); // fetch automatically on filter change
+  }, [filters.type, filters.wilaya, filters.country]); // fetch automatically on filter change
 
   const normalize = (h) => ({
     id: h._id || h.id,
@@ -61,6 +63,7 @@ export default function HotelsPage() {
     rating: h.avgRating ?? h.rating ?? 0,
     reviews: h.reviewsCount ?? h.reviews ?? 0,
     price: h.price ?? 0,
+    currency: h.currency || 'DZD',
     img: h.images?.[0]?.url || h.img,
     amenities: h.amenities || [],
     coordinates: h.coordinates || null,
@@ -91,12 +94,22 @@ export default function HotelsPage() {
               </div>
 
               <select
+                value={filters.country}
+                onChange={(e) => setFilters({ ...filters, country: e.target.value, wilaya: '' })}
+                aria-label={t('Pays')}
+                className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 outline-none hover:border-brand-300 transition-colors"
+              >
+                <option value="">{t('Tous les pays')}</option>
+                {COUNTRY_LIST.map((c) => <option key={c.code} value={c.code}>{countryName(c.code, lang)}</option>)}
+              </select>
+
+              <select
                 value={filters.wilaya}
                 onChange={(e) => setFilters({ ...filters, wilaya: e.target.value })}
                 className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 outline-none hover:border-brand-300 transition-colors"
               >
-                <option value="">{t('Toutes les wilayas')}</option>
-                {wilayas.map((w) => (
+                <option value="">{filters.country && filters.country !== 'DZ' ? t('Toutes les régions') : t('Toutes les wilayas')}</option>
+                {regionsFor(filters.country, wilayas).map((w) => (
                   <option key={w} value={w}>{w}</option>
                 ))}
               </select>

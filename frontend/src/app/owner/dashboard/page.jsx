@@ -5,7 +5,7 @@ import Link from '@/components/LocaleLink';
 import { Hotel, Home, CalendarCheck, Wallet, Plus, ArrowRight, PlayCircle, Star, MapPin } from 'lucide-react';
 import DashboardShell from '@/components/DashboardShell';
 import api from '@/lib/api';
-import { formatDZD } from '@/lib/data';
+import { formatDZD, formatAmounts } from '@/lib/data';
 
 import { useT } from '@/lib/i18n/useT';
 export default function OwnerDashboard() {
@@ -118,7 +118,7 @@ export default function OwnerDashboard() {
             </div>
             <div>
               <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">{t('Revenus')}</p>
-              <h3 className="text-xl font-extrabold text-gray-900 leading-none">{formatDZD(stats.totalRevenue)}</h3>
+              <h3 className="text-xl font-extrabold text-gray-900 leading-none">{formatAmounts(stats.revenueByCurrency, stats.totalRevenue)}</h3>
             </div>
           </div>
         </div>

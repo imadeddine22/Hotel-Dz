@@ -7,10 +7,12 @@ import DashboardShell from '@/components/DashboardShell';
 import ImageUploader from '@/components/ImageUploader';
 import api, { getImageUrl } from '@/lib/api';
 import { formatDZD } from '@/lib/data';
-import { useWilayas } from '@/hooks/useWilayas';
+import { useWilayas, regionsFor } from '@/hooks/useWilayas';
 import CommuneDatalist from '@/components/CommuneDatalist';
 
 import { useT } from '@/lib/i18n/useT';
+import CountrySelect from '@/components/CountrySelect';
+import { currencyOf } from '@/lib/countries';
 const PROPERTY_TYPES = ['Appartement', 'Villa', 'Maison', 'Duplex', 'Studio', 'Terrain', 'Local commercial', 'Ferme', 'Chalet', 'Immeuble'];
 
 const STATUS_BADGE = {
@@ -20,7 +22,7 @@ const STATUS_BADGE = {
 };
 
 const emptyForm = {
-  title: '', description: '', wilaya: '', city: '', address: '',
+  title: '', description: '', country: 'DZ', wilaya: '', city: '', address: '',
   type: 'Appartement', price: '', area: '', rooms: '1', bathrooms: '1',
   amenities: '', contactPhone: '', contactEmail: '',
 };
@@ -65,6 +67,7 @@ function SellerListingsContent() {
     setForm({
       title: listing.title || '',
       description: listing.description || '',
+      country: listing.country || 'DZ',
       wilaya: listing.wilaya || '',
       city: listing.city || '',
       address: listing.address || '',
@@ -197,13 +200,18 @@ function SellerListingsContent() {
 
             <div className="grid gap-4 md:grid-cols-3">
               <div>
+                <label htmlFor="sale-country" className="mb-1 block text-sm font-semibold text-gray-700">{t('Pays *')}</label>
+                <CountrySelect id="sale-country" value={form.country} onChange={(c) => setForm((f) => ({ ...f, country: c, wilaya: '' }))}
+                  className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 font-serif font-bold text-slate-800 outline-none shadow-sm transition focus:border-emerald-500" />
+              </div>
+              <div>
                 <label htmlFor="sale-wilaya" className="mb-1 block text-sm font-semibold text-gray-700">{t('Wilaya *')}</label>
                 <select
                   id="sale-wilaya" required value={form.wilaya} onChange={(e) => set('wilaya', e.target.value)}
                   className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 font-serif font-bold text-slate-800 outline-none shadow-sm transition focus:border-emerald-500"
                 >
                   <option value="">{t('Sélectionner...')}</option>
-                  {wilayas?.map((w) => <option key={w} value={w}>{w}</option>)}
+                  {regionsFor(form.country, wilayas)?.map((w) => <option key={w} value={w}>{w}</option>)}
                 </select>
               </div>
               <div>
@@ -227,7 +235,7 @@ function SellerListingsContent() {
 
             <div className="grid gap-4 md:grid-cols-4">
               <div>
-                <label className="mb-1 block text-sm font-semibold text-gray-700">{t('Prix (DZD) *')}</label>
+                <label className="mb-1 block text-sm font-semibold text-gray-700">{t('Prix')} ({currencyOf(form.country)}) *</label>
                 <input
                   type="number" required min="0" value={form.price} onChange={(e) => set('price', e.target.value)}
                   className="w-full rounded-xl border border-gray-200 px-4 py-2.5 outline-none focus:border-emerald-500 transition"
@@ -367,7 +375,7 @@ function SellerListingsContent() {
                   </p>
 
                   <div className="flex items-center justify-between">
-                    <p className="text-lg font-extrabold text-emerald-600">{formatDZD(listing.price)}</p>
+                    <p className="text-lg font-extrabold text-emerald-600">{formatDZD(listing.price, listing.currency)}</p>
                     <div className="flex items-center gap-1 text-xs text-gray-400">
                       <Eye className="h-3.5 w-3.5" /> {listing.views || 0}
                     </div>

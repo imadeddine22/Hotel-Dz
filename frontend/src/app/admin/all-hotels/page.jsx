@@ -3,11 +3,13 @@
 import { useEffect, useState } from 'react';
 import { MapPin, Star, Trash2, Eye, Building2, Plus, X, CheckCircle, XCircle, Pencil } from 'lucide-react';
 import MapPicker from '@/components/MapPicker';
-import { useWilayas } from '@/hooks/useWilayas';
+import { useWilayas, regionsFor } from '@/hooks/useWilayas';
 import api, { getImageUrl, getServerURL, resolveImg } from '@/lib/api';
 import { formatDZD } from '@/lib/data';
 
 import { useT } from '@/lib/i18n/useT';
+import CountrySelect from '@/components/CountrySelect';
+import { currencyOf } from '@/lib/countries';
 export default function AdminAllHotelsPage() {
   const { t } = useT();
   const { wilayas, addWilaya } = useWilayas();
@@ -33,7 +35,7 @@ export default function AdminAllHotelsPage() {
   }
 
   const emptyForm = {
-    name: '', description: '', wilaya: '', city: '', address: '',
+    name: '', description: '', country: 'DZ', wilaya: '', city: '', address: '',
     starRating: 3, type: 'Économique', amenities: '', status: 'approved', lat: '', lng: '', suitableFor: [],
     owner: ''
   };
@@ -52,7 +54,7 @@ export default function AdminAllHotelsPage() {
 
   const openEdit = (hotel) => {
     setForm({
-      name: hotel.name, description: hotel.description || '', wilaya: hotel.wilaya,
+      name: hotel.name, description: hotel.description || '', country: hotel.country || 'DZ', wilaya: hotel.wilaya,
       city: hotel.city, address: hotel.address || '', type: hotel.type,
       starRating: hotel.starRating, status: hotel.status,
       amenities: hotel.amenities?.join(', ') || '',
@@ -385,7 +387,11 @@ export default function AdminAllHotelsPage() {
                   </select>
                 </div>
                 <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                  <label style={labelStyle}>{t('Pays *')}</label>
+                  <CountrySelect value={form.country} onChange={(c) => setForm((f) => ({ ...f, country: c, wilaya: '' }))} style={inputStyle} />
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <label style={labelStyle}>{t('Wilaya *')}</label>
                     <button
                       type="button"
@@ -398,7 +404,7 @@ export default function AdminAllHotelsPage() {
                   <select required style={inputStyle} value={form.wilaya}
                     onChange={(e) => setForm({ ...form, wilaya: e.target.value })}>
                     <option value="">{t('Choisir une wilaya')}</option>
-                    {wilayas.map(w => <option key={w} value={w}>{w}</option>)}
+                    {regionsFor(form.country, wilayas).map(w => <option key={w} value={w}>{w}</option>)}
                   </select>
                 </div>
                 <div>

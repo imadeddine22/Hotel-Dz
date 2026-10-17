@@ -165,8 +165,10 @@ export const HOTELS = [
   },
 ];
 
-export const formatDZD = (n) =>
-  new Intl.NumberFormat('fr-DZ').format(n) + ' DZD';
+/** Price in its currency: formatDZD(14000) → "14 000 DZD", formatDZD(180, 'TND') → "180 TND". */
+export const formatDZD = (n, currency = 'DZD') =>
+  `${new Intl.NumberFormat('fr-DZ', { maximumFractionDigits: 2 }).format(Number(n) || 0)} ${currency || 'DZD'}`;
+export const formatPrice = formatDZD;
 
 export const TRANSLATIONS = {
   fr: {
@@ -316,4 +318,10 @@ export const TRANSLATIONS = {
     helpCenter: 'Help Center',
     copyright: 'All rights reserved.',
   },
+};
+
+/** { DZD: 120000, TND: 540 } → "120 000 DZD + 540 TND" (amounts in different currencies are never added up). */
+export const formatAmounts = (byCurrency, fallback = 0) => {
+  const parts = Object.entries(byCurrency || {}).filter(([, v]) => v > 0);
+  return parts.length ? parts.map(([cur, v]) => formatDZD(v, cur)).join(' + ') : formatDZD(fallback);
 };

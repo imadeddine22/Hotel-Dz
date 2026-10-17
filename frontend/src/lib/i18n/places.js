@@ -5,6 +5,7 @@
 // "Bejaia", "Béjaïa" and «بجاية» all match. Wilayas are always available; communes (≈50 KB) load
 // on demand, the first time a place name is looked up and not found.
 import { WILAYA_LIST } from '../wilayas';
+import { COUNTRIES } from '../countries';
 
 const ARABIC = /[؀-ۿ]/;
 
@@ -33,6 +34,11 @@ const addPlace = (latin, arabic, overwrite) => {
 for (const w of WILAYA_LIST) {
   addPlace(w.ascii, w.arabic, true);
   addPlace(w.name, w.arabic, true); // official French spelling ("Béjaïa") wins for display
+}
+// Tunisian governorates, Moroccan cities, and the country names themselves
+for (const c of Object.values(COUNTRIES)) {
+  if (c.code !== 'DZ') for (const r of c.regions) addPlace(r.name, r.arabic, false);
+  addPlace(c.name, c.arabic, false); // «الجزائر» stays the wilaya Alger, «تونس» the governorate Tunis
 }
 
 let loading = null;

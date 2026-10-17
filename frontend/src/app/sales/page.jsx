@@ -440,7 +440,7 @@ export default function SalesPage() {
 
                       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent h-24" />
                       <p className="absolute bottom-4 left-4 text-xl font-extrabold text-white drop-shadow-sm">
-                        {formatDZD(listing.price)}
+                        {formatDZD(listing.price, listing.currency)}
                       </p>
                     </div>
 

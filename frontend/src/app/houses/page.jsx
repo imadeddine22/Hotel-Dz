@@ -10,6 +10,8 @@ import { useWilayas } from '@/hooks/useWilayas';
 
 import { useT } from '@/lib/i18n/useT';
 import { useInitialData } from '@/components/InitialData';
+import { COUNTRY_LIST, countryName } from '@/lib/countries';
+import { regionsFor } from '@/hooks/useWilayas';
 const TYPES = ['Villa', 'Appartement', 'Maison', 'Chalet', 'Studio', 'Duplex', 'Riad', 'Ferme'];
 // Static WILAYAS list removed, loaded dynamically via useWilayas hook.
 
@@ -25,9 +27,9 @@ const MOCK = [
 ];
 
 export default function HousesPage() {
-  const { t } = useT();
+  const { t, lang } = useT();
   const { wilayas } = useWilayas();
-  const [filters, setFilters] = useState({ wilaya: '', type: '', q: '', sort: '' });
+  const [filters, setFilters] = useState({ country: '', wilaya: '', type: '', q: '', sort: '' });
   const initial = useInitialData();
   const [houses, setHouses] = useState(initial?.houses ?? []);
   const [loading, setLoading] = useState(!initial?.houses);
@@ -55,13 +57,14 @@ export default function HousesPage() {
     }
   };
 
-  useEffect(() => { fetchHouses(); }, []); // eslint-disable-line
+  useEffect(() => { fetchHouses(); }, [filters.country, filters.wilaya]); // eslint-disable-line
 
   const normalizeHouse = (h) => ({
     _id: h._id || h.id,
     name: h.name, city: h.city, wilaya: h.wilaya, type: h.type,
     rooms: h.rooms, bathrooms: h.bathrooms, capacity: h.capacity,
     pricePerNight: h.pricePerNight ?? h.price ?? 0,
+    currency: h.currency || 'DZD',
     images: h.images || (h.img ? [{ url: h.img }] : []),
   });
 
@@ -106,12 +109,21 @@ export default function HousesPage() {
               />
             </div>
             <select
+              value={filters.country}
+              onChange={(e) => setFilters({ ...filters, country: e.target.value, wilaya: '' })}
+              aria-label={t('Pays')}
+              style={{ borderRadius: 10, border: '1px solid #e2e8f0', padding: '8px 12px', fontSize: 13, color: '#374151', background: '#f8fafc' }}
+            >
+              <option value="">{t('Tous les pays')}</option>
+              {COUNTRY_LIST.map((c) => <option key={c.code} value={c.code}>{countryName(c.code, lang)}</option>)}
+            </select>
+            <select
               value={filters.wilaya}
               onChange={(e) => setFilters({ ...filters, wilaya: e.target.value })}
               style={{ borderRadius: 10, border: '1px solid #e2e8f0', padding: '8px 12px', fontSize: 13, color: '#374151', background: '#f8fafc' }}
             >
-              <option value="">{t('Toutes les wilayas')}</option>
-              {wilayas.map((w) => <option key={w} value={w}>{w}</option>)}
+              <option value="">{filters.country && filters.country !== 'DZ' ? t('Toutes les régions') : t('Toutes les wilayas')}</option>
+              {regionsFor(filters.country, wilayas).map((w) => <option key={w} value={w}>{w}</option>)}
             </select>
             <button
               onClick={fetchHouses}

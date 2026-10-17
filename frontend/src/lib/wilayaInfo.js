@@ -87,3 +87,10 @@ export function getNeighbourWilayas(name, count = 6) {
 
 /** Canonical URL of a wilaya page: lowercase ASCII slug, e.g. /destinations/bordj-bou-arreridj */
 export const wilayaPath = (name) => `/destinations/${slugify(getWilayaInfo(name)?.name || name)}`;
+
+/**
+ * Destination page of a listing's region: Algerian wilayas keep /destinations/<wilaya>;
+ * other countries live under their code, e.g. /destinations/tn/sousse, /destinations/ma/marrakech.
+ */
+export const destinationPath = (region, country = 'DZ') =>
+  !country || country === 'DZ' ? wilayaPath(region) : `/destinations/${country.toLowerCase()}/${slugify(region)}`;

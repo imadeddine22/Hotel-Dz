@@ -194,7 +194,7 @@ export default function FavoritesPage() {
                       <h3 className="font-bold text-ink">{h.name}</h3>
                       <p className="mt-1 text-sm text-gray-500">{t(h.city)}{h.wilaya ? `, ${h.wilaya}` : ''}</p>
                       {h.price > 0 && (
-                        <p className="mt-2 text-lg font-extrabold text-brand-600">{formatDZD(h.price)}</p>
+                        <p className="mt-2 text-lg font-extrabold text-brand-600">{formatDZD(h.price, h.currency)}</p>
                       )}
                     </div>
                   </Link>

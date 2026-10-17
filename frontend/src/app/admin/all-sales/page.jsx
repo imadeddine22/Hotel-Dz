@@ -4,10 +4,12 @@ import { useEffect, useState } from 'react';
 import { CheckCircle, XCircle, Trash2, Search, Eye, MapPin, Tag, Plus, X, ChevronDown } from 'lucide-react';
 import api, { getImageUrl } from '@/lib/api';
 import { formatDZD } from '@/lib/data';
-import { useWilayas } from '@/hooks/useWilayas';
+import { useWilayas, regionsFor } from '@/hooks/useWilayas';
 import ImageUploader from '@/components/ImageUploader';
 
 import { useT } from '@/lib/i18n/useT';
+import CountrySelect from '@/components/CountrySelect';
+import { currencyOf } from '@/lib/countries';
 const PROPERTY_TYPES = ['Appartement', 'Villa', 'Maison', 'Duplex', 'Studio', 'Terrain', 'Local commercial', 'Ferme', 'Chalet', 'Immeuble'];
 
 const STATUS_OPTIONS = [
@@ -51,7 +53,7 @@ export default function AdminAllSales() {
   const { wilayas } = useWilayas();
 
   const emptyForm = {
-    title: '', description: '', wilaya: '', city: '', address: '',
+    title: '', description: '', country: 'DZ', wilaya: '', city: '', address: '',
     type: 'Appartement', price: '', area: '', rooms: '1', bathrooms: '1',
     amenities: '', contactPhone: '', contactEmail: '',
   };
@@ -215,6 +217,11 @@ export default function AdminAllSales() {
             </div>
 
             <div className="grid gap-4 md:grid-cols-3">
+              <div>
+                <label className="mb-1 block text-sm font-semibold text-gray-700">{t('Pays *')}</label>
+                <CountrySelect value={form.country} onChange={(c) => setForm((f) => ({ ...f, country: c, wilaya: '' }))}
+                  className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 font-serif font-bold text-slate-800 outline-none shadow-sm" />
+              </div>
               <div className="relative">
                 <label className="mb-1 block text-sm font-semibold text-gray-700">{t('Wilaya *')}</label>
                 <div 
@@ -226,7 +233,7 @@ export default function AdminAllSales() {
                 </div>
                 {openSelect === 'wilaya' && (
                   <div className="absolute left-0 right-0 top-full mt-2 z-30 max-h-64 overflow-y-auto rounded-xl bg-white py-1.5 shadow-xl border border-gray-100">
-                    {wilayas?.map((w) => (
+                    {regionsFor(form.country, wilayas)?.map((w) => (
                       <button
                         key={w}
                         type="button"
@@ -266,7 +273,7 @@ export default function AdminAllSales() {
 
             <div className="grid gap-4 md:grid-cols-4">
               <div>
-                <label className="mb-1 block text-sm font-semibold text-gray-700">{t('Prix (DZD) *')}</label>
+                <label className="mb-1 block text-sm font-semibold text-gray-700">{t('Prix')} ({currencyOf(form.country)}) *</label>
                 <input
                   type="number" required min="0" value={form.price} onChange={(e) => set('price', e.target.value)}
                   className="w-full rounded-xl border border-gray-200 px-4 py-2.5 outline-none focus:border-brand-500 transition"
@@ -430,7 +437,7 @@ export default function AdminAllSales() {
 
               {/* Price */}
               <div className="text-right shrink-0 cursor-pointer" onClick={() => setViewingSale(sale)}>
-                <p className="font-extrabold text-emerald-600">{formatDZD(sale.price)}</p>
+                <p className="font-extrabold text-emerald-600">{formatDZD(sale.price, sale.currency)}</p>
                 <p className="text-xs text-gray-400">{sale.seller?.fullName || t('Vendeur')}</p>
               </div>
 
@@ -539,7 +546,7 @@ export default function AdminAllSales() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 rounded-2xl bg-gray-50 mb-6 text-sm">
               <div>
                 <p className="text-xs text-gray-400 font-bold uppercase">{t('Prix')}</p>
-                <p className="text-lg font-extrabold text-emerald-600">{formatDZD(viewingSale.price)}</p>
+                <p className="text-lg font-extrabold text-emerald-600">{formatDZD(viewingSale.price, viewingSale.currency)}</p>
               </div>
               <div>
                 <p className="text-xs text-gray-400 font-bold uppercase">{t('Surface')}</p>

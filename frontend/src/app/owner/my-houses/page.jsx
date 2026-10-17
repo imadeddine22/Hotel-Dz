@@ -7,13 +7,15 @@ import { Plus, MapPin, Trash2, BedDouble, Bath, Users, X, Home, Pencil } from 'l
 import DashboardShell from '@/components/DashboardShell';
 import MapPicker from '@/components/MapPicker';
 import ImageUploader from '@/components/ImageUploader';
-import { useWilayas } from '@/hooks/useWilayas';
+import { useWilayas, regionsFor } from '@/hooks/useWilayas';
 import CommuneDatalist from '@/components/CommuneDatalist';
 import api from '@/lib/api';
 
 import { getServerURL } from '@/lib/api';
 
 import { useT } from '@/lib/i18n/useT';
+import CountrySelect from '@/components/CountrySelect';
+import { currencyOf } from '@/lib/countries';
 const SERVER = getServerURL();
 function resolveImg(url) {
   if (!url) return null;
@@ -30,7 +32,7 @@ const STATUS = {
 const HOUSE_TYPES = ['Villa', 'Appartement', 'Maison', 'Chalet', 'Studio', 'Duplex', 'Riad', 'Ferme', 'Luxe', 'Affaires', 'Balnéaire', 'Boutique', 'Montagne', 'Désert', 'Appart-hôtel', 'Économique'];
 
 const emptyForm = {
-  name: '', description: '', wilaya: '', city: '', address: '',
+  name: '', description: '', country: 'DZ', wilaya: '', city: '', address: '',
   type: 'Maison', starRating: 3, rooms: 1, bathrooms: 1, capacity: 2,
   pricePerNight: '', amenities: '', lat: '', lng: '', suitableFor: [],
 };
@@ -65,7 +67,7 @@ function MyHousesContent() {
 
   const openEdit = (house) => {
     setForm({
-      name: house.name, description: house.description || '', wilaya: house.wilaya,
+      name: house.name, description: house.description || '', country: house.country || 'DZ', wilaya: house.wilaya,
       city: house.city, address: house.address || '', type: house.type, starRating: house.starRating || 3,
       rooms: house.rooms, bathrooms: house.bathrooms, capacity: house.capacity,
       pricePerNight: house.pricePerNight, amenities: house.amenities?.join(', ') || '',
@@ -209,7 +211,7 @@ function MyHousesContent() {
                 )}
                 {h.pricePerNight > 0 && (
                   <p className="mt-2 font-bold text-brand-500">
-                    {h.pricePerNight.toLocaleString('fr-DZ')} {t('DZD')}<span className="text-xs font-normal text-gray-400">{t('/nuit')}</span>
+                    {h.pricePerNight.toLocaleString('fr-DZ')} {h.currency || 'DZD'}<span className="text-xs font-normal text-gray-400">{t('/nuit')}</span>
                   </p>
                 )}
                 <div className="mt-3 flex gap-2">
@@ -280,7 +282,11 @@ function MyHousesContent() {
                   </select>
                 </div>
                 <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                  <label style={labelStyle}>{t('Pays *')}</label>
+                  <CountrySelect value={form.country} onChange={(c) => setForm((f) => ({ ...f, country: c, wilaya: '' }))} style={inputStyle} />
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <label style={labelStyle}>{t('Wilaya *')}</label>
                     <button
                       type="button"
@@ -293,7 +299,7 @@ function MyHousesContent() {
                   <select required style={inputStyle} value={form.wilaya}
                     onChange={(e) => setForm({ ...form, wilaya: e.target.value })}>
                     <option value="">{t('Choisir une wilaya')}</option>
-                    {wilayas.map(w => <option key={w} value={w}>{w}</option>)}
+                    {regionsFor(form.country, wilayas).map(w => <option key={w} value={w}>{w}</option>)}
                   </select>
                 </div>
                 <div>
@@ -303,7 +309,7 @@ function MyHousesContent() {
                   <CommuneDatalist id="house-communes" wilaya={form.wilaya} />
                 </div>
                 <div>
-                  <label style={labelStyle}>{t('Prix/nuit (DZD) *')}</label>
+                  <label style={labelStyle}>{t('Prix/nuit')} ({currencyOf(form.country)}) *</label>
                   <input type="number" min="0" required style={inputStyle} placeholder="5000" value={form.pricePerNight}
                     onChange={(e) => setForm({ ...form, pricePerNight: e.target.value })} />
                 </div>

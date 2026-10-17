@@ -33,8 +33,11 @@ export function pageMeta({ path, title, description, vars, titleVars, descriptio
   const tTitle = title && translate(lang, title, titleVars || vars);
   const tDesc = description && translate(lang, description, descriptionVars || vars);
   const url = localePath(lang, path);
+  // "… | Meskan dz" (« … | مسكن ») set here: a sub-layout's plain title would stop the root template
+  const brand = translate(lang, 'Meskan dz');
+  const fullTitle = tTitle && (tTitle.includes(brand) ? tTitle : `${tTitle} | ${brand}`);
   return {
-    ...(tTitle && { title: tTitle }),
+    ...(tTitle && { title: { absolute: fullTitle } }),
     ...(tDesc && { description: tDesc }),
     alternates: { canonical: url, languages: languageAlternates(path) },
     openGraph: {

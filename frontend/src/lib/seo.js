@@ -69,8 +69,9 @@ export function truncate(text, max = 155) {
   return `${cut.slice(0, cut.lastIndexOf(' ') > 80 ? cut.lastIndexOf(' ') : cut.length)}…`;
 }
 
-export const formatDZD = (n) =>
-  `${new Intl.NumberFormat('fr-DZ', { maximumFractionDigits: 0 }).format(Number(n) || 0)} DA`;
+/** Price in its currency ("14 000 DA" for dinars, "180 TND", "1 400 MAD"). */
+export const formatDZD = (n, currency = 'DZD') =>
+  `${new Intl.NumberFormat('fr-DZ', { maximumFractionDigits: 2 }).format(Number(n) || 0)} ${!currency || currency === 'DZD' ? 'DA' : currency}`;
 
 /** Metadata for private / transactional pages that must never be indexed. */
 export const noIndex = (title) => ({
@@ -109,7 +110,7 @@ function postalAddress(entity) {
     streetAddress: entity.address || undefined,
     addressLocality: entity.city,
     addressRegion: entity.wilaya,
-    addressCountry: 'DZ',
+    addressCountry: entity.country || 'DZ',
   };
 }
 
@@ -148,9 +149,9 @@ export function hotelLd(hotel, rooms = []) {
       value: true,
     })),
     priceRange: prices.length
-      ? `${formatDZD(Math.min(...prices))} - ${formatDZD(Math.max(...prices))}`
+      ? `${formatDZD(Math.min(...prices), hotel.currency)} - ${formatDZD(Math.max(...prices), hotel.currency)}`
       : undefined,
-    currenciesAccepted: 'DZD',
+    currenciesAccepted: hotel.currency || 'DZD',
   };
 }
 
@@ -181,7 +182,7 @@ export function houseLd(house) {
       ? {
           '@type': 'Offer',
           price: house.pricePerNight,
-          priceCurrency: 'DZD',
+          priceCurrency: house.currency || 'DZD',
           unitText: 'NIGHT',
         }
       : undefined,
@@ -212,7 +213,7 @@ export function saleLd(listing) {
     offers: {
       '@type': 'Offer',
       price: listing.price,
-      priceCurrency: 'DZD',
+      priceCurrency: listing.currency || 'DZD',
       availability: 'https://schema.org/InStock',
     },
   };

@@ -1,3 +1,4 @@
+import { isCountry } from '../utils/countries.js';
 import Hotel from '../models/Hotel.js';
 import Room from '../models/Room.js';
 import { uploadMany, destroyImage } from '../utils/cloudinaryUpload.js';
@@ -6,7 +7,7 @@ import { searchRegex, wilayaRegex, placeFilter } from '../utils/searchRegex.js';
 import { canView } from '../middlewares/auth.middleware.js';
 
 // Fields an owner may set. Status, ratings and owner are server-controlled.
-const EDITABLE = ['name', 'description', 'wilaya', 'city', 'address', 'starRating', 'type'];
+const EDITABLE = ['name', 'description', 'country', 'wilaya', 'city', 'address', 'starRating', 'type'];
 const pick = (body, keys) => Object.fromEntries(keys.filter((k) => body[k] !== undefined).map((k) => [k, body[k]]));
 
 // GET /hotels  — public list of APPROVED hotels with filters
@@ -15,6 +16,7 @@ export const getHotels = async (req, res, next) => {
     const { wilaya, city, place, type, minStars, minPrice, maxPrice, q, sort, page = 1, limit = 12 } = req.query;
 
     const filter = { status: 'approved' };
+    if (isCountry(req.query.country)) filter.country = req.query.country;
     if (wilaya) filter.wilaya = wilayaRegex(wilaya);
     const where = place && placeFilter(place); // undefined for blank input
     if (where) (filter.$and = filter.$and || []).push(where);

@@ -1,5 +1,5 @@
 import { absoluteImage, apiGetListing, NOT_FOUND, breadcrumbLd, hotelLd, JsonLd, truncate } from '@/lib/seo';
-import { wilayaPath } from '@/lib/wilayaInfo';
+import { destinationPath } from '@/lib/wilayaInfo';
 import { getT, pageMeta } from '@/lib/i18n/server';
 import { localized } from '@/lib/i18n/localizeData';
 import { InitialData } from '@/components/InitialData';
@@ -38,7 +38,7 @@ export async function generateMetadata({ params }) {
   return {
     ...meta,
     openGraph: { ...meta.openGraph, images, type: 'website' },
-    twitter: { card: 'summary_large_image', title: meta.title, description: meta.description, images },
+    twitter: { card: 'summary_large_image', title: meta.openGraph.title, description: meta.description, images },
   };
 }
 
@@ -54,7 +54,7 @@ export default async function HotelLayout({ children, params }) {
             breadcrumbLd([
               { name: 'Accueil', path: '/' },
               { name: 'Hôtels', path: '/hotels' },
-              { name: hotel.wilaya, path: wilayaPath(hotel.wilaya) },
+              { name: hotel.wilaya, path: destinationPath(hotel.wilaya, hotel.country) },
               { name: hotel.name, path: `/hotels/${hotel._id}` },
             ]),
           ]}

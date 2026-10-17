@@ -3,7 +3,7 @@ import { uploadMany, destroyImage } from '../utils/cloudinaryUpload.js';
 import { parseCoordinates } from '../utils/parseCoordinates.js';
 
 // Fields a seller may set. Status, views and reference are server-controlled.
-const EDITABLE = ['title', 'description', 'wilaya', 'city', 'address', 'type', 'price', 'area', 'rooms', 'bathrooms', 'contactPhone', 'contactEmail'];
+const EDITABLE = ['title', 'description', 'country', 'wilaya', 'city', 'address', 'type', 'price', 'area', 'rooms', 'bathrooms', 'contactPhone', 'contactEmail'];
 const pick = (body, keys) => Object.fromEntries(keys.filter((k) => body[k] !== undefined).map((k) => [k, body[k]]));
 
 // GET /seller/stats

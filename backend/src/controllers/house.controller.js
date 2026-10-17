@@ -1,3 +1,4 @@
+import { isCountry } from '../utils/countries.js';
 import House from '../models/House.js';
 import { uploadMany, destroyImage } from '../utils/cloudinaryUpload.js';
 import { parseCoordinates } from '../utils/parseCoordinates.js';
@@ -5,7 +6,7 @@ import { searchRegex, wilayaRegex, placeFilter } from '../utils/searchRegex.js';
 import { canView } from '../middlewares/auth.middleware.js';
 
 // Fields an owner may set. Status, ratings and owner are server-controlled.
-const EDITABLE = ['name', 'description', 'wilaya', 'city', 'address', 'type', 'starRating', 'rooms', 'bathrooms', 'capacity', 'pricePerNight'];
+const EDITABLE = ['name', 'description', 'country', 'wilaya', 'city', 'address', 'type', 'starRating', 'rooms', 'bathrooms', 'capacity', 'pricePerNight'];
 const pick = (body, keys) => Object.fromEntries(keys.filter((k) => body[k] !== undefined).map((k) => [k, body[k]]));
 
 // GET /houses — public list of APPROVED houses with filters
@@ -14,6 +15,7 @@ export const getHouses = async (req, res, next) => {
     const { wilaya, city, place, type, minPrice, maxPrice, q, sort, page = 1, limit = 12 } = req.query;
 
     const filter = { status: 'approved' };
+    if (isCountry(req.query.country)) filter.country = req.query.country;
     if (wilaya) filter.wilaya = wilayaRegex(wilaya);
     const where = place && placeFilter(place); // undefined for blank input
     if (where) (filter.$and = filter.$and || []).push(where);

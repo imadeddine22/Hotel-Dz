@@ -142,7 +142,7 @@ export default function AdminBookingsPage() {
                       {new Date(b.checkOut).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short' })}
                     </td>
                     <td style={{ fontSize: 13, fontWeight: 600, textAlign: 'center' }}>{b.nights}</td>
-                    <td style={{ fontWeight: 700, color: '#1e293b', fontSize: 13 }}>{formatDZD(b.totalPrice)}</td>
+                    <td style={{ fontWeight: 700, color: '#1e293b', fontSize: 13 }}>{formatDZD(b.totalPrice, b.currency)}</td>
                     <td>
                       <span className={`admin-badge ${b.status}`}>
                         {t(STATUS_LABELS[b.status] || b.status)}

@@ -17,6 +17,7 @@ export default function ManageRoomsPage() {
   const { t } = useT();
   const { id } = useParams();
   const [rooms, setRooms] = useState([]);
+  const [currency, setCurrency] = useState('DZD');
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(EMPTY_ROOM);
   const [editingId, setEditingId] = useState(null); // room being edited; null = adding a new one
@@ -24,7 +25,7 @@ export default function ManageRoomsPage() {
   const [error, setError] = useState('');
 
   const load = async () => {
-    try { const { data } = await api.get(`/hotels/${id}/rooms`, { localize: false }); setRooms(data.rooms); } catch (e) { setError(e.message); }
+    try { const { data } = await api.get(`/hotels/${id}/rooms`, { localize: false }); setRooms(data.rooms); setCurrency(data.currency || 'DZD'); } catch (e) { setError(e.message); }
   };
   useEffect(() => { load(); }, [id]);
 
@@ -88,7 +89,7 @@ export default function ManageRoomsPage() {
             </select>
           </div>
           <Field label={t('Titre')} value={form.title} onChange={(v) => set('title', v)} />
-          <Field label={t('Prix / nuit (DZD)')} type="number" value={form.pricePerNight} onChange={(v) => set('pricePerNight', v)} />
+          <Field label={`${t('Prix / nuit')} (${currency})`} type="number" value={form.pricePerNight} onChange={(v) => set('pricePerNight', v)} />
           <Field label={t('Capacité')} type="number" value={form.capacity} onChange={(v) => set('capacity', v)} />
           <div>
             <label htmlFor="room-beds" className="mb-1 block text-sm font-medium text-gray-700">{t('Nombre de lits')}</label>
@@ -143,7 +144,7 @@ export default function ManageRoomsPage() {
                 <span>x{r.quantity}</span>
               </p>
               <div className="mt-2 flex items-center justify-between">
-                <span className="font-bold text-brand-600">{formatDZD(r.pricePerNight)}</span>
+                <span className="font-bold text-brand-600">{formatDZD(r.pricePerNight, currency)}</span>
                 <div className="flex gap-2">
                   <button onClick={() => startEdit(r)} aria-label={t('Modifier {title}', { title: r.title })} title={t('Modifier')}
                     className="grid h-9 w-9 place-items-center rounded-lg bg-gray-50 text-gray-600 hover:bg-gray-100 transition">

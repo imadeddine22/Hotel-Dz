@@ -1,5 +1,5 @@
 import { absoluteImage, apiGetListing, NOT_FOUND, breadcrumbLd, formatDZD, houseLd, JsonLd, truncate } from '@/lib/seo';
-import { wilayaPath } from '@/lib/wilayaInfo';
+import { destinationPath } from '@/lib/wilayaInfo';
 import { getT, pageMeta } from '@/lib/i18n/server';
 import { localized } from '@/lib/i18n/localizeData';
 
@@ -27,7 +27,7 @@ export async function generateMetadata({ params }) {
   const description =
     truncate(house.description, 155) ||
     t("{name} à {city} ({wilaya}) : {rooms} chambre(s), jusqu'à {capacity} personnes, {price} / nuit. Réservez sur Meskan dz.", {
-      ...place, rooms: house.rooms, capacity: house.capacity, price: formatDZD(house.pricePerNight),
+      ...place, rooms: house.rooms, capacity: house.capacity, price: formatDZD(house.pricePerNight, house.currency),
     });
   const images = (house.images || []).slice(0, 1).map(absoluteImage);
 
@@ -40,7 +40,7 @@ export async function generateMetadata({ params }) {
   return {
     ...meta,
     openGraph: { ...meta.openGraph, images, type: 'website' },
-    twitter: { card: 'summary_large_image', title: meta.title, description: meta.description, images },
+    twitter: { card: 'summary_large_image', title: meta.openGraph.title, description: meta.description, images },
   };
 }
 
@@ -55,7 +55,7 @@ export default async function HouseLayout({ children, params }) {
             breadcrumbLd([
               { name: 'Accueil', path: '/' },
               { name: 'Locations', path: '/houses' },
-              { name: house.wilaya, path: wilayaPath(house.wilaya) },
+              { name: house.wilaya, path: destinationPath(house.wilaya, house.country) },
               { name: house.name, path: `/houses/${house._id}` },
             ]),
           ]}

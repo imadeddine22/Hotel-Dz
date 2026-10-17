@@ -195,7 +195,7 @@ export default function HotelDetailPage() {
                     )}
                   </div>
                   <div className="flex items-center justify-between gap-4 sm:flex-col sm:items-end">
-                    <span className="text-lg font-extrabold text-brand-600">{formatDZD(room.pricePerNight)}<span className="text-xs font-normal text-gray-400"> {t('/nuit')}</span></span>
+                    <span className="text-lg font-extrabold text-brand-600">{formatDZD(room.pricePerNight, hotel.currency)}<span className="text-xs font-normal text-gray-400"> {t('/nuit')}</span></span>
                     <button
                       onClick={() => router.push(`/booking/${room._id}?hotel=${hotel._id}`)}
                       className="rounded-lg bg-brand-500 px-5 py-2 text-sm font-semibold text-white hover:bg-brand-600"
@@ -244,7 +244,7 @@ export default function HotelDetailPage() {
             <p className="mb-4 text-sm text-gray-500">
               {t('À partir de')}{' '}
               <span className="text-xl font-extrabold text-brand-600">
-                {rooms.length ? formatDZD(Math.min(...rooms.map((r) => r.pricePerNight))) : '—'}
+                {rooms.length ? formatDZD(Math.min(...rooms.map((r) => r.pricePerNight)), hotel.currency) : '—'}
               </span>{' '}
               {t('/ nuit')}
             </p>

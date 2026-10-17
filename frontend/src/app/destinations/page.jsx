@@ -74,6 +74,7 @@ export default function DestinationsPage() {
           name: h.name,
           city: h.city,
           price: h.price || 0,
+          currency: h.currency || 'DZD',
           coordinates: h.coordinates || CITY_COORDS[h.city] || CITY_COORDS['Alger'],
           rating: h.avgRating ?? h.rating ?? 0,
           reviews: h.reviewsCount ?? h.reviews ?? 0,
@@ -87,6 +88,7 @@ export default function DestinationsPage() {
           name: m.name,
           city: m.city,
           price: m.pricePerNight ?? m.price ?? 0,
+          currency: m.currency || 'DZD',
           coordinates: m.coordinates || CITY_COORDS[m.city] || CITY_COORDS['Alger'],
           rooms: m.rooms,
           capacity: m.capacity,
@@ -368,7 +370,7 @@ export default function DestinationsPage() {
                           <div className="text-right flex items-center gap-4">
                             <div>
                               <span className="text-lg font-black text-slate-800">
-                                {formatDZD(p.price)}
+                                {formatDZD(p.price, p.currency)}
                               </span>
                               <span className="text-[10px] text-slate-400 font-bold"> {t('/ nuit')}</span>
                             </div>

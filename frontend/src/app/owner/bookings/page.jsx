@@ -144,7 +144,7 @@ export default function OwnerBookingsPage() {
                       {new Date(b.checkIn).toLocaleDateString(dateLocale())} → {new Date(b.checkOut).toLocaleDateString(dateLocale())}
                       <div className="text-xs text-gray-400">{b.nights} {t('nuit(s)')}</div>
                     </td>
-                    <td className="p-4 font-semibold text-brand-600">{formatDZD(b.totalPrice)}</td>
+                    <td className="p-4 font-semibold text-brand-600">{formatDZD(b.totalPrice, b.currency)}</td>
                     <td className="p-4">
                       <span className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold ${STATUS[b.shown].cls}`}>{t(STATUS[b.shown].label)}</span>
                       {b.paymentStatus === 'paid' && <div className="mt-1 text-xs font-medium text-emerald-600">{t('Payé')}</div>}
@@ -177,7 +177,7 @@ export default function OwnerBookingsPage() {
                         </form>
                       )}
                       {['confirmed', 'completed'].includes(b.shown) && b.paymentStatus === 'unpaid' && (
-                        <button disabled={busy} onClick={() => { if (confirm(`Confirmer l'encaissement de ${formatDZD(b.totalPrice)} ?`)) act(b._id, 'paid'); }}
+                        <button disabled={busy} onClick={() => { if (confirm(`Confirmer l'encaissement de ${formatDZD(b.totalPrice, b.currency)} ?`)) act(b._id, 'paid'); }}
                           className="inline-flex min-h-[36px] items-center gap-1 rounded-lg bg-emerald-50 px-3 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 disabled:opacity-50">
                           <Banknote className="h-4 w-4" aria-hidden="true" /> {t('Marquer payé')}
                         </button>

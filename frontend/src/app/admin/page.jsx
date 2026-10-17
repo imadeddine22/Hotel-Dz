@@ -7,7 +7,7 @@ import {
   TrendingUp, TrendingDown, CheckSquare, Building2, ArrowUpRight, Home, Tag,
 } from 'lucide-react';
 import api from '@/lib/api';
-import { formatDZD } from '@/lib/data';
+import { formatDZD, formatAmounts } from '@/lib/data';
 
 import { useT } from '@/lib/i18n/useT';
 import { dateLocale } from '@/lib/i18n/format';
@@ -251,7 +251,7 @@ export default function AdminDashboard() {
           </div>
           <div className="an-wide-body">
             <p className="an-wide-label">{t('Revenu total')}</p>
-            <p className="an-wide-val">{stats ? formatDZD(stats.revenue) : '—'}</p>
+            <p className="an-wide-val">{stats ? formatAmounts(stats.revenueByCurrency, stats.revenue) : '—'}</p>
             <TrendBadge value={revenueTrend} />
           </div>
           {revenueTrend !== null && (
@@ -473,7 +473,7 @@ export default function AdminDashboard() {
                       <td className="an-tbl-sub">{b.hotel?.name || '—'}</td>
                       <td className="an-tbl-sub">{new Date(b.createdAt).toLocaleDateString(dateLocale())}</td>
                       <td><span className={`admin-badge ${b.status}`}>{t(STATUS_LABELS[b.status] || b.status)}</span></td>
-                      <td className="an-tbl-bold">{formatDZD(b.totalPrice)}</td>
+                      <td className="an-tbl-bold">{formatDZD(b.totalPrice, b.currency)}</td>
                     </tr>
                   ))
                   : <tr><td colSpan={5} className="an-tbl-empty">{t('Aucune réservation récente')}</td></tr>

@@ -1,5 +1,5 @@
 import { apiGet, SITE_URL } from '@/lib/seo';
-import { getWilayaInfo, wilayaPath } from '@/lib/wilayaInfo';
+import { destinationPath, getWilayaInfo, wilayaPath } from '@/lib/wilayaInfo';
 import { WILAYAS } from '@/lib/wilayas';
 import { TOOLS } from '@/app/outils/tools';
 import { LOCALES, localePath } from '@/lib/i18n/locale';
@@ -49,6 +49,13 @@ export default async function sitemap() {
     changeFrequency: 'weekly',
     priority: activeWilayas.has(w) ? 0.8 : 0.5,
   }));
+
+  // Destinations outside Algeria (/destinations/tn/sousse…): only those with listings
+  const abroad = [...new Set([...hotels, ...houses, ...sales]
+    .filter((x) => x.country && x.country !== 'DZ' && x.wilaya)
+    .map((x) => destinationPath(x.wilaya, x.country)))]
+    .map((path) => ({ url: `${SITE_URL}${path}`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 }));
+  wilayaPages.push(...abroad);
 
   const entries = (list, prefix) =>
     list.map((x) => ({

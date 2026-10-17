@@ -222,7 +222,7 @@ export default function HouseDetailPage() {
               <p style={{ color: '#e9d5ff', fontSize: 13, margin: '0 0 4px' }}>{t('Prix par nuit')}</p>
               <p style={{ fontSize: 32, fontWeight: 900, color: '#fff', margin: 0 }}>
                 {price > 0 ? new Intl.NumberFormat('fr-DZ').format(price) : '—'}
-                <span style={{ fontSize: 14, fontWeight: 400, color: '#c4b5fd' }}> {t('DZD')}</span>
+                <span style={{ fontSize: 14, fontWeight: 400, color: '#c4b5fd' }}> {house.currency || 'DZD'}</span>
               </p>
             </div>
 

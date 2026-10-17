@@ -6,6 +6,7 @@ import { Tag, ChevronLeft, ChevronRight, MapPin, BedDouble, ChevronRight as Arro
 import api, { getImageUrl } from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
 import { useT } from '@/lib/i18n/useT';
+import { formatDZD } from '@/lib/data';
 
 
 export default function FeaturedSales({ selectedCity }) {
@@ -146,7 +147,7 @@ export default function FeaturedSales({ selectedCity }) {
                           {item.rooms > 0 && <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}><BedDouble size={13} /> {item.rooms} {t('p.')}</span>}
                         </div>
                         <span style={{ fontSize: 14, fontWeight: 800, color: '#cbd5e1' }}>
-                          {new Intl.NumberFormat('fr-DZ').format(price)} {t('DZD')}
+                          {formatDZD(price, item.currency)}
                         </span>
                       </div>
                     </div>

@@ -54,6 +54,7 @@ export default function WilayaClient({ wilayaName, children }) {
     rating: h.avgRating ?? h.rating ?? 0,
     reviews: h.reviewsCount ?? h.reviews ?? 0,
     price: h.price ?? 0,
+    currency: h.currency || 'DZD',
     img: h.images?.[0]?.url || h.img,
     amenities: h.amenities || [],
     coordinates: h.coordinates || null,
@@ -70,6 +71,7 @@ export default function WilayaClient({ wilayaName, children }) {
     bathrooms: h.bathrooms,
     capacity: h.capacity,
     pricePerNight: h.pricePerNight ?? h.price ?? 0,
+    currency: h.currency || 'DZD',
     images: h.images || (h.img ? [{ url: h.img }] : []),
   });
 

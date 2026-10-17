@@ -139,7 +139,7 @@ export default function SaleDetailPage() {
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-2xl font-extrabold text-emerald-600">{formatDZD(listing.price)}</p>
+                    <p className="text-2xl font-extrabold text-emerald-600">{formatDZD(listing.price, listing.currency)}</p>
                     <p className="text-xs text-gray-400 flex items-center justify-end gap-1 mt-1">
                       <Eye className="h-3 w-3" /> {listing.views} {t('vues')}
                     </p>

@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { autoTranslate } from '../utils/autoTranslate.js';
+import { countryPlugin } from '../utils/countryPlugin.js';
 
 const houseSchema = new mongoose.Schema(
   {
@@ -54,6 +55,7 @@ houseSchema.index({ wilaya: 1, status: 1 });
 
 // Name/description/amenities are machine-translated into the other site languages after each save
 export const TRANSLATED_FIELDS = ['name', 'description', 'amenities'];
+countryPlugin(houseSchema);
 autoTranslate(houseSchema, TRANSLATED_FIELDS);
 
 const House = mongoose.model('House', houseSchema);
