@@ -1121,5 +1121,15 @@
   "Jusqu'au (vide = sans fin)": "حتى تاريخ (فارغ = بدون نهاية)",
   "Le prix barré et le pourcentage s’affichent sur votre annonce tant que la promotion est active.": "يظهر السعر القديم مشطوباً مع النسبة على إعلانك طوال مدة التخفيض.",
   "Avis publié — merci !": "تم نشر التقييم — شكراً!",
-  "Avis des clients": "آراء الزبائن"
+  "Avis des clients": "آراء الزبائن",
+  "Aucune conversation. Vous pouvez écrire à l’établissement depuis « Mes réservations ».": "لا توجد محادثات. يمكنك مراسلة المؤسسة من صفحة «حجوزاتي».",
+  "Conversation": "محادثة",
+  "Choisissez une conversation.": "اختر محادثة.",
+  "Écrivez le premier message.": "اكتب الرسالة الأولى.",
+  "Lu": "مقروءة",
+  "Votre message": "رسالتك",
+  "Votre message…": "رسالتك…",
+  "Envoyer": "إرسال",
+  "{n} message(s) non lu(s)": "{n} رسالة غير مقروءة",
+  "Contacter": "مراسلة"
 }

@@ -25,6 +25,7 @@ import saleRoutes from './routes/sale.routes.js';
 import wilayaRoutes from './routes/wilaya.routes.js';
 import pricingRoutes from './routes/pricing.routes.js';
 import testimonialRoutes from './routes/testimonial.routes.js';
+import conversationRoutes from './routes/conversation.routes.js';
 
 const app = express();
 
@@ -90,6 +91,7 @@ app.use('/api/v1/sales', saleRoutes);
 app.use('/api/v1/wilayas', wilayaRoutes);
 app.use('/api/v1/pricing', pricingRoutes);
 app.use('/api/v1/testimonials', testimonialRoutes);
+app.use('/api/v1/conversations', conversationRoutes);
 
 // --- Error handling (must be last) ---
 app.use(notFound);

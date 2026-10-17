@@ -1,13 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Check, X, Banknote, Phone } from 'lucide-react';
+import { Check, X, Banknote, Phone, MessageCircle } from 'lucide-react';
 import DashboardShell from '@/components/DashboardShell';
 import api from '@/lib/api';
 import { formatDZD } from '@/lib/data';
 
 import { useT } from '@/lib/i18n/useT';
 import { dateLocale } from '@/lib/i18n/format';
+import Link from '@/components/LocaleLink';
 // Must match REQUEST_HOLD_MS in backend/src/utils/checkAvailability.js
 const REQUEST_HOLD_MS = 48 * 60 * 60 * 1000;
 
@@ -130,6 +131,9 @@ export default function OwnerBookingsPage() {
                     <td className="p-4">
                       <div className="font-medium text-gray-900">{b.customer?.fullName}</div>
                       <div className="text-xs text-gray-500">{b.customer?.email}</div>
+                      <Link href={`/messages?booking=${b._id}`} className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-brand-600 hover:underline">
+                        <MessageCircle className="h-3 w-3" aria-hidden="true" /> {t('Message')}
+                      </Link>
                       {b.customer?.phone && (
                         <a href={`tel:${b.customer.phone}`} className="mt-1 inline-flex items-center gap-1 text-xs text-brand-600 hover:underline">
                           <Phone className="h-3 w-3" aria-hidden="true" /> {b.customer.phone}

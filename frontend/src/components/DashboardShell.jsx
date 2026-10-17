@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import Link from '@/components/LocaleLink';
 import BrandLogo from '@/components/BrandLogo';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, Hotel, CalendarCheck, Users, CheckSquare, LogOut, Home, Mail, Globe, Tag } from 'lucide-react';
+import { LayoutDashboard, Hotel, CalendarCheck, Users, CheckSquare, LogOut, Home, Mail, Globe, Tag, MessageCircle } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 
 import { useT } from '@/lib/i18n/useT';
@@ -14,6 +14,7 @@ const MENUS = {
     { href: '/owner/my-hotels', label: 'Mes hôtels', icon: Hotel },
     { href: '/owner/my-houses', label: 'Mes maisons', icon: Home },
     { href: '/owner/bookings', label: 'Réservations', icon: CalendarCheck },
+    { href: '/messages', label: 'Messages', icon: MessageCircle },
     { href: '/', label: 'Site public', icon: Globe },
   ],
   seller: [

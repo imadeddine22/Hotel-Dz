@@ -618,6 +618,42 @@ describe('Scores out of 10, house reviews and deals');
   check('hotel "from" price includes the running deal', meridien?.discountPercent === 15 && meridien?.originalPrice > meridien?.price, JSON.stringify({ p: meridien?.price, o: meridien?.originalPrice }));
 }
 
+describe('Guest ↔ owner messages');
+{
+  const host = await register('owner');
+  const admin = await login('admin@hotelsdz.dz', 'admin123');
+  const stranger = await register('customer');
+  const h = await req('POST', '/houses', {
+    token: host.token,
+    form: { name: `Maison Messages ${uid}`, description: 'Test', wilaya: 'Annaba', city: 'Annaba', type: 'Villa', rooms: 2, bathrooms: 1, capacity: 4, pricePerNight: 9000, images: [PNG] },
+  });
+  await req('PUT', `/admin/houses/${h.data.house?._id}/approve`, { token: admin });
+  const bk = await req('POST', '/bookings/house', { token: customer.token, body: { houseId: h.data.house?._id, checkIn: day(70), checkOut: day(72) } });
+  const bookingId = bk.data.booking?._id;
+
+  expectStatus('visitor cannot read messages', await req('GET', '/conversations'), 401);
+  expectStatus('stranger cannot open a booking conversation', await req('GET', `/conversations/booking/${bookingId}`, { token: stranger.token }), 403);
+  const opened = await req('GET', `/conversations/booking/${bookingId}`, { token: customer.token });
+  expectStatus('guest opens the conversation of a booking', opened, 200);
+  const convId = opened.data.conversationId;
+  check('owner gets the same conversation', (await req('GET', `/conversations/booking/${bookingId}`, { token: host.token })).data.conversationId === convId);
+
+  expectStatus('empty message rejected', await req('POST', `/conversations/${convId}/messages`, { token: customer.token, body: { text: '   ' } }), 400);
+  expectStatus('guest sends a message', await req('POST', `/conversations/${convId}/messages`, { token: customer.token, body: { text: 'Bonjour, parking disponible ?' } }), 201);
+  expectStatus('stranger cannot post', await req('POST', `/conversations/${convId}/messages`, { token: stranger.token, body: { text: 'spam' } }), 403);
+  expectStatus('stranger cannot read', await req('GET', `/conversations/${convId}`, { token: stranger.token }), 403);
+
+  check('owner has 1 unread message', (await req('GET', '/conversations/unread', { token: host.token })).data.unread === 1);
+  const read = await req('GET', `/conversations/${convId}`, { token: host.token });
+  check('owner reads the thread', read.data.conversation?.messages?.length === 1);
+  check('reading marks it as read', (await req('GET', '/conversations/unread', { token: host.token })).data.unread === 0);
+  await req('POST', `/conversations/${convId}/messages`, { token: host.token, body: { text: 'Oui, gratuit.' } });
+  const list = await req('GET', '/conversations', { token: customer.token });
+  const mine = list.data.conversations?.find((c) => c._id === convId);
+  check('guest list shows the reply as unread', mine?.unread === 1 && mine?.lastMessage?.text === 'Oui, gratuit.');
+  check('admin can read for support', (await req('GET', `/conversations/${convId}`, { token: admin })).status === 200);
+}
+
 describe('No online payment');
 {
   const r = await fetch(`${API}/payments/webhook`, { method: 'POST', body: '{}' });

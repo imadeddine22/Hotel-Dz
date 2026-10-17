@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { MapPin, CheckCircle2 } from 'lucide-react';
+import { MapPin, CheckCircle2, MessageCircle } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import api, { getImageUrl } from '@/lib/api';
@@ -10,6 +10,7 @@ import { formatDZD } from '@/lib/data';
 import { useT } from '@/lib/i18n/useT';
 import { dateLocale } from '@/lib/i18n/format';
 import ReviewForm from '@/components/ReviewForm';
+import Link from '@/components/LocaleLink';
 // Must match REQUEST_HOLD_MS in backend/src/utils/checkAvailability.js
 const REQUEST_HOLD_MS = 48 * 60 * 60 * 1000;
 
@@ -176,6 +177,11 @@ export default function MyBookingsPage() {
                         reviewed.has(String(b._id))
                           ? <span className="text-xs font-semibold text-emerald-600">{t('Avis publié — merci !')}</span>
                           : <ReviewForm booking={b} onDone={(id) => setReviewed((prev) => new Set(prev).add(String(id)))} />
+                      )}
+                      {b.status !== 'cancelled' && (
+                        <Link href={`/messages?booking=${b._id}`} className="inline-flex items-center gap-1 text-sm font-medium text-brand-600 hover:underline">
+                          <MessageCircle className="h-4 w-4" aria-hidden="true" /> {t('Contacter')}
+                        </Link>
                       )}
                       {['pending', 'confirmed'].includes(b.status) && !started && (
                         <button onClick={() => cancel(b)} className="text-sm font-medium text-red-600 hover:underline">

@@ -1119,5 +1119,15 @@
   "Jusqu'au (vide = sans fin)": "Until (empty = no end)",
   "Le prix barré et le pourcentage s’affichent sur votre annonce tant que la promotion est active.": "The struck-through price and percentage show on your listing while the deal is running.",
   "Avis publié — merci !": "Review published — thank you!",
-  "Avis des clients": "Guest reviews"
+  "Avis des clients": "Guest reviews",
+  "Aucune conversation. Vous pouvez écrire à l’établissement depuis « Mes réservations ».": "No conversations yet. You can write to the property from “My bookings”.",
+  "Conversation": "Conversation",
+  "Choisissez une conversation.": "Choose a conversation.",
+  "Écrivez le premier message.": "Write the first message.",
+  "Lu": "Read",
+  "Votre message": "Your message",
+  "Votre message…": "Your message…",
+  "Envoyer": "Send",
+  "{n} message(s) non lu(s)": "{n} unread message(s)",
+  "Contacter": "Contact"
 }

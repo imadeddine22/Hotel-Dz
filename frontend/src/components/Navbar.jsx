@@ -3,13 +3,14 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from '@/components/LocaleLink';
 import { usePathname } from 'next/navigation';
-import { ChevronDown, Menu, X, Heart, User, Globe } from 'lucide-react';
+import { ChevronDown, Menu, X, Heart, User, Globe, MessageCircle } from 'lucide-react';
 import { useAuthStore, useLangStore } from '@/store/authStore';
 import { useFavoritesStore } from '@/store/favoritesStore';
 import BrandLogo, { brandName } from '@/components/BrandLogo';
 import { useT } from '@/lib/i18n/useT';
 import { useUrlLang } from '@/components/UrlLang';
 import { localePath, splitLocale } from '@/lib/i18n/locale';
+import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
@@ -65,6 +66,7 @@ export default function Navbar() {
   }, [langOpen]);
 
   const totalFavorites = user ? (hotelIds.length + houseIds.length) : anonCount;
+  const unreadMessages = useUnreadMessages(user);
 
   // Public pages: go to the same page's URL in that language (/ar/hotels…), rendered by the
   // server in it. Private pages have one URL: reload so listings are fetched again, localized.
@@ -135,6 +137,22 @@ export default function Navbar() {
               </span>
             )}
           </Link>
+
+          {/* Messages (logged-in) */}
+          {user && (
+            <Link
+              href="/messages"
+              aria-label={unreadMessages ? t('{n} message(s) non lu(s)', { n: unreadMessages }) : t('Messages')}
+              className={`relative grid h-10 w-10 place-items-center rounded-full transition ${pathname.startsWith('/messages') ? 'bg-brand-50 text-brand-600' : 'text-gray-600 hover:bg-gray-100'}`}
+            >
+              <MessageCircle className="h-5 w-5" />
+              {unreadMessages > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-brand-500 px-1 text-[9px] font-extrabold text-white ring-2 ring-white">
+                  {unreadMessages}
+                </span>
+              )}
+            </Link>
+          )}
 
           {/* Add Hotel Button */}
           <Link
@@ -234,6 +252,17 @@ export default function Navbar() {
               </Link>
             );
           })}
+
+          {user && (
+            <Link
+              href="/messages"
+              onClick={() => setOpen(false)}
+              className="flex items-center justify-between rounded-xl px-4 py-3 text-base font-bold text-gray-700 transition hover:bg-gray-50"
+            >
+              <span className="flex items-center gap-2"><MessageCircle className="h-5 w-5 text-brand-500" /> {t('Messages')}</span>
+              {unreadMessages > 0 && <span className="rounded-full bg-brand-500 px-2.5 py-0.5 text-xs font-bold text-white">{unreadMessages}</span>}
+            </Link>
+          )}
 
           {/* Mobile Favorites Link */}
           <Link

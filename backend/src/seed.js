@@ -16,6 +16,7 @@ import Booking from './models/Booking.js';
 import Review from './models/Review.js';
 import Message from './models/Message.js';
 import Testimonial from './models/Testimonial.js';
+import Conversation from './models/Conversation.js';
 import { ENABLED_COUNTRIES } from './utils/countries.js';
 
 const img = (id) => ({
@@ -65,7 +66,7 @@ export const seedDatabase = async () => {
   // Wipe
   await Promise.all([
     User.deleteMany({}), Hotel.deleteMany({}), House.deleteMany({}), Room.deleteMany({}),
-    Booking.deleteMany({}), Review.deleteMany({}), Message.deleteMany({}), Testimonial.deleteMany({}),
+    Booking.deleteMany({}), Review.deleteMany({}), Message.deleteMany({}), Testimonial.deleteMany({}), Conversation.deleteMany({}),
   ]);
 
   // --- Users ---
@@ -242,6 +243,21 @@ export const seedDatabase = async () => {
     });
   }
   console.log(`⭐ Reviews: ${paidStays.length}`);
+
+  // --- A demo guest ↔ owner conversation on one of Sara's bookings ---
+  const saraBooking = await Booking.findOne({ customer: customers[0]._id, hotel: { $exists: true }, status: { $ne: 'cancelled' } }).populate('hotel', 'name');
+  if (saraBooking) {
+    await Conversation.create({
+      booking: saraBooking._id, customer: customers[0]._id, owner: owner._id,
+      propertyType: 'hotel', propertyName: saraBooking.hotel?.name || '',
+      messages: [
+        { sender: customers[0]._id, text: 'Bonjour, est-il possible d’arriver vers 22 h ?', readAt: new Date() },
+        { sender: owner._id, text: 'Bonjour Sara, oui sans problème, la réception est ouverte 24 h/24.' },
+      ],
+      lastMessageAt: new Date(),
+    });
+    console.log('💬 Conversations: 1 (sara ↔ hôtelier)');
+  }
 
   // --- Deals: discounts set by owners ---
   const inMonth = daysFromNow(30);
