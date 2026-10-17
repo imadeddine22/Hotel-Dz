@@ -3,7 +3,7 @@ export function generateMetadata() {
   return pageMeta({
     path: '/pricing',
     title: 'Tarifs pour propriétaires et vendeurs',
-    description: "Publiez votre hôtel, votre maison à louer ou votre bien à vendre sur Meskan dz. Découvrez nos formules et leurs tarifs en dinars.",
+    description: "Publiez votre hôtel, votre maison à louer ou votre bien à vendre sur Meskan. Découvrez nos formules et leurs tarifs en dinars.",
   });
 }
 

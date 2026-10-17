@@ -26,7 +26,7 @@ export async function generateMetadata({ params }) {
   const title = t('{type} à louer à {city} — {name}', { ...place, type: t(house.type || 'Maison') });
   const description =
     truncate(house.description, 155) ||
-    t("{name} à {city} ({wilaya}) : {rooms} chambre(s), jusqu'à {capacity} personnes, {price} / nuit. Réservez sur Meskan dz.", {
+    t("{name} à {city} ({wilaya}) : {rooms} chambre(s), jusqu'à {capacity} personnes, {price} / nuit. Réservez sur Meskan.", {
       ...place, rooms: house.rooms, capacity: house.capacity, price: formatDZD(house.pricePerNight, house.currency),
     });
   const images = (house.images || []).slice(0, 1).map(absoluteImage);

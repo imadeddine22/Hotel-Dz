@@ -1,4 +1,4 @@
-// Countries Meskan dz covers. A listing's `wilaya` field holds the region of its country
+// Countries Meskan covers. A listing's `wilaya` field holds the region of its country
 // (Algerian wilaya, Tunisian governorate, Moroccan city); its currency follows the country.
 // Keep in sync with backend/src/utils/countries.js.
 import { WILAYA_LIST } from './wilayas';
@@ -48,7 +48,7 @@ export const COUNTRIES = {
   },
 };
 
-// Countries open to listings and searches. Meskan dz focuses on Algeria for now; Tunisia and
+// Countries open to listings and searches. Meskan focuses on Algeria for now; Tunisia and
 // Morocco are ready: open them with NEXT_PUBLIC_ENABLED_COUNTRIES=DZ,TN,MA (and ENABLED_COUNTRIES
 // on the backend). With a single country, country pickers and filters are hidden.
 export const ENABLED_COUNTRIES = (process.env.NEXT_PUBLIC_ENABLED_COUNTRIES || 'DZ')

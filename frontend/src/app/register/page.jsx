@@ -52,7 +52,7 @@ export default function RegisterPage() {
           <BrandLogo className="h-12" textClassName="text-3xl" />
         </Link>
         <h1 className="mb-1 text-2xl font-bold text-ink">{t('Créer un compte')}</h1>
-        <p className="mb-6 text-sm text-gray-500">{t('Rejoignez Meskan dz')}</p>
+        <p className="mb-6 text-sm text-gray-500">{t('Rejoignez Meskan')}</p>
 
         {error && (
           <div className="mb-4 rounded-lg bg-red-50 px-4 py-2 text-sm text-red-600">{error}</div>

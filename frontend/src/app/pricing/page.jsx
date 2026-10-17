@@ -23,7 +23,7 @@ const FAQS = [
   },
   {
     q: "Y a-t-il des frais ou commissions supplémentaires sur mes réservations ?",
-    a: "Non. Contrairement à d'autres plateformes, Meskan dz fonctionne sur un modèle d'abonnement pur. Vous gardez 100% de vos gains sans aucune commission prélevée sur vos réservations."
+    a: "Non. Contrairement à d'autres plateformes, Meskan fonctionne sur un modèle d'abonnement pur. Vous gardez 100% de vos gains sans aucune commission prélevée sur vos réservations."
   },
   {
     q: "Que se passe-t-il si je dépasse la limite d'établissements de mon plan ?",
@@ -373,7 +373,7 @@ export default function PricingPage() {
                 {t('Frequently asked')} <br />{t('questions')}
               </h2>
               <p className="text-slate-500 text-sm mt-4 font-medium max-w-sm leading-relaxed">
-                {t('These are the most commonly asked questions about Meskan dz. Can\'t find what you\'re looking for?')}
+                {t('These are the most commonly asked questions about Meskan. Can\'t find what you\'re looking for?')}
               </p>
               <Link
                 href="/contact"
@@ -403,7 +403,7 @@ export default function PricingPage() {
               {t('Prêt à publier vos biens et garder 100% de vos gains ?')}
             </h2>
             <p className="mx-auto mt-4 max-w-lg text-slate-400 text-xs md:text-sm font-medium">
-              {t('Inscrivez-vous dès aujourd\'hui sur Meskan dz. Choisissez le plan d\'abonnement idéal et touchez des clients dans les 69 wilayas d\'Algérie.')}
+              {t('Inscrivez-vous dès aujourd\'hui sur Meskan. Choisissez le plan d\'abonnement idéal et touchez des clients dans les 69 wilayas d\'Algérie.')}
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-4">
               <Link

@@ -5,9 +5,9 @@ export const revalidate = 86400;
 
 // Context file for AI systems — see https://llmstxt.org
 export function GET() {
-  const body = `# Meskan dz
+  const body = `# Meskan
 
-> Meskan dz est une plateforme algérienne pour réserver des hôtels, louer des maisons et appartements à la nuit, et acheter des biens immobiliers dans les 69 wilayas d'Algérie. Les annonces sont vérifiées par l'équipe avant publication. La réservation est gratuite : le voyageur envoie une demande, l'établissement l'accepte, et le paiement se fait en dinars (DZD) sur place à l'arrivée.
+> Meskan est une plateforme algérienne pour réserver des hôtels, louer des maisons et appartements à la nuit, et acheter des biens immobiliers dans les 69 wilayas d'Algérie. Les annonces sont vérifiées par l'équipe avant publication. La réservation est gratuite : le voyageur envoie une demande, l'établissement l'accepte, et le paiement se fait en dinars (DZD) sur place à l'arrivée.
 
 Langues : français (${SITE_URL}/), arabe (${SITE_URL}/ar) et anglais (${SITE_URL}/en) ; chaque page existe dans les trois langues (préfixe /ar ou /en). Pays couvert : Algérie (69 wilayas). Contact : support@hotelsdz.dz.
 
@@ -18,7 +18,7 @@ Wilaya pages use ASCII slugs: ${SITE_URL}/destinations/oran, ${SITE_URL}/destina
 - [Locations](${SITE_URL}/houses): villas, appartements, chalets et studios à louer à la nuit
 - [Ventes immobilières](${SITE_URL}/sales): appartements, villas, terrains et locaux à vendre, avec référence d'annonce
 - [Destinations](${SITE_URL}/destinations): une page par wilaya avec nombre d'annonces, prix médians et FAQ
-- [Comparatif](${SITE_URL}/comparatif): Meskan dz face à Booking.com, Airbnb et Ouedkniss (paiement, frais, réservation)
+- [Comparatif](${SITE_URL}/comparatif): Meskan face à Booking.com, Airbnb et Ouedkniss (paiement, frais, réservation)
 - [Tarifs](${SITE_URL}/pricing): formules pour propriétaires et vendeurs (version texte : ${SITE_URL}/pricing.md)
 
 ## Outils gratuits

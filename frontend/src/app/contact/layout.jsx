@@ -3,7 +3,7 @@ export function generateMetadata() {
   return pageMeta({
     path: '/contact',
     title: 'Contact et aide',
-    description: "Une question sur une réservation, un paiement ou une annonce ? Contactez l'équipe Meskan dz par e-mail, téléphone ou formulaire.",
+    description: "Une question sur une réservation, un paiement ou une annonce ? Contactez l'équipe Meskan par e-mail, téléphone ou formulaire.",
   });
 }
 

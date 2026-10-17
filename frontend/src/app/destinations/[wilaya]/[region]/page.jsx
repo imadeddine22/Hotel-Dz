@@ -72,14 +72,14 @@ export default async function RegionPage({ params }) {
     {
       q: t('Combien coûte une nuit à {name} ?', { name }),
       a: nightly || hotelFrom
-        ? t('Sur Meskan dz, une maison ou un appartement à {name} coûte en médiane {night} par nuit ; les hôtels démarrent autour de {hotel}. Les prix sont affichés et payés en {currency}.', {
+        ? t('Sur Meskan, une maison ou un appartement à {name} coûte en médiane {night} par nuit ; les hôtels démarrent autour de {hotel}. Les prix sont affichés et payés en {currency}.', {
             name, night: nightly ? formatDZD(nightly, country.currency) : '—', hotel: hotelFrom ? formatDZD(hotelFrom, country.currency) : '—', currency: country.currency,
           })
-        : t('Les premières annonces de {name} arrivent bientôt sur Meskan dz. Les prix y seront affichés en {currency}.', { name, currency: country.currency }),
+        : t('Les premières annonces de {name} arrivent bientôt sur Meskan. Les prix y seront affichés en {currency}.', { name, currency: country.currency }),
     },
     {
       q: t('Comment payer un séjour à {name} ?', { name }),
-      a: t("La réservation sur Meskan dz est gratuite : l'établissement confirme votre demande, puis vous payez sur place à l'arrivée, en {currency}. Aucune carte bancaire internationale n'est nécessaire.", { currency: country.currency }),
+      a: t("La réservation sur Meskan est gratuite : l'établissement confirme votre demande, puis vous payez sur place à l'arrivée, en {currency}. Aucune carte bancaire internationale n'est nécessaire.", { currency: country.currency }),
     },
   ];
 
@@ -129,10 +129,10 @@ export default async function RegionPage({ params }) {
         <h1 className="text-3xl font-black text-slate-900 md:text-4xl">{t('Hôtels et locations à {name}, {country}', { name, country: cName })}</h1>
         <p className="mt-4 max-w-3xl leading-relaxed">
           {total > 0
-            ? t('{name} ({country}) sur Meskan dz : {hotels} hôtel(s), {houses} location(s) et {sales} bien(s) à vendre, avec des prix en {currency}.', {
+            ? t('{name} ({country}) sur Meskan : {hotels} hôtel(s), {houses} location(s) et {sales} bien(s) à vendre, avec des prix en {currency}.', {
                 name, country: cName, hotels: data.hotels.length, houses: data.houses.length, sales: data.sales.length, currency: country.currency,
               })
-            : t('Les premières annonces de {name} arrivent bientôt sur Meskan dz. Hôteliers et propriétaires peuvent publier leur annonce dès maintenant.', { name })}
+            : t('Les premières annonces de {name} arrivent bientôt sur Meskan. Hôteliers et propriétaires peuvent publier leur annonce dès maintenant.', { name })}
         </p>
 
         <Section title={t('Hôtels')} items={data.hotels} href={(h) => `/hotels/${h._id}`} price={(h) => (h.price ? `${t('À partir de')} ${formatDZD(h.price, h.currency)}` : t('Voir les chambres'))} />

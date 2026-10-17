@@ -183,7 +183,7 @@ export default function Testimonials() {
           </div>
         ) : (
           <form onSubmit={submit} className="space-y-4 rounded-3xl border border-slate-100 bg-white p-6 text-start shadow-card md:p-8">
-            <h3 className="text-lg font-bold text-slate-800">{t('Votre avis sur Meskan dz')}</h3>
+            <h3 className="text-lg font-bold text-slate-800">{t('Votre avis sur Meskan')}</h3>
 
             <fieldset>
               <legend className="mb-2 text-sm font-semibold text-slate-600">{t('Note')}</legend>
@@ -227,7 +227,7 @@ export default function Testimonials() {
                 rows={4}
                 value={form.comment}
                 onChange={(e) => setForm({ ...form, comment: e.target.value })}
-                placeholder={t('Racontez votre expérience avec Meskan dz…')}
+                placeholder={t('Racontez votre expérience avec Meskan…')}
                 className="w-full resize-none rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-teal-500"
               />
               <p className="mt-1 text-end text-xs text-slate-400" dir="ltr">{form.comment.length}/600</p>

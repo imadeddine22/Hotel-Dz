@@ -1,6 +1,6 @@
-// Builds the Meskan dz icon assets from the source PNG (the house/spiral mark alone),
+// Builds the Meskan icon assets from the source PNG (the house/spiral mark alone),
 // with no dependencies (zlib only). The brand name is rendered as live text next to the icon
-// (BrandLogo.jsx) so it can read "Meskan dz" or «مسكن» depending on the language.
+// (BrandLogo.jsx) so it can read "Meskan" or «مسكن» depending on the language.
 //   public/brand/meskan-mark.png        icon, navy on transparent, square
 //   public/brand/meskan-mark-white.png  same in white (dark backgrounds, e.g. footer)
 //   src/app/icon.png                    favicon (Next.js app icon convention)

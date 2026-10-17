@@ -4,7 +4,7 @@ import AdminLayout from '@/components/AdminLayout';
 export const metadata = {
   title: 'Admin',
   robots: { index: false, follow: false },
-  description: 'Panneau d\'administration Meskan dz',
+  description: 'Panneau d\'administration Meskan',
 };
 
 export default function AdminRootLayout({ children }) {

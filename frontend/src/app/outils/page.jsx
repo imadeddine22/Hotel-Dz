@@ -30,7 +30,7 @@ export default function ToolsHub() {
           {
             '@context': 'https://schema.org',
             '@type': 'ItemList',
-            name: 'Outils gratuits Meskan dz',
+            name: 'Outils gratuits Meskan',
             itemListElement: TOOLS.map((t, i) => ({
               '@type': 'ListItem',
               position: i + 1,

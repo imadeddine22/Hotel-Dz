@@ -178,7 +178,9 @@ let hotelBookingId;
   const b = await req('POST', '/bookings', { token: customer.token, body: { roomId: room._id, checkIn: day(40), checkOut: day(43), guests: 1 } });
   expectStatus('book a room', b, 201);
   hotelBookingId = b.data.booking?._id;
-  check('total price = nights × price', b.data.booking?.totalPrice === 3 * room.pricePerNight, `${b.data.booking?.totalPrice} vs ${3 * room.pricePerNight}`);
+  // the room may be on a deal (seed): the server prices it after the running discount
+  const nightly = room.discountPercent && (!room.discountUntil || new Date(room.discountUntil) >= new Date()) ? Math.round(room.pricePerNight * (1 - room.discountPercent / 100)) : room.pricePerNight;
+  check('total price = nights × price (after any deal)', b.data.booking?.totalPrice === 3 * nightly, `${b.data.booking?.totalPrice} vs ${3 * nightly}`);
   check('new booking is pending/unpaid', b.data.booking?.status === 'pending' && b.data.booking?.paymentStatus === 'unpaid');
 
   const mine = await req('GET', '/bookings/my', { token: customer.token });

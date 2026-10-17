@@ -75,7 +75,7 @@ export const formatDZD = (n, currency = 'DZD') =>
 
 /** Metadata for private / transactional pages that must never be indexed. */
 export const noIndex = (title) => ({
-  title: { default: title, template: '%s | Meskan dz' },
+  title: { default: title, template: '%s | Meskan' },
   robots: { index: false, follow: false },
 });
 

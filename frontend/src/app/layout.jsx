@@ -20,7 +20,7 @@ import { getLang, getUrlLang, pageMeta } from '@/lib/i18n/server';
 const DESCRIPTION =
   "Hôtels, maisons à louer et biens à vendre dans les 69 wilayas d'Algérie. Annonces vérifiées, réservation gratuite, paiement sur place.";
 
-const HOME_TITLE = 'Meskan dz — Hôtels, locations et immobilier en Algérie';
+const HOME_TITLE = 'Meskan — Hôtels, locations et immobilier en Algérie';
 
 // Per language: /ar and /en are their own indexable versions (canonical + hreflang)
 export function generateMetadata() {

@@ -9,19 +9,19 @@ export const SOURCES = [
   { label: 'Ouedkniss — rubrique Location vacances', url: 'https://www.ouedkniss.com/location-vacance_immobilier-r?lang=fr' },
 ];
 
-const COLUMNS = ['Meskan dz', 'Booking.com', 'Airbnb', 'Ouedkniss'];
+const COLUMNS = ['Meskan', 'Booking.com', 'Airbnb', 'Ouedkniss'];
 
 export const CONTENT = {
   fr: {
     metaTitle: 'Booking, Airbnb ou Ouedkniss : comparatif Algérie',
     metaDescription:
       "Comparatif honnête pour réserver un hôtel, louer une maison ou acheter un bien en Algérie : paiement, frais, réservation et types d'annonces.",
-    h1: 'Meskan dz, Booking.com, Airbnb ou Ouedkniss : que choisir en Algérie ?',
+    h1: 'Meskan, Booking.com, Airbnb ou Ouedkniss : que choisir en Algérie ?',
     intro:
-      "Pour réserver un hôtel, louer un appartement à la nuit ou acheter un bien en Algérie, quatre plateformes reviennent souvent. Elles ne font pas la même chose : Booking.com et Airbnb sont des plateformes internationales de réservation, Ouedkniss est un site de petites annonces, et Meskan dz est une plateforme algérienne de réservation avec paiement sur place en dinars.",
+      "Pour réserver un hôtel, louer un appartement à la nuit ou acheter un bien en Algérie, quatre plateformes reviennent souvent. Elles ne font pas la même chose : Booking.com et Airbnb sont des plateformes internationales de réservation, Ouedkniss est un site de petites annonces, et Meskan est une plateforme algérienne de réservation avec paiement sur place en dinars.",
     tldrTitle: 'En bref',
     tldr: [
-      "Vous voulez réserver en ligne et payer en dinars à l'arrivée, sans carte internationale : Meskan dz.",
+      "Vous voulez réserver en ligne et payer en dinars à l'arrivée, sans carte internationale : Meskan.",
       'Vous voyagez souvent à l’étranger et avez une carte Visa ou Mastercard : Booking.com et Airbnb offrent le plus grand choix mondial.',
       "Vous cherchez le plus grand volume d'annonces algériennes et acceptez de tout négocier par téléphone : Ouedkniss.",
     ],
@@ -41,9 +41,9 @@ export const CONTENT = {
     ],
     sections: [
       {
-        title: 'Meskan dz',
+        title: 'Meskan',
         body: [
-          "Meskan dz réunit trois usages au même endroit : hôtels, locations à la nuit et biens à vendre, dans les 69 wilayas. Le voyageur envoie une demande de réservation gratuite ; l'hôtel ou le propriétaire l'accepte sous 48 heures, puis le séjour se règle sur place, en dinars. Aucune carte bancaire internationale n'est nécessaire.",
+          "Meskan réunit trois usages au même endroit : hôtels, locations à la nuit et biens à vendre, dans les 69 wilayas. Le voyageur envoie une demande de réservation gratuite ; l'hôtel ou le propriétaire l'accepte sous 48 heures, puis le séjour se règle sur place, en dinars. Aucune carte bancaire internationale n'est nécessaire.",
           "Côté hébergeurs, il n'y a pas de commission sur les réservations : une formule gratuite (1 établissement) et des abonnements fixes en dinars (Growth à 2 900 DA/mois, Pro à 6 900 DA/mois). Chaque annonce est vérifiée par l'équipe avant publication.",
           "Limites : la plateforme est récente et son catalogue est plus petit que celui des géants internationaux, et elle ne couvre que l'Algérie.",
         ],
@@ -72,24 +72,24 @@ export const CONTENT = {
     ],
     whoTitle: 'Quelle plateforme pour vous ?',
     who: [
-      ['Voyageur en Algérie, paiement en espèces ou carte CIB/Edahabia', 'Meskan dz'],
+      ['Voyageur en Algérie, paiement en espèces ou carte CIB/Edahabia', 'Meskan'],
       ['Voyage à l’étranger, carte Visa ou Mastercard', 'Booking.com ou Airbnb'],
-      ['Hôtelier qui veut éviter les commissions', 'Meskan dz'],
-      ['Acheter ou vendre un bien, très large audience', 'Ouedkniss ou Meskan dz'],
+      ['Hôtelier qui veut éviter les commissions', 'Meskan'],
+      ['Acheter ou vendre un bien, très large audience', 'Ouedkniss ou Meskan'],
     ],
     faqTitle: 'Questions fréquentes',
     faq: [
       [
         'Peut-on réserver un hôtel en Algérie sans carte bancaire internationale ?',
-        "Oui. Sur Meskan dz, la demande de réservation est gratuite et le séjour se paie sur place, en dinars, à l'arrivée. Sur Booking.com, cela dépend de l'hôtel : certains acceptent le paiement sur place, d'autres demandent une carte.",
+        "Oui. Sur Meskan, la demande de réservation est gratuite et le séjour se paie sur place, en dinars, à l'arrivée. Sur Booking.com, cela dépend de l'hôtel : certains acceptent le paiement sur place, d'autres demandent une carte.",
       ],
       [
-        'Meskan dz prend-il une commission sur les réservations ?',
+        'Meskan prend-il une commission sur les réservations ?',
         "Non. Les hébergeurs choisissent une formule gratuite ou un abonnement fixe en dinars ; aucune commission n'est prélevée sur les séjours. Les voyageurs ne paient aucun frais de réservation.",
       ],
       [
-        'Quelle est la différence entre Meskan dz et Ouedkniss ?',
-        "Ouedkniss est un site de petites annonces : on contacte l'annonceur et tout se négocie en direct. Meskan dz est une plateforme de réservation : les annonces sont vérifiées, la disponibilité est vérifiée et la demande est confirmée par l'établissement.",
+        'Quelle est la différence entre Meskan et Ouedkniss ?',
+        "Ouedkniss est un site de petites annonces : on contacte l'annonceur et tout se négocie en direct. Meskan est une plateforme de réservation : les annonces sont vérifiées, la disponibilité est vérifiée et la demande est confirmée par l'établissement.",
       ],
     ],
     cta: 'Voir les hôtels en Algérie',
@@ -186,12 +186,12 @@ export const CONTENT = {
   en: {
     metaTitle: 'Booking vs Airbnb vs Ouedkniss in Algeria',
     metaDescription: 'An honest comparison for booking a hotel, renting a house or buying property in Algeria: payment, fees, booking and listing types.',
-    h1: 'Meskan dz, Booking.com, Airbnb or Ouedkniss: which to use in Algeria?',
+    h1: 'Meskan, Booking.com, Airbnb or Ouedkniss: which to use in Algeria?',
     intro:
-      'To book a hotel, rent an apartment by the night or buy property in Algeria, four platforms come up again and again. They do different things: Booking.com and Airbnb are international booking platforms, Ouedkniss is a classifieds site, and Meskan dz is an Algerian booking platform where you pay on site in dinars.',
+      'To book a hotel, rent an apartment by the night or buy property in Algeria, four platforms come up again and again. They do different things: Booking.com and Airbnb are international booking platforms, Ouedkniss is a classifieds site, and Meskan is an Algerian booking platform where you pay on site in dinars.',
     tldrTitle: 'In short',
     tldr: [
-      'You want to book online and pay in dinars on arrival, without an international card: Meskan dz.',
+      'You want to book online and pay in dinars on arrival, without an international card: Meskan.',
       'You travel abroad often and have a Visa or Mastercard: Booking.com and Airbnb offer the widest worldwide choice.',
       'You want the largest volume of Algerian listings and are happy to negotiate by phone: Ouedkniss.',
     ],
@@ -211,9 +211,9 @@ export const CONTENT = {
     ],
     sections: [
       {
-        title: 'Meskan dz',
+        title: 'Meskan',
         body: [
-          'Meskan dz brings three things together: hotels, nightly rentals and properties for sale, across all 69 wilayas. The traveller sends a free booking request; the hotel or owner accepts it within 48 hours, and the stay is paid on site, in dinars. No international bank card is needed.',
+          'Meskan brings three things together: hotels, nightly rentals and properties for sale, across all 69 wilayas. The traveller sends a free booking request; the hotel or owner accepts it within 48 hours, and the stay is paid on site, in dinars. No international bank card is needed.',
           'For hosts there is no commission on bookings: a free plan (1 property) and flat subscriptions in dinars (Growth at 2,900 DZD/month, Pro at 6,900 DZD/month). Every listing is checked by the team before it goes live.',
           'Limits: the platform is new, its catalogue is smaller than the international giants’, and it only covers Algeria.',
         ],
@@ -242,24 +242,24 @@ export const CONTENT = {
     ],
     whoTitle: 'Which platform is right for you?',
     who: [
-      ['Travelling in Algeria, paying cash or with a CIB/Edahabia card', 'Meskan dz'],
+      ['Travelling in Algeria, paying cash or with a CIB/Edahabia card', 'Meskan'],
       ['Travelling abroad with a Visa or Mastercard', 'Booking.com or Airbnb'],
-      ['Hotelier who wants to avoid commissions', 'Meskan dz'],
-      ['Buying or selling property, very wide audience', 'Ouedkniss or Meskan dz'],
+      ['Hotelier who wants to avoid commissions', 'Meskan'],
+      ['Buying or selling property, very wide audience', 'Ouedkniss or Meskan'],
     ],
     faqTitle: 'Frequently asked questions',
     faq: [
       [
         'Can I book a hotel in Algeria without an international bank card?',
-        'Yes. On Meskan dz the booking request is free and the stay is paid on site, in dinars, on arrival. On Booking.com it depends on the hotel: some accept payment at the property, others require a card.',
+        'Yes. On Meskan the booking request is free and the stay is paid on site, in dinars, on arrival. On Booking.com it depends on the hotel: some accept payment at the property, others require a card.',
       ],
       [
-        'Does Meskan dz take a commission on bookings?',
+        'Does Meskan take a commission on bookings?',
         'No. Hosts choose a free plan or a flat subscription in dinars; no commission is taken on stays. Travellers pay no booking fees.',
       ],
       [
-        'What is the difference between Meskan dz and Ouedkniss?',
-        'Ouedkniss is a classifieds site: you contact the advertiser and everything is negotiated directly. Meskan dz is a booking platform: listings are verified, availability is checked and the request is confirmed by the property.',
+        'What is the difference between Meskan and Ouedkniss?',
+        'Ouedkniss is a classifieds site: you contact the advertiser and everything is negotiated directly. Meskan is a booking platform: listings are verified, availability is checked and the request is confirmed by the property.',
       ],
     ],
     cta: 'See hotels in Algeria',

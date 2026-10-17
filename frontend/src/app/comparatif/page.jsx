@@ -13,7 +13,7 @@ export function generateMetadata() {
   return pageMeta({ path: PATH, title: c.metaTitle, description: c.metaDescription });
 }
 
-/** "Meskan dz vs Booking.com, Airbnb, Ouedkniss": honest comparison, fully server-rendered. */
+/** "Meskan vs Booking.com, Airbnb, Ouedkniss": honest comparison, fully server-rendered. */
 export default function ComparisonPage() {
   const lang = getLang();
   const c = CONTENT[lang];

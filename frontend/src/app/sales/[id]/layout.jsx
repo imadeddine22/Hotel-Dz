@@ -27,7 +27,7 @@ export async function generateMetadata({ params }) {
   const title = t('{type}{area} à vendre à {city} — {price}', { ...place, type: t(listing.type), area, price: formatDZD(listing.price, listing.currency) });
   const description =
     truncate(listing.description, 155) ||
-    t('{name} à {city} ({wilaya}) : {rooms} pièce(s), {price}. Réf. {reference}. Contactez le vendeur sur Meskan dz.', {
+    t('{name} à {city} ({wilaya}) : {rooms} pièce(s), {price}. Réf. {reference}. Contactez le vendeur sur Meskan.', {
       ...place, rooms: listing.rooms, price: formatDZD(listing.price, listing.currency), reference: listing.reference,
     });
   const images = (listing.images || []).slice(0, 1).map(absoluteImage);

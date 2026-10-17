@@ -43,24 +43,24 @@ function buildFaqs(name, info, s) {
   const msg = (k, vars) => ({ k, vars });
   const faqs = [
     {
-      q: msg("Combien d'hôtels sont disponibles à {name} sur Meskan dz ?", { name }),
+      q: msg("Combien d'hôtels sont disponibles à {name} sur Meskan ?", { name }),
       a: s.hotels
-        ? msg("Meskan dz référence actuellement {n} hôtel(s) vérifié(s) dans la wilaya de {name}, réservables en ligne gratuitement, avec paiement sur place à l'arrivée.", { n: s.hotels, name })
-        : msg("Aucun hôtel n'est encore publié à {name}. Les hôteliers de la wilaya peuvent inscrire leur établissement gratuitement sur Meskan dz.", { name }),
+        ? msg("Meskan référence actuellement {n} hôtel(s) vérifié(s) dans la wilaya de {name}, réservables en ligne gratuitement, avec paiement sur place à l'arrivée.", { n: s.hotels, name })
+        : msg("Aucun hôtel n'est encore publié à {name}. Les hôteliers de la wilaya peuvent inscrire leur établissement gratuitement sur Meskan.", { name }),
     },
     {
       q: msg("Quel est le prix d'une location de maison à {name} ?", { name }),
       a: s.medianNight
-        ? msg("Le prix médian d'une maison ou d'un appartement en location à {name} est de {price} par nuit, calculé sur les {n} annonces publiées sur Meskan dz.", { name, price: formatDZD(s.medianNight), n: s.houses })
+        ? msg("Le prix médian d'une maison ou d'un appartement en location à {name} est de {price} par nuit, calculé sur les {n} annonces publiées sur Meskan.", { name, price: formatDZD(s.medianNight), n: s.houses })
         : msg("Il n'y a pas encore assez d'annonces de location à {name} pour calculer un prix moyen. Consultez la page régulièrement : de nouvelles maisons sont ajoutées chaque semaine.", { name }),
     },
     {
-      q: msg('Peut-on acheter un bien immobilier à {name} via Meskan dz ?', { name }),
+      q: msg('Peut-on acheter un bien immobilier à {name} via Meskan ?', { name }),
       a: s.sales
         ? s.medianSale
           ? msg('Oui, {n} bien(s) à vendre publié(s) à {name}, pour un prix médian de {price}. Chaque annonce est validée par notre équipe et le vendeur est contactable directement.', { n: s.sales, name, price: formatDZD(s.medianSale) })
           : msg('Oui, {n} bien(s) à vendre publié(s) à {name}. Chaque annonce est validée par notre équipe et le vendeur est contactable directement.', { n: s.sales, name })
-        : msg("Aucun bien n'est actuellement en vente à {name}. Les vendeurs peuvent publier une annonce après inscription sur Meskan dz.", { name }),
+        : msg("Aucun bien n'est actuellement en vente à {name}. Les vendeurs peuvent publier une annonce après inscription sur Meskan.", { name }),
     },
   ];
   if (info) {
@@ -92,8 +92,8 @@ export async function generateMetadata({ params }) {
     path: wilayaPath(displayName),
     title: t('Hôtels, locations et maisons à vendre à {name}', { name: place }),
     description: parts.length
-      ? t('{parts} à {name}. Comparez les prix, lisez les avis et réservez gratuitement en ligne, paiement sur place, sur Meskan dz.', { parts: parts.join(', '), name: place })
-      : t('Trouvez un hôtel, une maison à louer ou un bien à acheter à {name}. Réservation en ligne gratuite et paiement sur place sur Meskan dz.', { name: place }),
+      ? t('{parts} à {name}. Comparez les prix, lisez les avis et réservez gratuitement en ligne, paiement sur place, sur Meskan.', { parts: parts.join(', '), name: place })
+      : t('Trouvez un hôtel, une maison à louer ou un bien à acheter à {name}. Réservation en ligne gratuite et paiement sur place sur Meskan.', { name: place }),
     // Unknown wilaya, or no listings and no editorial content: keep it out of the index.
     robots: !info || (s.reachable && total === 0 && !info.highlights.length) ? { index: false, follow: true } : undefined,
   });
@@ -138,9 +138,9 @@ export default async function WilayaPage({ params }) {
         <p className="mt-3 max-w-3xl leading-relaxed">
           {info && <T k="{displayName} est la wilaya n°{code} d'Algérie, dans la région {label}. " vars={{ displayName, code: info.code, label: info.region.label }} />}
           {s.hotels + s.houses + s.sales > 0 ? (
-            <T k="Sur Meskan dz, vous y trouvez {hotels} hôtel(s), {houses} maison(s) à louer et {sales} bien(s) à vendre, tous vérifiés par notre équipe." vars={{ hotels: s.hotels, houses: s.houses, sales: s.sales }} />
+            <T k="Sur Meskan, vous y trouvez {hotels} hôtel(s), {houses} maison(s) à louer et {sales} bien(s) à vendre, tous vérifiés par notre équipe." vars={{ hotels: s.hotels, houses: s.houses, sales: s.sales }} />
           ) : (
-            <T k="Les premières annonces de {displayName} arrivent bientôt sur Meskan dz. Hôteliers, propriétaires et vendeurs de la wilaya peuvent publier leur annonce dès maintenant." vars={{ displayName }} />
+            <T k="Les premières annonces de {displayName} arrivent bientôt sur Meskan. Hôteliers, propriétaires et vendeurs de la wilaya peuvent publier leur annonce dès maintenant." vars={{ displayName }} />
           )}
           {s.cities.length > 0 && <> <T k="Annonces disponibles notamment à {cities}." vars={{ cities: s.cities.join(', ') }} /></>}
         </p>

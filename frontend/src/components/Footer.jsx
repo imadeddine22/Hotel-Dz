@@ -20,10 +20,10 @@ export default function Footer() {
       
       <div className="relative z-10 max-w-7xl mx-auto px-4 text-center pb-16">
         <h3 className="text-3xl md:text-5xl font-black font-serif text-white tracking-tight leading-tight">
-          {t('Laissez Meskan dz gérer vos séjours.')} <br />
+          {t('Laissez Meskan gérer vos séjours.')} <br />
           {lang === 'ar' ? 'ابدأ اليوم مجاناً وسهّل عملياتك' : t('Simplifiez vos réservations dès aujourd\'hui.')}
         </h3>
-        <p className="text-slate-400 text-xs md:text-sm font-medium mt-4 max-w-md mx-auto leading-relaxed">
+        <p className="text-slate-400 text-sm md:text-base font-medium mt-4 max-w-md mx-auto leading-relaxed">
           {lang === 'ar' 
             ? 'سجّل فندقك أو منزلك في دقائق معدودة. بدون عمولات، وبأمان تام.' 
             : t('Inscrivez votre établissement en quelques minutes. Sans frais de service, sans commission, et touchez des milliers de clients.')}
@@ -31,7 +31,7 @@ export default function Footer() {
         <div className="mt-8">
           <Link
             href="/register"
-            className="inline-block bg-white hover:bg-slate-50 text-slate-900 font-bold px-8 py-3.5 rounded-full text-xs transition shadow-md hover:scale-102"
+            className="inline-block bg-white hover:bg-slate-50 text-slate-900 font-bold px-8 py-3.5 rounded-full text-sm transition shadow-md hover:scale-102"
           >
             {lang === 'ar' ? 'ابدأ مجاناً' : t('Commencer gratuitement')}
           </Link>
@@ -44,26 +44,26 @@ export default function Footer() {
           
           {/* Column 1: Navigation */}
           <div>
-            <h4 className="text-[10px] font-black tracking-widest text-white uppercase mb-4">
+            <h4 className="text-xs md:text-sm font-black tracking-widest text-white uppercase mb-5">
               {lang === 'ar' ? 'التصفح' : t('Navigation')}
             </h4>
-            <ul className="space-y-3 text-xs font-semibold">
+            <ul className="space-y-3.5 text-sm md:text-base font-semibold">
               <li><Link href="/" className="hover:text-white transition">{t.navHome}</Link></li>
               <li><Link href="/hotels" className="hover:text-white transition">{t.navHotels}</Link></li>
               <li><Link href="/houses" className="hover:text-white transition">{t.navHouses}</Link></li>
               <li><Link href="/sales" className="hover:text-white transition">{t.navSales}</Link></li>
               <li><Link href="/destinations" className="hover:text-white transition">{t.navDestinations}</Link></li>
               <li><Link href="/outils" className="hover:text-white transition">{lang === 'ar' ? 'أدوات مجانية' : t('Outils gratuits')}</Link></li>
-              <li><Link href="/comparatif" className="hover:text-white transition">{t('Meskan dz vs Booking, Airbnb, Ouedkniss')}</Link></li>
+              <li><Link href="/comparatif" className="hover:text-white transition">{t('Meskan vs Booking, Airbnb, Ouedkniss')}</Link></li>
             </ul>
           </div>
 
           {/* Column 2: Espace Client */}
           <div>
-            <h4 className="text-[10px] font-black tracking-widest text-white uppercase mb-4">
+            <h4 className="text-xs md:text-sm font-black tracking-widest text-white uppercase mb-5">
               {lang === 'ar' ? 'حساب الزبون' : t('Espace Client')}
             </h4>
-            <ul className="space-y-3 text-xs font-semibold">
+            <ul className="space-y-3.5 text-sm md:text-base font-semibold">
               <li><Link href="/my-bookings" className="hover:text-white transition">{t.myBookings}</Link></li>
               <li><Link href="/favorites" className="hover:text-white transition">{t.favorites}</Link></li>
               <li><Link href="/profile" className="hover:text-white transition">{t.mySpace}</Link></li>
@@ -72,10 +72,10 @@ export default function Footer() {
 
           {/* Column 3: Espace Propriétaire */}
           <div>
-            <h4 className="text-[10px] font-black tracking-widest text-white uppercase mb-4">
+            <h4 className="text-xs md:text-sm font-black tracking-widest text-white uppercase mb-5">
               {lang === 'ar' ? 'الملاك' : t('Propriétaires')}
             </h4>
-            <ul className="space-y-3 text-xs font-semibold">
+            <ul className="space-y-3.5 text-sm md:text-base font-semibold">
               <li><Link href="/pricing" className="hover:text-white transition">{t.navPricing}</Link></li>
               <li><Link href="/register" className="hover:text-white transition">{t.becomeOwner}</Link></li>
               <li><Link href="/login" className="hover:text-white transition">{t.login}</Link></li>
@@ -84,16 +84,16 @@ export default function Footer() {
 
           {/* Column 4: Contact & Info */}
           <div>
-            <h4 className="text-[10px] font-black tracking-widest text-white uppercase mb-4 font-sans">
+            <h4 className="text-xs md:text-sm font-black tracking-widest text-white uppercase mb-5 font-sans">
               {lang === 'ar' ? 'معلومات الاتصال' : t('Contact & Info')}
             </h4>
-            <ul className="space-y-3 text-xs font-semibold mb-4">
+            <ul className="space-y-3.5 text-sm md:text-base font-semibold mb-4">
               <li><Link href="/about" className="hover:text-white transition">{lang === 'ar' ? 'عن الموقع' : t('À propos')}</Link></li>
               <li><Link href="/contact" className="hover:text-white transition">{t.helpCenter}</Link></li>
             </ul>
             
             {/* Real Website Information */}
-            <div className="pt-4 border-t border-slate-900/60 space-y-2 text-xs text-slate-500">
+            <div className="pt-4 border-t border-slate-900/60 space-y-2.5 text-sm md:text-base text-slate-400">
               <div className="flex items-center gap-2">
                 <Mail className="h-3.5 w-3.5 text-teal-500 shrink-0" />
                 <span className="truncate">{t('support@hotelsdz.dz')}</span>
@@ -112,8 +112,8 @@ export default function Footer() {
         </div>
 
         <nav aria-label={lang === 'ar' ? 'وجهات شائعة' : t('Destinations populaires')} className="mt-12 border-t border-slate-900/60 pt-8">
-          <p className="text-[10px] font-black tracking-widest text-white uppercase mb-4">{lang === 'ar' ? 'وجهات شائعة' : t('Destinations populaires')}</p>
-          <ul className="flex flex-wrap gap-x-5 gap-y-2 text-xs font-semibold">
+          <p className="text-xs md:text-sm font-black tracking-widest text-white uppercase mb-5">{lang === 'ar' ? 'وجهات شائعة' : t('Destinations populaires')}</p>
+          <ul className="flex flex-wrap gap-x-6 gap-y-3 text-sm md:text-base font-semibold">
             {POPULAR.map((w) => (
               <li key={w}><Link href={wilayaPath(w)} className="hover:text-white transition">{lang === 'ar' ? `فنادق ${WILAYA_LIST.find((x) => x.name === w)?.arabic || w}` : t('Hôtels à {w}', { w })}</Link></li>
             ))}
@@ -126,8 +126,8 @@ export default function Footer() {
         </div>
 
         {/* Mini Bottom Bar */}
-        <div className="border-t border-slate-900/60 py-6 text-center text-[10px] font-black uppercase tracking-widest text-slate-500">
-          © {new Date().getFullYear()} {t('Meskan dz.')} {t.copyright}
+        <div className="border-t border-slate-900/60 py-6 text-center text-xs md:text-sm font-bold uppercase tracking-widest text-slate-400">
+          © {new Date().getFullYear()} {t('Meskan.')} {t.copyright}
         </div>
 
       </div>

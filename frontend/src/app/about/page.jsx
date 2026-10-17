@@ -9,7 +9,7 @@ export function generateMetadata() {
   return pageMeta({
     path: '/about',
     title: 'À propos',
-    description: "Meskan dz connecte les hôteliers algériens aux voyageurs : réservation simple et gratuite, paiement sur place, hôtels vérifiés dans les 69 wilayas.",
+    description: "Meskan connecte les hôteliers algériens aux voyageurs : réservation simple et gratuite, paiement sur place, hôtels vérifiés dans les 69 wilayas.",
   });
 }
 
@@ -63,7 +63,7 @@ export default function AboutPage() {
             <T>Le séjour algérien,</T> <span className="text-brand-400"><T>simplifié</T></span>
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-lg text-gray-200">
-            <T>Meskan dz connecte les hôteliers d'Algérie aux voyageurs qui cherchent une adresse de confiance — réservation en ligne, paiement sur place, avis vérifiés.</T>
+            <T>Meskan connecte les hôteliers d'Algérie aux voyageurs qui cherchent une adresse de confiance — réservation en ligne, paiement sur place, avis vérifiés.</T>
           </p>
         </div>
       </section>
@@ -86,7 +86,7 @@ export default function AboutPage() {
           <div>
             <h2 className="text-3xl font-extrabold text-ink"><T>Notre mission</T></h2>
             <p className="mt-4 leading-relaxed text-gray-600">
-              <T>Le tourisme algérien mérite des outils modernes. Trop d'hôtels n'existent pas en ligne, et trop de voyageurs réservent encore par téléphone, sans garantie. Meskan dz change cela : une vitrine professionnelle pour chaque hôtelier, et une réservation transparente pour chaque client.</T>
+              <T>Le tourisme algérien mérite des outils modernes. Trop d'hôtels n'existent pas en ligne, et trop de voyageurs réservent encore par téléphone, sans garantie. Meskan change cela : une vitrine professionnelle pour chaque hôtelier, et une réservation transparente pour chaque client.</T>
             </p>
             <p className="mt-3 leading-relaxed text-gray-600">
               <T>Vous êtes hôtelier ? Inscrivez votre établissement gratuitement, gérez vos chambres et vos réservations depuis un tableau de bord simple.</T>
@@ -123,7 +123,7 @@ export default function AboutPage() {
             <Building2 className="h-6 w-6" />
           </span>
           <div>
-            <h2 className="text-2xl font-extrabold text-ink"><T>Pourquoi Meskan dz ?</T></h2>
+            <h2 className="text-2xl font-extrabold text-ink"><T>Pourquoi Meskan ?</T></h2>
             <p className="text-sm text-gray-500"><T>Ce qui nous rend différents</T></p>
           </div>
         </div>
@@ -146,7 +146,7 @@ export default function AboutPage() {
           <Users className="h-10 w-10" />
           <h2 className="text-3xl font-extrabold"><T>Rejoignez l'aventure</T></h2>
           <p className="max-w-xl text-brand-50">
-            <T>Que vous soyez voyageur ou hôtelier, Meskan dz est fait pour vous. Créez votre compte en moins d'une minute.</T>
+            <T>Que vous soyez voyageur ou hôtelier, Meskan est fait pour vous. Créez votre compte en moins d'une minute.</T>
           </p>
           <Link
             href="/register"
