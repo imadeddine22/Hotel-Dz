@@ -78,7 +78,8 @@ export default function HouseCard({ house, list = false }) {
         </div>
       </Link>
       {(house._id || house.id) && (
-        <div className="absolute left-3 bottom-3 z-20">
+        // on the photo (bottom corner), never over the price; outside the Link so a click doesn't navigate
+        <div className={`absolute z-20 ${list ? 'left-3 bottom-3' : 'right-3 top-[10.25rem]'}`}>
           <FavoriteButton type="house" id={house._id || house.id} />
         </div>
       )}
