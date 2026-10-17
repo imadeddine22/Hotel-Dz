@@ -55,7 +55,7 @@ const currentLang = () => {
 // Owner/seller/admin screens edit the original text: never hand them a translation,
 // or saving the form would overwrite the original with it.
 const EDITING_PATHS = /\/(my\/list|seller\/|admin\/|owner\/)/;
-const LOCALIZED_FIELDS = ['name', 'title', 'description', 'amenities'];
+const LOCALIZED_FIELDS = ['name', 'title', 'description', 'amenities', 'comment'];
 
 /**
  * Listings carry machine translations (`translations: { ar: { name, description, … }, en: … }`,

@@ -444,6 +444,48 @@ describe('Admin');
   expectStatus('admin deletes user', await req('DELETE', `/admin/users/${customer2.user._id}`, { token: adminToken }), 200);
 }
 
+describe('Home page testimonials (moderated)');
+{
+  const pub = await req('GET', '/testimonials');
+  expectStatus('approved testimonials are public', pub, 200);
+  check('only approved testimonials are listed', pub.data.testimonials?.length >= 1 && pub.data.testimonials.every((t) => !('status' in t) || t.status === 'approved'));
+  check('public list exposes no e-mail', !JSON.stringify(pub.data).includes('@'));
+
+  expectStatus('visitor cannot post a testimonial', await req('POST', '/testimonials', { body: { rating: 5, comment: 'Anonymous spam text' } }), 401);
+  const writer = await register('customer');
+  expectStatus('rating is validated', await req('POST', '/testimonials', { token: writer.token, body: { rating: 9, comment: 'Excellent plateforme vraiment' } }), 400);
+  expectStatus('short comment rejected', await req('POST', '/testimonials', { token: writer.token, body: { rating: 5, comment: 'Bien' } }), 400);
+  const sent = await req('POST', '/testimonials', {
+    token: writer.token,
+    body: { rating: 4, title: 'Client, Tlemcen', comment: `Très bonne plateforme ${uid}`, status: 'approved', name: 'Spoofed' },
+  });
+  expectStatus('customer posts a testimonial', sent, 201);
+  const tid = sent.data.testimonial?._id;
+  check('new testimonial waits for moderation (status not spoofable)', sent.data.testimonial?.status === 'pending');
+  check('author name comes from the account', sent.data.testimonial?.name === 'Test customer');
+  check('pending testimonial is not public', !(await req('GET', '/testimonials')).data.testimonials.some((t) => t._id === tid));
+  check('author sees own pending testimonial', (await req('GET', '/testimonials/mine', { token: writer.token })).data.testimonial?._id === tid);
+
+  const again = await req('POST', '/testimonials', { token: writer.token, body: { rating: 5, comment: `Encore mieux ${uid}` } });
+  check('posting again updates the same testimonial', again.data.testimonial?._id === tid && again.data.testimonial?.rating === 5);
+
+  expectStatus('customer cannot moderate', await req('PUT', `/testimonials/${tid}/approve`, { token: writer.token }), 403);
+  expectStatus('customer cannot list moderation queue', await req('GET', '/testimonials/admin', { token: writer.token }), 403);
+
+  const admin = await login('admin@hotelsdz.dz', 'admin123');
+  const queue = await req('GET', '/testimonials/admin?status=pending', { token: admin });
+  check('admin sees it in the pending queue', queue.data.testimonials?.some((t) => t._id === tid) && queue.data.pending >= 1);
+  expectStatus('admin approves', await req('PUT', `/testimonials/${tid}/approve`, { token: admin }), 200);
+  check('approved testimonial is public', (await req('GET', '/testimonials')).data.testimonials.some((t) => t._id === tid));
+
+  const edited = await req('POST', '/testimonials', { token: writer.token, body: { rating: 1, comment: `Changé après validation ${uid}` } });
+  check('editing an approved testimonial sends it back to moderation', edited.data.testimonial?.status === 'pending');
+  check('edited testimonial leaves the public list', !(await req('GET', '/testimonials')).data.testimonials.some((t) => t._id === tid));
+
+  expectStatus('admin deletes', await req('DELETE', `/testimonials/${tid}`, { token: admin }), 200);
+  expectStatus('deleted testimonial is gone', await req('DELETE', `/testimonials/${tid}`, { token: admin }), 404);
+}
+
 describe('No online payment');
 {
   const r = await fetch(`${API}/payments/webhook`, { method: 'POST', body: '{}' });

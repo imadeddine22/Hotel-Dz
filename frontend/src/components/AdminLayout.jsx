@@ -20,6 +20,7 @@ import {
   Home,
   Mail,
   Tag,
+  MessageSquareQuote,
 } from 'lucide-react';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
@@ -33,6 +34,7 @@ const ADMIN_MENU = [
   { href: '/admin/all-sales', label: 'Ventes immobilières', icon: Tag },
   { href: '/admin/users', label: 'Utilisateurs', icon: Users },
   { href: '/admin/messages', label: 'Messages', icon: Mail },
+  { href: '/admin/testimonials', label: 'Avis clients', icon: MessageSquareQuote },
   { href: '/admin/bookings', label: 'Réservations', icon: CalendarCheck },
   { href: '/admin/pricing', label: 'Tarification', icon: Settings },
 ];
@@ -45,6 +47,7 @@ export default function AdminLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [unread, setUnread] = useState(0);
+  const [pendingReviews, setPendingReviews] = useState(0);
 
   useEffect(() => {
     if (loading) return;
@@ -57,6 +60,9 @@ export default function AdminLayout({ children }) {
     if (!user || !isRole('admin')) return;
     api.get('/messages')
       .then(({ data }) => setUnread((data.messages || []).filter((m) => !m.isRead).length))
+      .catch(() => {});
+    api.get('/testimonials/admin?status=pending', { localize: false })
+      .then(({ data }) => setPendingReviews(data.pending || 0))
       .catch(() => {});
   }, [user, pathname]);
 
@@ -91,7 +97,7 @@ export default function AdminLayout({ children }) {
           {ADMIN_MENU.map((item) => {
             const Icon = item.icon;
             const active = pathname === item.href;
-            const showBadge = item.href === '/admin/messages' && unread > 0;
+            const badge = item.href === '/admin/messages' ? unread : item.href === '/admin/testimonials' ? pendingReviews : 0;
             return (
               <Link
                 key={item.href}
@@ -101,7 +107,7 @@ export default function AdminLayout({ children }) {
               >
                 <Icon className="admin-nav-icon" />
                 <span>{t(item.label)}</span>
-                {showBadge && <span className="admin-nav-badge">{unread}</span>}
+                {badge > 0 && <span className="admin-nav-badge">{badge}</span>}
               </Link>
             );
           })}

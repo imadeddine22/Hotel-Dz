@@ -15,6 +15,7 @@ import Room from './models/Room.js';
 import Booking from './models/Booking.js';
 import Review from './models/Review.js';
 import Message from './models/Message.js';
+import Testimonial from './models/Testimonial.js';
 
 const img = (id) => ({
   url: `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=1200&q=80`,
@@ -63,7 +64,7 @@ export const seedDatabase = async () => {
   // Wipe
   await Promise.all([
     User.deleteMany({}), Hotel.deleteMany({}), House.deleteMany({}), Room.deleteMany({}),
-    Booking.deleteMany({}), Review.deleteMany({}), Message.deleteMany({}),
+    Booking.deleteMany({}), Review.deleteMany({}), Message.deleteMany({}), Testimonial.deleteMany({}),
   ]);
 
   // --- Users ---
@@ -126,6 +127,19 @@ export const seedDatabase = async () => {
   // --- Contact messages ---
   await Message.create(MESSAGES);
   console.log(`✉️  Messages: ${MESSAGES.length}`);
+
+  // --- Home page testimonials (3 published, 1 waiting for the admin) ---
+  await Testimonial.create([
+    { user: customers[0]._id, name: customers[0].fullName, title: 'Cliente, Alger', rating: 5, status: 'approved',
+      comment: "Réservation très simple : l'hôtel a confirmé ma demande en quelques heures et j'ai payé sur place. Je recommande !" },
+    { user: owner._id, name: owner.fullName, title: 'Hôtelier, Oran', rating: 5, status: 'approved',
+      comment: "Inscrire mon hôtel a pris dix minutes. Je reçois les demandes directement et je garde le contrôle sur chaque réservation." },
+    { user: customers[1]._id, name: customers[1].fullName, title: 'Client, Constantine', rating: 4, status: 'approved',
+      comment: "Large choix de maisons dans toutes les wilayas, avec les prix clairs par nuit. Une vraie aide pour les vacances en famille." },
+    { user: customers[2]._id, name: customers[2].fullName, title: 'Cliente, Béjaïa', rating: 5, status: 'pending',
+      comment: "Super expérience pour notre séjour à Béjaïa, la maison était exactement comme sur les photos." },
+  ]);
+  console.log('💬 Testimonials: 3 approved, 1 pending');
 
   // --- A few favorites for the first customer ---
   const fav = customers[0];
