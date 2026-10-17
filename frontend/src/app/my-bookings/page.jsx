@@ -113,7 +113,7 @@ export default function MyBookingsPage() {
                       <div>
                         <h3 className="font-bold text-ink">{property?.name || t('Hébergement supprimé')}</h3>
                         <p className="flex items-center gap-1 text-sm text-gray-500">
-                          <MapPin className="h-4 w-4" aria-hidden="true" /> {property?.city}, {property?.wilaya}
+                          <MapPin className="h-4 w-4" aria-hidden="true" /> {t(property?.city)}, {t(property?.wilaya)}
                         </p>
                         <p className="mt-1 text-sm text-gray-500">
                           {isHouse ? `${property?.type || 'Maison'} entière` : b.room?.title} · {b.guests} {t('pers.')}

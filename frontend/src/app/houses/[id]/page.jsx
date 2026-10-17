@@ -176,7 +176,7 @@ export default function HouseDetailPage() {
           <div style={{ background: '#fff', borderRadius: 16, padding: 24, marginBottom: 24, boxShadow: '0 1px 8px rgba(0,0,0,0.05)' }}>
             <h2 style={{ fontSize: 18, fontWeight: 700, color: '#1e293b', margin: '0 0 4px' }}>{t('Localisation')}</h2>
             <p style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#94a3b8', margin: '0 0 16px' }}>
-              <MapPin size={14} /> {house.address || `${house.city}, ${house.wilaya}`}
+              <MapPin size={14} /> {house.address || t(`${house.city}, ${house.wilaya}`)}
             </p>
             <LocationMap
               lat={house.coordinates?.lat}

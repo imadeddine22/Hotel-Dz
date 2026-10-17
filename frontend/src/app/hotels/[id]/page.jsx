@@ -120,7 +120,7 @@ export default function HotelDetailPage() {
           <div className="mb-8">
             <h3 className="mb-1 font-semibold text-ink">{t('Localisation')}</h3>
             <p className="mb-3 flex items-center gap-1 text-sm text-gray-500">
-              <MapPin className="h-4 w-4" /> {hotel.address || `${hotel.city}, ${hotel.wilaya}`}
+              <MapPin className="h-4 w-4" /> {hotel.address || t(`${hotel.city}, ${hotel.wilaya}`)}
             </p>
             <LocationMap lat={hotel.coordinates?.lat} lng={hotel.coordinates?.lng} label={hotel.name} accent="#00bcd4" />
           </div>
