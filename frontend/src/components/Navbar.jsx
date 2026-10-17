@@ -6,8 +6,7 @@ import { usePathname } from 'next/navigation';
 import { ChevronDown, Menu, X, Heart, User, Globe } from 'lucide-react';
 import { useAuthStore, useLangStore } from '@/store/authStore';
 import { useFavoritesStore } from '@/store/favoritesStore';
-import BrandLogo from '@/components/BrandLogo';
-import { SITE_NAME } from '@/lib/brand';
+import BrandLogo, { brandName } from '@/components/BrandLogo';
 import { useT } from '@/lib/i18n/useT';
 
 export default function Navbar() {
@@ -89,8 +88,8 @@ export default function Navbar() {
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         
         {/* Left: Brand Logo */}
-        <Link href="/" className="flex items-center shrink-0 group" aria-label={`${SITE_NAME} — ${t.tagline}`}>
-          <BrandLogo className="h-10 sm:h-11 transition-transform duration-300 group-hover:scale-[1.03]" alt="" priority />
+        <Link href="/" className="flex items-center shrink-0 group" aria-label={`${brandName(lang)} — ${t.tagline}`}>
+          <span className="inline-block transition-transform duration-300 group-hover:scale-[1.03]"><BrandLogo className="h-10 sm:h-11" textClassName="text-2xl sm:text-[1.7rem]" alt="" priority /></span>
         </Link>
 
         {/* Center: Navigation Links */}

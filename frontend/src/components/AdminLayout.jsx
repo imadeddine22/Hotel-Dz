@@ -80,7 +80,7 @@ export default function AdminLayout({ children }) {
       <aside className={`admin-sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="admin-sidebar-header">
           <Link href="/" className="admin-logo">
-            <BrandLogo className="h-9" />
+            <BrandLogo className="h-9" textClassName="text-xl" />
           </Link>
           <button className="admin-sidebar-close" onClick={() => setSidebarOpen(false)}>
             <X className="w-5 h-5" />

@@ -1,10 +1,12 @@
-// Builds the Meskan dz logo assets from the source PNG, with no dependencies (zlib only):
-//   public/brand/meskan-logo.png        full logo, navy on transparent, cropped
-//   public/brand/meskan-logo-white.png  same in white (dark backgrounds, e.g. footer)
-//   public/brand/meskan-mark.png        house/spiral mark only, square (avatar / social)
+// Builds the Meskan dz icon assets from the source PNG (the house/spiral mark alone),
+// with no dependencies (zlib only). The brand name is rendered as live text next to the icon
+// (BrandLogo.jsx) so it can read "Meskan dz" or «مسكن» depending on the language.
+//   public/brand/meskan-mark.png        icon, navy on transparent, square
+//   public/brand/meskan-mark-white.png  same in white (dark backgrounds, e.g. footer)
 //   src/app/icon.png                    favicon (Next.js app icon convention)
+//   src/app/apple-icon.png              iOS home-screen icon
 //
-// Usage: node scripts/make-logo.cjs <source.png>
+// Usage: node scripts/make-logo.cjs <icon.png>
 const fs = require('fs');
 const path = require('path');
 const zlib = require('zlib');
@@ -139,20 +141,13 @@ function markEnd(img, box) {
 // ── Build ───────────────────────────────────────────────────────
 const source = decode(fs.readFileSync(src));
 const navy = toInk(source, NAVY);
-const full = bbox(navy);
-const logo = crop(navy, full, 4);
-const white = { ...logo, px: Buffer.from(logo.px) };
+const mark = crop(navy, bbox(navy), 6, true); // square frame, small margin
+const white = { ...mark, px: Buffer.from(mark.px) };
 for (let i = 0; i < white.px.length; i += 4) white.px[i] = white.px[i + 1] = white.px[i + 2] = 255;
-
-const mx = markEnd(navy, full);
-// Erase the wordmark so squaring the mark's frame can't pull in the edge of the "M"
-const markOnly = { ...navy, px: Buffer.from(navy.px) };
-for (let y = 0; y < markOnly.height; y++) for (let x = mx; x < markOnly.width; x++) markOnly.px[(y * markOnly.width + x) * 4 + 3] = 0;
-const mark = crop(markOnly, bbox(markOnly), 12, true);
 
 fs.mkdirSync(path.join(out, 'public', 'brand'), { recursive: true });
 const write = (rel, img) => { fs.writeFileSync(path.join(out, rel), encode(img)); console.log(`${rel}  ${img.width}x${img.height}`); };
-write('public/brand/meskan-logo.png', logo);
-write('public/brand/meskan-logo-white.png', white);
 write('public/brand/meskan-mark.png', mark);
+write('public/brand/meskan-mark-white.png', white);
 write('src/app/icon.png', resize(mark, 64));
+write('src/app/apple-icon.png', resize(mark, 180));

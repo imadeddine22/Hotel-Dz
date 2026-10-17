@@ -49,7 +49,7 @@ export default function RegisterPage() {
     <div className="grid min-h-screen place-items-center bg-[var(--bg)] px-4 py-10">
       <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-card">
         <Link href="/" className="mb-6 flex justify-center">
-          <BrandLogo className="h-12" />
+          <BrandLogo className="h-12" textClassName="text-3xl" />
         </Link>
         <h1 className="mb-1 text-2xl font-bold text-ink">{t('Créer un compte')}</h1>
         <p className="mb-6 text-sm text-gray-500">{t('Rejoignez Meskan dz')}</p>

@@ -19,7 +19,7 @@ export default function Footer() {
       
       <div className="relative z-10 max-w-7xl mx-auto px-4 text-center pb-16">
         <h3 className="text-3xl md:text-5xl font-black font-serif text-white tracking-tight leading-tight">
-          {lang === 'ar' ? 'دع Meskan dz يدير إقامتك' : t('Laissez Meskan dz gérer vos séjours.')} <br />
+          {t('Laissez Meskan dz gérer vos séjours.')} <br />
           {lang === 'ar' ? 'ابدأ اليوم مجاناً وسهّل عملياتك' : t('Simplifiez vos réservations dès aujourd\'hui.')}
         </h3>
         <p className="text-slate-400 text-xs md:text-sm font-medium mt-4 max-w-md mx-auto leading-relaxed">
@@ -120,7 +120,7 @@ export default function Footer() {
 
         {/* ─── Massive Branding Watermark Logo at the Bottom ─── */}
         <div aria-hidden="true" className="mt-16 flex justify-center select-none opacity-[0.06] transition duration-700 hover:opacity-[0.1]">
-          <BrandLogo variant="light" alt="" className="h-24 md:h-48" />
+          <BrandLogo variant="light" alt="" className="h-20 md:h-40" textClassName="text-6xl md:text-9xl" />
         </div>
 
         {/* Mini Bottom Bar */}
