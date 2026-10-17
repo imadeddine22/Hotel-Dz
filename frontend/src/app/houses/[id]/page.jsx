@@ -21,7 +21,7 @@ const MOCK = {
 };
 
 export default function HouseDetailPage() {
-  const { t } = useT();
+  const { t, lang } = useT();
   const { id } = useParams();
   const [house, setHouse] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -87,7 +87,7 @@ export default function HouseDetailPage() {
           </span>
           <h1 style={{ fontSize: 34, fontWeight: 800, color: '#fff', margin: '0 0 6px' }}>{house.name}</h1>
           <p style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#e2e8f0', fontSize: 15, margin: 0 }}>
-            <MapPin size={16} /> {t(house.city)}{house.wilaya !== house.city ? `, ${house.wilaya}` : ''}
+            <MapPin size={16} /> {t(house.city)}{house.wilaya && house.wilaya !== house.city ? `${lang === 'ar' ? '، ' : ', '}${t(house.wilaya)}` : ''}
           </p>
         </div>
 

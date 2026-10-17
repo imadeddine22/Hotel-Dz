@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useLangStore } from '@/store/authStore';
 import { TRANSLATIONS } from '@/lib/data';
 import { DEFAULT_LANG, isRtl, translate } from './index';
-import { loadCommuneNames } from './places';
+import { onPlacesLoaded, placesLoaded } from './places';
 
 /**
  * const { t, lang } = useT();  t('Mes réservations')  t('Hôtels à {place}', { place })
@@ -18,16 +18,9 @@ export function useT() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
   const lang = mounted ? stored || DEFAULT_LANG : DEFAULT_LANG;
-  // Arabic: fetch the commune names once, then re-render so t('Hydra') → «حيدرة»
-  const [placesReady, setPlacesReady] = useState(false);
-  useEffect(() => {
-    if (lang !== 'ar') return undefined;
-    let active = true;
-    loadCommuneNames().then(() => active && setPlacesReady(true));
-    return () => {
-      active = false;
-    };
-  }, [lang]);
+  // Commune names load on first use: re-render once they arrive so t('Hydra') → «حيدرة»
+  const [placesReady, setPlacesReady] = useState(placesLoaded);
+  useEffect(() => (placesLoaded() ? setPlacesReady(true) : onPlacesLoaded(() => setPlacesReady(true))), []);
   // t is a function, and also carries the older keyed translations (t.navHome, t.seeAll…)
   // from lib/data.js so components written against that object keep working.
   const t = useMemo(

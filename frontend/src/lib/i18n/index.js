@@ -7,7 +7,7 @@ import ar from './ar.json';
 import en from './en.json';
 import fr from './fr.json';
 import { WILAYA_LIST } from '../wilayas';
-import { placeArabic } from './places';
+import { placeName } from './places';
 
 export { translateMessage } from './messages';
 
@@ -27,8 +27,8 @@ export function translate(lang, key, vars) {
   if (key === undefined || key === null || key === '') return key ?? '';
   if (typeof key !== 'string') return key; // numbers, elements: leave untouched
   const dict = DICTS[lang] || DICTS.fr;
-  // place names (wilayas, communes) come from the official Arabic list
-  return fill(dict[key] ?? (lang === 'ar' ? placeArabic(key) : undefined) ?? key, vars);
+  // place names (wilayas, communes) come from the official list, in Arabic or French
+  return fill(dict[key] ?? placeName(lang, key) ?? key, vars);
 }
 
 export const isRtl = (lang) => lang === 'ar';

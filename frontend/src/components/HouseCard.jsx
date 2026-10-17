@@ -8,7 +8,7 @@ import { getImageUrl } from '@/lib/api';
 
 import { useT } from '@/lib/i18n/useT';
 export default function HouseCard({ house, list = false }) {
-  const { t } = useT();
+  const { t, lang } = useT();
   const rawImg = house.images?.[0]?.url || house.img || null;
   const img = getImageUrl(rawImg) ||
     'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&q=80';
@@ -46,7 +46,7 @@ export default function HouseCard({ house, list = false }) {
           <h3 className="text-base font-bold text-gray-900">{house.name}</h3>
           <p className="mt-1 flex items-center gap-1 text-sm text-gray-500">
             <MapPin className="h-4 w-4 text-brand-500" />
-            {t(house.city)}{house.wilaya && house.wilaya !== house.city ? `, ${house.wilaya}` : ''}
+            {t(house.city)}{house.wilaya && house.wilaya !== house.city ? `${lang === 'ar' ? '، ' : ', '}${t(house.wilaya)}` : ''}
           </p>
 
           {/* Details row */}
