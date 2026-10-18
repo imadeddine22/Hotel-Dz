@@ -1,6 +1,7 @@
 'use client';
 
 import Testimonials from '@/components/Testimonials';
+import HomeBanner from '@/components/HomeBanner';
 
 import { useT } from '@/lib/i18n/useT';
 export default function HomeDetailsSection() {
@@ -17,6 +18,9 @@ export default function HomeDetailsSection() {
         <p className="max-w-2xl mx-auto text-slate-500 text-xs md:text-sm font-medium leading-relaxed">
           {t('With a proven track record and in-depth market knowledge, we\'re here to make your real estate journey smooth and stress-free. Whether buying, selling, or renting, you can count on our team to deliver results with integrity.')}
         </p>
+
+        {/* Brand banner (where the team photo was) */}
+        <HomeBanner />
 
         {/* Stat Cards Grid */}
         <div className="grid gap-6 md:grid-cols-3 pt-6 relative z-10 px-4 md:px-12">
