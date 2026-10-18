@@ -927,6 +927,20 @@ describe('Listing reels (videos)');
   check('category filter (sales only)', sales.data.reels.length > 0 && sales.data.reels.every((r) => r.kind === 'sale'));
   check('feed cards carry price and listing photo', feed.data.reels.every((r) => 'price' in r && typeof r.image === 'string'));
 
+  // Wilaya filter (with or without a category)
+  const wl = await req('GET', '/reels/wilayas');
+  check('wilayas with reels, with counts', wl.status === 200 && wl.data.wilayas.length > 0 && wl.data.wilayas.every((w) => w.wilaya && w.count > 0) && wl.data.total === feed.data.total);
+  const top = wl.data.wilayas[0];
+  const inWilaya = await req('GET', `/reels?wilaya=${encodeURIComponent(top.wilaya)}&limit=20`);
+  check(`?wilaya=${top.wilaya}: only that wilaya, all categories`, inWilaya.data.reels.length === top.count && inWilaya.data.reels.every((r) => r.wilaya === top.wilaya));
+  const lower = await req('GET', `/reels?wilaya=${encodeURIComponent(top.wilaya.toLowerCase())}&limit=20`);
+  check('wilaya filter ignores case / accents', lower.data.reels.length === top.count);
+  const both = await req('GET', '/reels?type=sales&wilaya=Alger&limit=20');
+  check('category + wilaya combined', both.data.reels.every((r) => r.kind === 'sale' && r.wilaya === 'Alger'));
+  check('no partial matches (« Alg » ≠ Alger)', (await req('GET', '/reels?wilaya=Alg')).data.reels.length === 0);
+  const salesWl = await req('GET', '/reels/wilayas?type=sales');
+  check('wilaya list follows the category', salesWl.data.total === sales.data.total);
+
   const ownerToken = await login('owner@hotelsdz.dz', 'owner123');
   const myHouse = (await req('GET', '/houses/my/list', { token: ownerToken })).data.houses.find((h) => h.status === 'approved' && h.reel?.status !== 'pending');
   const up = await putReel(ownerToken, 'house', myHouse._id, MP4);

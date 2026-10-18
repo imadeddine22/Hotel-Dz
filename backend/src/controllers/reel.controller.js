@@ -11,6 +11,7 @@ const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000';
 const OWNER_PAGE = { hotel: '/owner/my-hotels', house: '/owner/my-houses', sale: '/seller/my-listings' };
 import { attachPrices } from './hotel.controller.js';
 import { effectivePrice } from '../utils/pricing.js';
+import { wilayaRegex } from '../utils/searchRegex.js';
 
 // kind (URL) → model, owner field, public path
 const KINDS = {
@@ -19,6 +20,12 @@ const KINDS = {
   sale: { Model: HouseForSale, owner: 'seller', type: 'sales' },
 };
 const TYPE_TO_KIND = { hotels: 'hotel', houses: 'house', sales: 'sale' };
+
+/** Exactly this wilaya (accents / case / hyphens ignored), or undefined for "all". */
+const wilayaFilter = (value) => {
+  const rx = typeof value === 'string' ? wilayaRegex(value) : undefined;
+  return rx ? new RegExp(`^${rx.source}$`, 'i') : undefined;
+};
 
 /** Listing of :kind/:id if the requester owns it (or is admin); otherwise sends the error. */
 async function loadOwned(req, res) {
@@ -119,13 +126,35 @@ const card = (kind, doc) => ({
   reel: { url: doc.reel.url, poster: doc.reel.poster, duration: doc.reel.duration, uploadedAt: doc.reel.uploadedAt },
 });
 
-// GET /reels?type=hotels|houses|sales&page=1&limit=8 — published reels of published listings, newest first
+// GET /reels/wilayas?type= — wilayas that have published reels, with how many: [{ wilaya, count }]
+export const getReelWilayas = async (req, res, next) => {
+  try {
+    const only = TYPE_TO_KIND[req.query.type];
+    const kinds = only ? [only] : Object.keys(KINDS);
+    const pipeline = [
+      { $match: { status: 'approved', 'reel.status': 'approved', wilaya: { $type: 'string', $ne: '' } } },
+      { $group: { _id: '$wilaya', count: { $sum: 1 } } },
+    ];
+    const lists = await Promise.all(kinds.map((k) => KINDS[k].Model.aggregate(pipeline)));
+    const count = new Map();
+    for (const { _id, count: n } of lists.flat()) count.set(_id, (count.get(_id) || 0) + n);
+    const wilayas = [...count].map(([wilaya, n]) => ({ wilaya, count: n })).sort((a, b) => b.count - a.count || a.wilaya.localeCompare(b.wilaya));
+    res.set('Cache-Control', 'public, max-age=120');
+    res.json({ success: true, total: wilayas.reduce((a, w) => a + w.count, 0), wilayas });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// GET /reels?type=hotels|houses|sales&wilaya=Alger&page=1&limit=8 — published reels of published listings, newest first
 export const getReels = async (req, res, next) => {
   try {
     const only = TYPE_TO_KIND[req.query.type];
     const page = Math.max(1, parseInt(req.query.page, 10) || 1);
     const limit = Math.min(20, Math.max(1, parseInt(req.query.limit, 10) || 8));
     const filter = { status: 'approved', 'reel.status': 'approved' };
+    const wilaya = wilayaFilter(req.query.wilaya);
+    if (wilaya) filter.wilaya = wilaya;
     const kinds = only ? [only] : Object.keys(KINDS);
 
     // newest `page × limit` of each kind, merged by date: simple and enough at this size

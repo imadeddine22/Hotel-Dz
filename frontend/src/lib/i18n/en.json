@@ -1355,5 +1355,7 @@
   "Motif :": "Reason:",
   "Envoyez une autre vidéo : elle sera de nouveau vérifiée.": "Send another video: it will be checked again.",
   "Format reel uniquement : vidéo verticale 9:16 (filmée au téléphone, idéal 1080×1920)": "Reel format only: vertical 9:16 video (filmed with a phone, ideally 1080×1920)",
-  "MP4, WebM ou MOV · de {min} à {s} secondes · 50 Mo maximum": "MP4, WebM or MOV · {min} to {s} seconds · 50 MB max"
+  "MP4, WebM ou MOV · de {min} à {s} secondes · 50 Mo maximum": "MP4, WebM or MOV · {min} to {s} seconds · 50 MB max",
+  "Aucun reel à {place} pour le moment": "No reels in {place} yet",
+  "Voir toutes les wilayas": "See all wilayas"
 }

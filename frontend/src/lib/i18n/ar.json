@@ -1360,5 +1360,7 @@
   "Motif :": "السبب:",
   "Envoyez une autre vidéo : elle sera de nouveau vérifiée.": "أرسل فيديو آخر: ستتم مراجعته من جديد.",
   "Format reel uniquement : vidéo verticale 9:16 (filmée au téléphone, idéal 1080×1920)": "صيغة الريلز فقط: فيديو عمودي 9:16 (مصوّر بالهاتف، والأفضل 1080×1920)",
-  "MP4, WebM ou MOV · de {min} à {s} secondes · 50 Mo maximum": "MP4 أو WebM أو MOV · من {min} إلى {s} ثانية · 50 ميغابايت كحد أقصى"
+  "MP4, WebM ou MOV · de {min} à {s} secondes · 50 Mo maximum": "MP4 أو WebM أو MOV · من {min} إلى {s} ثانية · 50 ميغابايت كحد أقصى",
+  "Aucun reel à {place} pour le moment": "لا توجد ريلز في {place} حاليًا",
+  "Voir toutes les wilayas": "عرض كل الولايات"
 }

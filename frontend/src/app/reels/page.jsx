@@ -2,7 +2,7 @@
 
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Volume2, VolumeX, MapPin, Play, Clapperboard, ExternalLink, X } from 'lucide-react';
+import { Volume2, VolumeX, MapPin, Play, Clapperboard, ExternalLink, X, ChevronDown } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Link from '@/components/LocaleLink';
 import ShareButton from '@/components/ShareButton';
@@ -34,6 +34,8 @@ function Reels() {
   const router = useRouter();
   const params = useSearchParams();
   const type = TABS.some((x) => x.type === params.get('type')) ? params.get('type') : '';
+  const wilaya = params.get('wilaya') || '';
+  const [wilayas, setWilayas] = useState([]); // [{ wilaya, count }] with published reels, for this category
   const [items, setItems] = useState([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
@@ -45,7 +47,7 @@ function Reels() {
     async (p) => {
       setLoading(true);
       try {
-        const { data } = await api.get('/reels', { params: { type: type || undefined, page: p, limit: 6 } });
+        const { data } = await api.get('/reels', { params: { type: type || undefined, wilaya: wilaya || undefined, page: p, limit: 6 } });
         setItems((prev) => (p === 1 ? data.reels : [...prev, ...data.reels.filter((r) => !prev.some((x) => x._id === r._id))]));
         setHasMore(data.hasMore);
         setPage(p);
@@ -56,8 +58,16 @@ function Reels() {
         setLoading(false);
       }
     },
-    [type]
+    [type, wilaya]
   );
+
+  // wilayas offered in the picker: only those with reels in the chosen category
+  useEffect(() => {
+    api
+      .get('/reels/wilayas', { params: { type: type || undefined } })
+      .then(({ data }) => setWilayas(data.wilayas || []))
+      .catch(() => setWilayas([]));
+  }, [type]);
 
   // new category → back to the top
   useEffect(() => {
@@ -72,7 +82,18 @@ function Reels() {
     else router.push(localePath(lang, '/'));
   };
 
-  const pick = (next) => router.replace(localePath(lang, next ? `/reels?type=${next}` : '/reels'), { scroll: false });
+  // category and wilaya are both kept in the URL (shareable, back button friendly)
+  const go = (next) => {
+    const q = new URLSearchParams();
+    if (next.type) q.set('type', next.type);
+    if (next.wilaya) q.set('wilaya', next.wilaya);
+    const qs = q.toString();
+    router.replace(localePath(lang, qs ? `/reels?${qs}` : '/reels'), { scroll: false });
+  };
+  const pick = (next) => go({ type: next, wilaya });
+  const pickWilaya = (next) => go({ type, wilaya: next });
+  const options = wilaya && !wilayas.some((w) => w.wilaya === wilaya) ? [...wilayas, { wilaya, count: 0 }] : wilayas;
+  const totalCount = wilayas.reduce((n, w) => n + w.count, 0);
 
   return (
     <main className="flex h-[100dvh] flex-col bg-black">
@@ -106,6 +127,28 @@ function Reels() {
           <span className="hidden h-9 w-9 shrink-0 sm:block" aria-hidden="true" />
         </div>
 
+        {/* Wilaya: all of them, or only one (whatever the category) */}
+        <div className="absolute inset-x-0 top-14 z-20 flex justify-center px-3">
+          <label className={`relative inline-flex max-w-full items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-bold backdrop-blur transition ${wilaya ? 'bg-pink-500 text-white' : 'bg-white/15 text-white hover:bg-white/25'}`}>
+            <MapPin className="h-4 w-4 shrink-0" aria-hidden="true" />
+            <span className="truncate">{wilaya ? t(wilaya) : t('Toutes les wilayas')}</span>
+            <ChevronDown className="h-4 w-4 shrink-0" aria-hidden="true" />
+            <select
+              value={wilaya}
+              onChange={(e) => pickWilaya(e.target.value)}
+              aria-label={t('Wilaya')}
+              className="absolute inset-0 cursor-pointer opacity-0"
+            >
+              <option value="">{t('Toutes les wilayas')} ({totalCount})</option>
+              {options.map((w) => (
+                <option key={w.wilaya} value={w.wilaya}>
+                  {t(w.wilaya)} ({w.count})
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+
         <div ref={feed} className="h-full snap-y snap-mandatory overflow-y-auto overscroll-contain [scrollbar-width:none]">
           {items.map((r, i) => (
             <ReelItem
@@ -121,11 +164,17 @@ function Reels() {
             <div className="grid h-full place-items-center px-6 text-center text-white">
               <div>
                 <Clapperboard className="mx-auto mb-3 h-12 w-12 text-pink-400" aria-hidden="true" />
-                <p className="text-lg font-bold">{t('Aucun reel pour le moment')}</p>
+                <p className="text-lg font-bold">{wilaya ? t('Aucun reel à {place} pour le moment', { place: t(wilaya) }) : t('Aucun reel pour le moment')}</p>
                 <p className="mt-1 text-sm text-white/60">{t('Les propriétaires publient bientôt des vidéos de leurs annonces.')}</p>
-                <Link href="/hotels" className="mt-5 inline-block rounded-full bg-white px-5 py-2.5 text-sm font-bold text-ink">
-                  {t('Voir les annonces')}
-                </Link>
+                {wilaya ? (
+                  <button type="button" onClick={() => pickWilaya('')} className="mt-5 inline-block rounded-full bg-white px-5 py-2.5 text-sm font-bold text-ink">
+                    {t('Voir toutes les wilayas')}
+                  </button>
+                ) : (
+                  <Link href="/hotels" className="mt-5 inline-block rounded-full bg-white px-5 py-2.5 text-sm font-bold text-ink">
+                    {t('Voir les annonces')}
+                  </Link>
+                )}
               </div>
             </div>
           )}
