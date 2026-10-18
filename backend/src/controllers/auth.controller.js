@@ -4,6 +4,7 @@ import generateToken from '../utils/generateToken.js';
 import sendEmail from '../utils/sendEmail.js';
 import { escapeHtml } from '../utils/escapeHtml.js';
 import { googleEnabled, verifyGoogleCredential } from '../utils/google.js';
+import { uploadBuffer, destroyImage } from '../utils/cloudinaryUpload.js';
 
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000';
 const RESET_MINUTES = 30;
@@ -77,6 +78,34 @@ export const logout = async (req, res) => {
     secure: isProd,
     sameSite: isProd ? 'none' : 'lax',
   }).json({ success: true, message: 'Logged out' });
+};
+
+// PUT /auth/avatar (multipart "avatar") — profile photo of any user (guest, owner, seller, admin)
+export const updateAvatar = async (req, res, next) => {
+  try {
+    if (!req.file) return res.status(400).json({ success: false, message: 'Choose an image' });
+    const user = await User.findById(req.user._id);
+    const previous = user.avatar?.publicId;
+    user.avatar = await uploadBuffer(req.file.buffer, 'dzhotels/avatars', req.file.mimetype);
+    await user.save({ validateBeforeSave: false });
+    if (previous) destroyImage(previous); // the old photo is no longer used
+    res.json({ success: true, user: sanitize(user) });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// DELETE /auth/avatar — back to the initial
+export const removeAvatar = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (user.avatar?.publicId) destroyImage(user.avatar.publicId);
+    user.avatar = { url: '', publicId: '' };
+    await user.save({ validateBeforeSave: false });
+    res.json({ success: true, user: sanitize(user) });
+  } catch (err) {
+    next(err);
+  }
 };
 
 // GET /auth/me

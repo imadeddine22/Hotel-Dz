@@ -12,6 +12,7 @@ import { monthlyPayment } from '@/components/tools/MortgageCalculator';
 
 import { useT } from '@/lib/i18n/useT';
 import { useInitialData } from '@/components/InitialData';
+import Avatar from '@/components/Avatar';
 /** "0552 22 22 22" → "213552222222" for wa.me links */
 const waNumber = (phone) => {
   const d = String(phone || '').replace(/\D/g, '');
@@ -213,9 +214,7 @@ export default function SaleDetailPage() {
                 
                 {/* Seller Info */}
                 <div className="flex items-center gap-3 mb-6 p-3 rounded-xl bg-gray-50">
-                  <div className="grid h-12 w-12 place-items-center rounded-full bg-gradient-to-tr from-emerald-500 to-teal-500 text-white font-bold">
-                    {seller.fullName?.charAt(0)?.toUpperCase() || t('V')}
-                  </div>
+                  <Avatar user={{ ...seller, fullName: seller.fullName || t('Vendeur') }} className="h-12 w-12 rounded-full" initialClassName="bg-gradient-to-tr from-emerald-500 to-teal-500 text-white" />
                   <div>
                     <p className="font-bold text-gray-900">{seller.fullName || t('Vendeur')}</p>
                     <p className="text-xs text-gray-400">{t('Vendeur vérifié')}</p>

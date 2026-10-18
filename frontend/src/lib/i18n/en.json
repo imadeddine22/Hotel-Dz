@@ -1236,5 +1236,11 @@
   "Demandes": "Requests",
   "En vedette": "Featured",
   "Mettre en vedette": "Feature",
-  "Sélection complète ({max} hôtels)": "Selection full ({max} hotels)"
+  "Sélection complète ({max} hôtels)": "Selection full ({max} hotels)",
+  "Choisissez une image JPG, PNG, WebP ou GIF.": "Choose a JPG, PNG, WebP or GIF image.",
+  "Image trop lourde (2 Mo maximum).": "Image too large (2 MB max).",
+  "Changer la photo de profil": "Change profile photo",
+  "Ajouter une photo de profil": "Add a profile photo",
+  "Retirer la photo": "Remove photo",
+  "Mon profil et ma photo": "My profile and photo"
 }

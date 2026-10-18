@@ -7,9 +7,10 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useAuthStore } from '@/store/authStore';
 import api from '@/lib/api';
+import ProfilePhoto from '@/components/ProfilePhoto';
 
 import { useT } from '@/lib/i18n/useT';
-const ROLE_LABELS = { customer: 'Client', owner: 'Hôtelier', admin: 'Administrateur' };
+const ROLE_LABELS = { customer: 'Client', owner: 'Hôtelier', seller: 'Vendeur', admin: 'Administrateur' };
 
 export default function ProfilePage() {
   const { t } = useT();
@@ -82,10 +83,8 @@ export default function ProfilePage() {
 
       <section className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
         {/* Header card */}
-        <div className="mb-6 flex items-center gap-5 rounded-2xl bg-white p-6 shadow-card">
-          <span className="grid h-16 w-16 place-items-center rounded-full bg-brand-500 text-2xl font-bold text-white">
-            {user.fullName?.charAt(0).toUpperCase()}
-          </span>
+        <div className="mb-6 flex flex-wrap items-center gap-5 rounded-2xl bg-white p-6 shadow-card">
+          <ProfilePhoto />
           <div>
             <h1 className="text-2xl font-extrabold text-ink">{user.fullName}</h1>
             <p className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-gray-500">
@@ -93,7 +92,7 @@ export default function ProfilePage() {
                 <Mail className="h-4 w-4" /> {user.email}
               </span>
               <span className="flex items-center gap-1 rounded-full bg-brand-50 px-2.5 py-0.5 font-medium text-brand-700">
-                <ShieldCheck className="h-3.5 w-3.5" /> {ROLE_LABELS[user.role] || user.role}
+                <ShieldCheck className="h-3.5 w-3.5" /> {t(ROLE_LABELS[user.role] || user.role)}
               </span>
             </p>
           </div>

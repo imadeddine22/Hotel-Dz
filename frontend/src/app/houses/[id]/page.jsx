@@ -14,6 +14,7 @@ import { useInitialData } from '@/components/InitialData';
 import Policies, { PolicyBadges } from '@/components/Policies';
 import { ScoreBadge, ScoreBars } from '@/components/Score';
 import { effectivePrice } from '@/lib/scores';
+import Avatar from '@/components/Avatar';
 const MOCK = {
   name: 'Villa Yasmine', city: 'Alger', wilaya: 'Alger', type: 'Villa',
   rooms: 4, bathrooms: 2, capacity: 8, pricePerNight: 15000,
@@ -294,13 +295,7 @@ export default function HouseDetailPage() {
                 }}>
                   <p style={{ fontSize: 11, color: '#94a3b8', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: 1 }}>{t('Propriétaire')}</p>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{
-                      width: 40, height: 40, borderRadius: '50%',
-                      background: 'linear-gradient(135deg, #7c3aed, #a855f7)',
-                      color: '#fff', display: 'grid', placeItems: 'center', fontWeight: 700, fontSize: 16
-                    }}>
-                      {house.owner.fullName?.charAt(0) || t('P')}
-                    </div>
+                    <Avatar user={{ ...house.owner, fullName: house.owner.fullName || t('Propriétaire') }} className="h-10 w-10 rounded-full text-base" initialClassName="bg-gradient-to-br from-violet-600 to-purple-500 text-white" />
                     <div>
                       <p style={{ fontSize: 14, fontWeight: 600, color: '#1e293b', margin: 0 }}>{house.owner.fullName}</p>
                       {house.owner.email && (

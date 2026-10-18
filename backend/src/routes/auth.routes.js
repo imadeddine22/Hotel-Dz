@@ -8,9 +8,12 @@ import {
   forgotPassword,
   resetPassword,
   googleAuth,
+  updateAvatar,
+  removeAvatar,
 } from '../controllers/auth.controller.js';
 import { protect } from '../middlewares/auth.middleware.js';
 import { validate } from '../middlewares/validate.middleware.js';
+import { avatarUpload } from '../middlewares/upload.middleware.js';
 import { loginLimiter, registerLimiter, resetLimiter } from '../middlewares/rateLimits.middleware.js';
 import {
   registerSchema,
@@ -30,6 +33,8 @@ router.post('/forgot-password', resetLimiter, validate(forgotPasswordSchema), fo
 router.post('/reset-password', resetLimiter, validate(resetPasswordSchema), resetPassword);
 router.post('/google', loginLimiter, validate(googleAuthSchema), googleAuth);
 router.get('/me', protect, getMe);
+router.put('/avatar', protect, avatarUpload, updateAvatar);
+router.delete('/avatar', protect, removeAvatar);
 router.put('/update-profile', protect, validate(updateProfileSchema), updateProfile);
 
 export default router;

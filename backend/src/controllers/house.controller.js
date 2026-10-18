@@ -64,7 +64,7 @@ export const getHouses = async (req, res, next) => {
 // GET /houses/:id — public details
 export const getHouse = async (req, res, next) => {
   try {
-    const house = await House.findById(req.params.id).populate('owner', 'fullName email phone');
+    const house = await House.findById(req.params.id).populate('owner', 'fullName email phone avatar');
     // Pending/rejected houses are only visible to their owner and admins
     if (!house || !canView(req, house)) return res.status(404).json({ success: false, message: 'House not found' });
     res.json({ success: true, house });

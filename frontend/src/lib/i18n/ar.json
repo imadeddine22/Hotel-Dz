@@ -1241,5 +1241,11 @@
   "Demandes": "الطلبات",
   "En vedette": "مميز",
   "Mettre en vedette": "إضافة إلى المميزة",
-  "Sélection complète ({max} hôtels)": "الاختيار مكتمل ({max} فنادق)"
+  "Sélection complète ({max} hôtels)": "الاختيار مكتمل ({max} فنادق)",
+  "Choisissez une image JPG, PNG, WebP ou GIF.": "اختر صورة بصيغة JPG أو PNG أو WebP أو GIF.",
+  "Image trop lourde (2 Mo maximum).": "الصورة كبيرة جدًا (2 ميغابايت كحد أقصى).",
+  "Changer la photo de profil": "تغيير صورة الحساب",
+  "Ajouter une photo de profil": "إضافة صورة للحساب",
+  "Retirer la photo": "حذف الصورة",
+  "Mon profil et ma photo": "ملفي وصورتي"
 }

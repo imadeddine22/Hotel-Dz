@@ -844,6 +844,43 @@ describe('Featured hotels (chosen by the admin)');
   check('back to the best-rated fallback', (await req('GET', '/hotels/featured')).data.chosen === false);
 }
 
+describe('Profile photo (every role)');
+{
+  const putAvatar = async (token, file, name = 'me.png') => {
+    const fd = new FormData();
+    if (file) fd.append('avatar', file, name);
+    const r = await fetch(`${API}/auth/avatar`, { method: 'PUT', headers: { Authorization: `Bearer ${token}` }, body: fd });
+    return { status: r.status, data: await r.json().catch(() => ({})) };
+  };
+  const adminToken = await login('admin@hotelsdz.dz', 'admin123');
+  const people = {
+    customer: customer.token,
+    owner: (await register('owner')).token,
+    seller: (await register('seller')).token,
+    admin: adminToken,
+  };
+  for (const [role, token] of Object.entries(people)) {
+    const r = await putAvatar(token, PNG);
+    check(`${role} adds a profile photo`, r.status === 200 && Boolean(r.data.user?.avatar?.url), `${r.status} ${r.data.message || ''}`);
+  }
+  const me = (await req('GET', '/auth/me', { token: people.seller })).data.user;
+  check('the photo is part of the logged-in user', Boolean(me?.avatar?.url));
+  const img = await fetch(new URL(me.avatar.url, API.replace(/\/api\/v1$/, '/')));
+  check('the photo is served as an image', img.ok && (img.headers.get('content-type') || '').startsWith('image/'), `${img.status} ${img.headers.get('content-type')}`);
+
+  const first = me.avatar.url;
+  const again = await putAvatar(people.seller, PNG);
+  check('a new photo replaces the old one', again.status === 200 && again.data.user.avatar.url !== first);
+
+  expectStatus('no file → 400', await putAvatar(people.customer, null), 400);
+  expectStatus('not an image → 400', await putAvatar(people.customer, new Blob(['hello'], { type: 'text/plain' }), 'x.txt'), 400);
+  expectStatus('more than 2 MB → 400 (not 500)', await putAvatar(people.customer, new Blob([new Uint8Array(2 * 1024 * 1024 + 10)], { type: 'image/png' })), 400);
+  expectStatus('visitor cannot upload a photo', await putAvatar('', PNG), 401);
+
+  const del = await req('DELETE', '/auth/avatar', { token: people.customer });
+  check('photo removed (back to the initial)', del.status === 200 && !del.data.user?.avatar?.url);
+}
+
 describe('No online payment');
 {
   const r = await fetch(`${API}/payments/webhook`, { method: 'POST', body: '{}' });

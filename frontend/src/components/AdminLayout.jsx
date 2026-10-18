@@ -24,6 +24,7 @@ import {
   Star,
 } from 'lucide-react';
 import api from '@/lib/api';
+import Avatar from '@/components/Avatar';
 import { useAuthStore } from '@/store/authStore';
 
 import { useT } from '@/lib/i18n/useT';
@@ -145,9 +146,7 @@ export default function AdminLayout({ children }) {
                 className="admin-profile-btn"
                 onClick={() => setProfileOpen(!profileOpen)}
               >
-                <div className="admin-avatar">
-                  {user.fullName?.charAt(0)?.toUpperCase() || t('A')}
-                </div>
+                <Avatar user={user} className="admin-avatar" initialClassName="" />
                 <div className="admin-profile-info">
                   <span className="admin-profile-name">{user.fullName}</span>
                   <span className="admin-profile-role">{t('Administrateur')}</span>
@@ -157,7 +156,7 @@ export default function AdminLayout({ children }) {
               {profileOpen && (
                 <div className="admin-profile-dropdown">
                   <Link href="/profile" className="admin-dropdown-item">
-                    <Settings className="w-4 h-4" /> {t('Paramètres')}
+                    <Settings className="w-4 h-4" /> {t('Mon profil et ma photo')}
                   </Link>
                   <button
                     onClick={async () => { await logout(); router.push('/'); }}

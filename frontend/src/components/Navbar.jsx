@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from '@/components/LocaleLink';
+import Avatar from '@/components/Avatar';
 import { usePathname, useRouter } from 'next/navigation';
 import { ChevronDown, Menu, X, Heart, User, Globe, MessageCircle, LogOut } from 'lucide-react';
 import { useAuthStore, useLangStore } from '@/store/authStore';
@@ -174,7 +175,7 @@ export default function Navbar() {
             href={user ? dashHref : '/login'}
             className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2.5 text-sm font-bold text-gray-700 hover:bg-gray-50 transition"
           >
-            <User className="h-4 w-4 text-brand-500" />
+            {user ? <Avatar user={user} className="-ms-2 h-7 w-7 rounded-full text-xs" initialClassName="bg-brand-500 text-white" /> : <User className="h-4 w-4 text-brand-500" />}
             {user ? t.mySpace : t.login}
           </Link>
           {user && (
@@ -315,8 +316,9 @@ export default function Navbar() {
             <Link
               href={user ? dashHref : '/login'}
               onClick={() => setOpen(false)}
-              className="w-full rounded-xl border border-gray-200 py-3 text-center text-sm font-bold text-gray-700 hover:bg-gray-50"
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 py-3 text-center text-sm font-bold text-gray-700 hover:bg-gray-50"
             >
+              {user && <Avatar user={user} className="h-7 w-7 rounded-full text-xs" initialClassName="bg-brand-500 text-white" />}
               {user ? t.mySpace : t.login}
             </Link>
             {user && (

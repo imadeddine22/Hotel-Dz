@@ -6,6 +6,7 @@ import api from '@/lib/api';
 
 import { useT } from '@/lib/i18n/useT';
 import { dateLocale } from '@/lib/i18n/format';
+import Avatar from '@/components/Avatar';
 const ROLE_COLORS = {
   admin: '#8b5cf6',
   owner: '#3b82f6',
@@ -144,12 +145,7 @@ export default function AdminUsersPage() {
                   <tr key={u._id}>
                     <td>
                       <div className="admin-table-user">
-                        <div
-                          className="admin-table-avatar"
-                          style={{ background: `linear-gradient(135deg, ${ROLE_COLORS[u.role]}, ${ROLE_COLORS[u.role]}99)` }}
-                        >
-                          {u.fullName?.charAt(0)?.toUpperCase() || '?'}
-                        </div>
+                        <Avatar user={u} className="admin-table-avatar" initialClassName="text-white" />
                         <span className="admin-table-username">{u.fullName}</span>
                       </div>
                     </td>

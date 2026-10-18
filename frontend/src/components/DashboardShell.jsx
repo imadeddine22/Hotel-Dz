@@ -6,6 +6,7 @@ import BrandLogo from '@/components/BrandLogo';
 import { usePathname, useRouter } from 'next/navigation';
 import { LayoutDashboard, Hotel, CalendarCheck, Users, CheckSquare, LogOut, Home, Mail, Globe, Tag, MessageCircle } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
+import Avatar from '@/components/Avatar';
 
 import { useT } from '@/lib/i18n/useT';
 const MENUS = {
@@ -105,15 +106,13 @@ export default function DashboardShell({ role, title, children }) {
           <div className="flex items-center gap-6 ml-auto">
 
             {/* User Profile */}
-            <div className="flex items-center gap-3 rounded-full bg-white p-1.5 pr-4 shadow-sm border border-gray-50 cursor-pointer hover:shadow-md transition-shadow">
-              <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 text-white font-bold text-sm">
-                {user.fullName?.charAt(0).toUpperCase()}
-              </div>
+            <Link href="/profile" title={t('Mon profil et ma photo')} className="flex items-center gap-3 rounded-full bg-white p-1.5 pe-4 shadow-sm border border-gray-50 hover:shadow-md transition-shadow">
+              <Avatar user={user} className="h-10 w-10 rounded-full text-sm" />
               <div className="hidden md:block">
                 <p className="text-sm font-bold text-gray-800 leading-tight">{user.fullName}</p>
                 <p className="text-xs font-medium text-gray-400 capitalize leading-tight">{t(user.role)}</p>
               </div>
-            </div>
+            </Link>
           </div>
         </header>
 
