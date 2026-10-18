@@ -11,7 +11,6 @@ import FeaturedSales from '@/components/FeaturedSales';
 import CitiesSection from '@/components/CitiesSection';
 import HotelsList from '@/components/HotelsList';
 import HomeDetailsSection from '@/components/HomeDetailsSection';
-import CtaBanner from '@/components/CtaBanner';
 import Footer from '@/components/Footer';
 import { findWilaya } from '@/hooks/useCommunes';
 
@@ -61,7 +60,6 @@ export default function HomePage() {
       )}
 
       <HomeDetailsSection />
-      <CtaBanner />
       <Footer />
     </main>
   );
