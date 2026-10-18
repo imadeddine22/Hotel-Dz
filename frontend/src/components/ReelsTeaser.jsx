@@ -1,13 +1,36 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Clapperboard, Play, ChevronRight } from 'lucide-react';
+import { Clapperboard, Play, ChevronRight, MapPin } from 'lucide-react';
 import Link from '@/components/LocaleLink';
 import api, { getImageUrl } from '@/lib/api';
 import { useT } from '@/lib/i18n/useT';
 
 const TAB = { hotel: 'hotels', house: 'houses', sale: 'sales' };
 const BADGE = { hotel: 'Hôtel', house: 'Location', sale: 'À vendre' };
+
+// Decorations cut out of the designer's mock-up (public/brand/reels-bg.webp, 1983×793):
+// the palm-leaf shadow on the left and the Algiers skyline (Maqam Echahid) line art on the right.
+// Everything else (titles, cards, buttons) is live, translated content.
+const ART = { src: '/brand/reels-bg.webp', w: 1983, h: 793 };
+const COLORS = { bg: '#F5FBFC', ink: '#152A41', sub: '#475569', from: '#0DD5C4', to: '#00B3D2', swash: '#20B7BD' };
+const gradient = `linear-gradient(135deg, ${COLORS.from}, ${COLORS.to})`;
+
+/** A rectangle (x, y, w, h in artwork pixels) of the mock-up, scaled to `height` (CSS) and placed by `style`. */
+function ArtPiece({ x, y, w, h, height, style, className = '' }) {
+  return (
+    <div className={`pointer-events-none absolute overflow-hidden ${className}`} style={{ height, aspectRatio: `${w} / ${h}`, ...style }} aria-hidden="true">
+      <img
+        src={ART.src}
+        alt=""
+        loading="lazy"
+        draggable={false}
+        className="absolute max-w-none select-none"
+        style={{ width: `${(ART.w / w) * 100}%`, height: `${(ART.h / h) * 100}%`, left: `${(-x / w) * 100}%`, top: `${(-y / h) * 100}%` }}
+      />
+    </div>
+  );
+}
 
 /** Home page strip of the latest reels, with the way into the Reels page (hidden when there are none). */
 export default function ReelsTeaser() {
@@ -24,51 +47,56 @@ export default function ReelsTeaser() {
   if (!reels?.length) return null;
 
   return (
-    <section className="bg-gradient-to-br from-gray-950 via-gray-900 to-pink-950 py-12 text-white" aria-labelledby="reels-teaser">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6">
-        <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <span className="grid h-12 w-12 place-items-center rounded-full bg-gradient-to-br from-orange-500 to-pink-500 shadow-lg">
-              <Clapperboard className="h-6 w-6" aria-hidden="true" />
+    <section className="relative overflow-hidden py-12 lg:py-20" style={{ background: COLORS.bg }} aria-labelledby="reels-teaser">
+      {/* palm shadow (left edge) and Algiers skyline (bottom right), behind the content */}
+      <ArtPiece x={0} y={0} w={185} h={793} height="100%" style={{ left: 0, top: 0 }} className="opacity-80" />
+      <ArtPiece x={1550} y={395} w={433} h={245} height="44%" style={{ right: 0, bottom: 0 }} className="opacity-70 max-lg:opacity-30" />
+      <ArtPiece x={1900} y={60} w={83} h={335} height="62%" style={{ right: 0, top: 0 }} className="opacity-70 max-lg:hidden" />
+
+      <div className="relative z-10 mx-auto flex max-w-7xl flex-col items-center gap-8 px-4 sm:px-6 lg:flex-row lg:items-center lg:gap-6">
+        {/* Title */}
+        <div className="flex shrink-0 flex-col items-center text-center lg:w-60 lg:items-start lg:text-start">
+          <div className="flex items-center gap-4">
+            <span className="grid h-16 w-16 place-items-center rounded-full text-white shadow-lg" style={{ background: gradient }}>
+              <Clapperboard className="h-8 w-8" aria-hidden="true" />
             </span>
-            <div>
-              <h2 id="reels-teaser" className="text-2xl font-extrabold">{t('Reels')}</h2>
-              <p className="text-sm text-white/70">{t('Visitez en vidéo avant de réserver ou d’acheter')}</p>
-            </div>
+            <h2 id="reels-teaser" className="text-5xl font-black tracking-tight" style={{ color: COLORS.ink }}>
+              {t('Reels')}
+            </h2>
           </div>
-          <Link
-            href="/reels"
-            className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-orange-500 to-pink-500 px-6 py-3 text-sm font-bold shadow-lg ring-2 ring-white/20 transition hover:scale-105"
-          >
-            <Play className="h-4 w-4 fill-current" aria-hidden="true" /> {t('Regarder les reels')}
-          </Link>
+          <p className="mt-3 text-base font-medium" style={{ color: COLORS.sub }}>
+            {t('Visitez en vidéo avant de réserver ou d’acheter')}
+          </p>
         </div>
 
-        <ul className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:px-0">
+        {/* Cards */}
+        <ul className="-mx-4 flex w-[calc(100%+2rem)] snap-x gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] lg:mx-0 lg:w-auto lg:min-w-0 lg:flex-1 lg:px-1">
           {reels.map((r) => {
             const cover = getImageUrl(r.reel.poster) || getImageUrl(r.image);
             const title = r.name || r.title;
             return (
-              <li key={`${r.kind}-${r._id}`} className="w-40 shrink-0 snap-start sm:w-44">
-                <Link href={`/reels?type=${TAB[r.kind]}`} className="group relative block aspect-[9/16] overflow-hidden rounded-2xl bg-gray-800">
+              <li key={`${r.kind}-${r._id}`} className="w-40 shrink-0 snap-start xl:w-44">
+                <Link href={`/reels?type=${TAB[r.kind]}`} className="group relative block aspect-[3/5] overflow-hidden rounded-2xl bg-slate-200 shadow-md ring-1 ring-black/5 transition hover:-translate-y-1 hover:shadow-xl">
                   {cover && <img src={cover} alt="" loading="lazy" className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />}
-                  <span className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20" />
-                  <span className="absolute start-2 top-2 rounded-full bg-pink-500 px-2 py-0.5 text-[10px] font-bold">{t(BADGE[r.kind])}</span>
+                  <span className="absolute inset-0 bg-gradient-to-t from-[#0b2236]/90 via-transparent to-transparent" />
+                  <span className="absolute end-2 top-2 rounded-full bg-pink-500 px-2.5 py-0.5 text-[11px] font-bold text-white shadow">{t(BADGE[r.kind])}</span>
                   <span className="absolute inset-0 grid place-items-center">
-                    <span className="grid h-11 w-11 place-items-center rounded-full bg-white/25 backdrop-blur transition group-hover:scale-110 group-hover:bg-white/40">
+                    <span className="grid h-11 w-11 place-items-center rounded-full bg-white/35 text-white backdrop-blur transition group-hover:scale-110 group-hover:bg-white/50">
                       <Play className="ms-0.5 h-5 w-5 fill-current" aria-hidden="true" />
                     </span>
                   </span>
-                  <span className="absolute inset-x-2 bottom-2">
+                  <span className="absolute inset-x-2.5 bottom-2.5 text-white">
                     <span className="line-clamp-2 text-xs font-bold leading-snug" dir="auto">{title}</span>
-                    <span className="mt-0.5 block truncate text-[11px] text-white/70">{t(r.city)}</span>
+                    <span className="mt-1 flex items-center gap-1 truncate text-[11px] text-white/80">
+                      <MapPin className="h-3 w-3 shrink-0" aria-hidden="true" /> {t(r.city)}
+                    </span>
                   </span>
                 </Link>
               </li>
             );
           })}
-          <li className="w-40 shrink-0 snap-start sm:w-44">
-            <Link href="/reels" className="grid aspect-[9/16] place-items-center rounded-2xl border border-dashed border-white/25 text-center text-sm font-bold text-white/80 transition hover:border-white/60 hover:text-white">
+          <li className="w-40 shrink-0 snap-start xl:w-44">
+            <Link href="/reels" className="grid aspect-[3/5] place-items-center rounded-2xl border-2 border-dashed border-slate-300 bg-white/40 text-center text-sm font-bold transition hover:border-[#00B3D2] hover:bg-white" style={{ color: COLORS.ink }}>
               <span>
                 <ChevronRight className="mx-auto mb-1 h-6 w-6 rtl:rotate-180" aria-hidden="true" />
                 {t('Tous les reels')}
@@ -76,6 +104,25 @@ export default function ReelsTeaser() {
             </Link>
           </li>
         </ul>
+
+        {/* Call to action */}
+        <div className="flex shrink-0 flex-col items-center gap-6 lg:w-52">
+          <Link
+            href="/reels"
+            className="inline-flex items-center gap-2 rounded-full px-7 py-3.5 text-base font-bold text-white shadow-lg transition hover:scale-105 hover:shadow-xl"
+            style={{ background: gradient }}
+          >
+            <Play className="h-4 w-4 fill-current" aria-hidden="true" /> {t('Regarder les reels')}
+          </Link>
+          <p className="relative -rotate-2 text-center text-2xl font-extrabold leading-snug" style={{ color: COLORS.ink }}>
+            {t('Découvrez')}
+            <br />
+            {t('les plus beaux endroits')}
+            <svg viewBox="0 0 120 12" className="mx-auto mt-1 h-3 w-24" aria-hidden="true">
+              <path d="M2 9 C 35 2, 80 2, 118 6" fill="none" stroke={COLORS.swash} strokeWidth="3.5" strokeLinecap="round" />
+            </svg>
+          </p>
+        </div>
       </div>
     </section>
   );
