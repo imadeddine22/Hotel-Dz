@@ -95,11 +95,12 @@ export default function ShareButton({ title, text = '', className = '' }) {
         onClick={onClick}
         aria-haspopup="menu"
         aria-expanded={open}
-        aria-label={t('Partager')}
         title={t('Partager')}
-        className="grid h-10 w-10 place-items-center rounded-full bg-white/95 text-gray-700 shadow-md backdrop-blur transition hover:scale-105 hover:text-brand-600"
+        // coloured and labelled so it stands out on any photo
+        className="inline-flex h-10 items-center gap-2 rounded-full bg-gradient-to-r from-orange-500 to-pink-500 px-4 text-sm font-bold text-white shadow-lg ring-2 ring-white/70 transition hover:scale-105 hover:shadow-xl"
       >
-        <Share2 className="h-[18px] w-[18px]" aria-hidden="true" />
+        <Share2 className="h-4 w-4" aria-hidden="true" />
+        {t('Partager')}
       </button>
 
       {open && (

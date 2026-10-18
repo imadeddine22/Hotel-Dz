@@ -149,7 +149,6 @@ export default function SaleDetailPage() {
                   </div>
                   <div className="flex flex-col items-end gap-2 text-right">
                     <ShareButton
-                      className="[&>button]:bg-gray-50 [&>button]:shadow-none"
                       title={`${t(listing.title)} — ${formatDZD(listing.price, listing.currency)}`}
                       text={t('Regarde ce bien à vendre sur Meskan : {title} à {city}', { title: t(listing.title), city: t(listing.city) })}
                     />
