@@ -137,11 +137,12 @@ function Reels() {
               value={wilaya}
               onChange={(e) => pickWilaya(e.target.value)}
               aria-label={t('Wilaya')}
-              className="absolute inset-0 cursor-pointer opacity-0"
+              // the pill is white text: give the dropdown list its own dark-on-white colours (Chrome on Windows inherits them)
+              className="absolute inset-0 cursor-pointer bg-white text-gray-900 opacity-0"
             >
-              <option value="">{t('Toutes les wilayas')} ({totalCount})</option>
+              <option value="" className="bg-white text-gray-900">{t('Toutes les wilayas')} ({totalCount})</option>
               {options.map((w) => (
-                <option key={w.wilaya} value={w.wilaya}>
+                <option key={w.wilaya} value={w.wilaya} className="bg-white text-gray-900">
                   {t(w.wilaya)} ({w.count})
                 </option>
               ))}
