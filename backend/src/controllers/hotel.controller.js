@@ -1,19 +1,32 @@
+import { effectivePrice } from '../utils/pricing.js';
+import { paging, num } from '../utils/query.js';
+import { parsePolicies } from '../utils/policies.js';
+import { isCountry } from '../utils/countries.js';
 import Hotel from '../models/Hotel.js';
 import Room from '../models/Room.js';
+import { parseRoomList } from '../utils/roomList.js';
 import { uploadMany, destroyImage } from '../utils/cloudinaryUpload.js';
 import { parseCoordinates } from '../utils/parseCoordinates.js';
-import { searchRegex, wilayaRegex } from '../utils/searchRegex.js';
+import { searchRegex, wilayaRegex, placeFilter } from '../utils/searchRegex.js';
+import { canView } from '../middlewares/auth.middleware.js';
+
+// Fields an owner may set. Status, ratings and owner are server-controlled.
+const EDITABLE = ['name', 'description', 'country', 'wilaya', 'city', 'address', 'starRating', 'type'];
+const pick = (body, keys) => Object.fromEntries(keys.filter((k) => body[k] !== undefined).map((k) => [k, body[k]]));
 
 // GET /hotels  — public list of APPROVED hotels with filters
 export const getHotels = async (req, res, next) => {
   try {
-    const { wilaya, city, type, minStars, minPrice, maxPrice, q, sort, page = 1, limit = 12 } = req.query;
+    const { wilaya, city, place, type, minStars, q, sort } = req.query;
 
     const filter = { status: 'approved' };
+    if (isCountry(req.query.country)) filter.country = req.query.country;
     if (wilaya) filter.wilaya = wilayaRegex(wilaya);
+    const where = place && placeFilter(place); // undefined for blank input
+    if (where) (filter.$and = filter.$and || []).push(where);
     if (city) filter.city = searchRegex(city);
     if (type) filter.type = type;
-    if (minStars) filter.starRating = { $gte: Number(minStars) };
+    if (num(minStars)) filter.starRating = { $gte: num(minStars) };
     if (q) filter.name = searchRegex(q);
 
     let query = Hotel.find(filter);
@@ -23,14 +36,30 @@ export const getHotels = async (req, res, next) => {
     else if (sort === 'newest') query = query.sort({ createdAt: -1 });
     else query = query.sort({ avgRating: -1, createdAt: -1 });
 
-    const pageNum = Math.max(1, Number(page));
-    const lim = Math.min(50, Number(limit));
+    const { page: pageNum, limit: lim } = paging(req.query);
     const total = await Hotel.countDocuments(filter);
 
     const hotels = await query
       .skip((pageNum - 1) * lim)
       .limit(lim)
       .lean();
+
+    // "À partir de" price = cheapest active room of each hotel (hotels have no price of their own)
+    const rooms = await Room.find({ hotel: { $in: hotels.map((h) => h._id) }, isActive: true })
+      .select('hotel pricePerNight discountPercent discountUntil')
+      .lean();
+    const best = new Map(); // hotel id → cheapest room price after discount
+    for (const r of rooms) {
+      const p = effectivePrice(r);
+      const cur = best.get(String(r.hotel));
+      if (!cur || p.price < cur.price) best.set(String(r.hotel), p);
+    }
+    hotels.forEach((h) => {
+      const p = best.get(String(h._id));
+      h.price = p?.price ?? null;
+      h.originalPrice = p?.discountPercent ? p.original : null;
+      h.discountPercent = p?.discountPercent || 0;
+    });
 
     res.json({
       success: true,
@@ -48,8 +77,10 @@ export const getHotels = async (req, res, next) => {
 // GET /hotels/:id — public details (approved) or owner/admin can see own
 export const getHotel = async (req, res, next) => {
   try {
-    const hotel = await Hotel.findById(req.params.id).populate('owner', 'fullName email phone');
-    if (!hotel) return res.status(404).json({ success: false, message: 'Hotel not found' });
+    // public page: the owner's name only (their email/phone are not shown there and stay private)
+    const hotel = await Hotel.findById(req.params.id).populate('owner', 'fullName');
+    // Pending/rejected hotels are only visible to their owner and admins
+    if (!hotel || !canView(req, hotel)) return res.status(404).json({ success: false, message: 'Hotel not found' });
 
     const rooms = await Room.find({ hotel: hotel._id, isActive: true });
     res.json({ success: true, hotel, rooms });
@@ -74,20 +105,27 @@ export const getMyHotels = async (req, res, next) => {
 // POST /hotels — owner creates a hotel (status: pending)
 export const createHotel = async (req, res, next) => {
   try {
+    // Room types offered (single, double…) can be sent with the hotel; validate before saving anything
+    const { rooms: roomList, error: roomError } = parseRoomList(req.body.rooms);
+    if (roomError) return res.status(400).json({ success: false, message: roomError });
+
     const images = req.files?.length ? await uploadMany(req.files, 'dzhotels/hotels') : [];
 
     const coordinates = parseCoordinates(req.body);
     const hotel = await Hotel.create({
-      ...req.body,
+      ...pick(req.body, EDITABLE),
       amenities: parseArray(req.body.amenities),
       suitableFor: parseArray(req.body.suitableFor),
+      ...(parsePolicies(req.body.policies) && { policies: parsePolicies(req.body.policies) }),
       ...(coordinates && { coordinates }),
       owner: req.user._id,
       images,
       status: 'pending',
     });
+    // create() (not insertMany) so each room's save hooks run (automatic translation)
+    const rooms = roomList.length ? await Room.create(roomList.map((r) => ({ ...r, hotel: hotel._id }))) : [];
 
-    res.status(201).json({ success: true, hotel });
+    res.status(201).json({ success: true, hotel, rooms });
   } catch (err) {
     next(err);
   }
@@ -102,12 +140,13 @@ export const updateHotel = async (req, res, next) => {
       return res.status(403).json({ success: false, message: 'Not your hotel' });
     }
 
-    const fields = ['name', 'description', 'wilaya', 'city', 'address', 'starRating', 'type'];
-    fields.forEach((f) => {
+    EDITABLE.forEach((f) => {
       if (req.body[f] !== undefined) hotel[f] = req.body[f];
     });
     if (req.body.amenities !== undefined) hotel.amenities = parseArray(req.body.amenities);
     if (req.body.suitableFor !== undefined) hotel.suitableFor = parseArray(req.body.suitableFor);
+    const policies = parsePolicies(req.body.policies, hotel.policies);
+    if (policies) hotel.policies = policies;
     const coordinates = parseCoordinates(req.body);
     if (coordinates) hotel.coordinates = coordinates;
 

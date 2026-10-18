@@ -4,13 +4,19 @@ import { useEffect, useState } from 'react';
 import { Ban, CheckCircle2, Trash2, Search, Users } from 'lucide-react';
 import api from '@/lib/api';
 
+import { useT } from '@/lib/i18n/useT';
+import { dateLocale } from '@/lib/i18n/format';
 const ROLE_COLORS = {
   admin: '#8b5cf6',
   owner: '#3b82f6',
+  seller: '#10b981',
   customer: '#64748b',
 };
 
+const ROLE_LABELS = { admin: 'Admin', owner: 'Hôtelier', seller: 'Vendeur', customer: 'Client' };
+
 export default function AdminUsersPage() {
+  const { t } = useT();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -49,7 +55,7 @@ export default function AdminUsersPage() {
   };
 
   const deleteUser = async (id, name) => {
-    if (!confirm(`Supprimer l'utilisateur "${name}" ?`)) return;
+    if (!confirm(t('Supprimer l\'utilisateur "{name}" ?', { name }))) return;
     try {
       await api.delete(`/admin/users/${id}`);
       setUsers((u) => u.filter((x) => x._id !== id));
@@ -61,8 +67,8 @@ export default function AdminUsersPage() {
   return (
     <div>
       <div className="admin-page-header">
-        <h1 className="admin-page-title">Utilisateurs</h1>
-        <p className="admin-page-subtitle">Gestion des comptes utilisateurs · {users.length} membres</p>
+        <h1 className="admin-page-title">{t('Utilisateurs')}</h1>
+        <p className="admin-page-subtitle">{t('Gestion des comptes utilisateurs ·')} {users.length} {t('membres')}</p>
       </div>
 
       <div className="admin-table-wrapper">
@@ -72,6 +78,7 @@ export default function AdminUsersPage() {
               { label: 'Tous', value: '' },
               { label: 'Clients', value: 'customer' },
               { label: 'Hôteliers', value: 'owner' },
+              { label: 'Vendeurs', value: 'seller' },
               { label: 'Admins', value: 'admin' },
             ].map((f) => (
               <button
@@ -79,7 +86,7 @@ export default function AdminUsersPage() {
                 className={`admin-filter-btn ${roleFilter === f.value ? 'active' : ''}`}
                 onClick={() => setRoleFilter(f.value)}
               >
-                {f.label}
+                {t(f.label)}
               </button>
             ))}
           </div>
@@ -88,7 +95,7 @@ export default function AdminUsersPage() {
               <Search style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', width: 16, height: 16, color: '#94a3b8' }} />
               <input
                 type="text"
-                placeholder="Rechercher..."
+                placeholder={t('Rechercher...')}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="admin-search-input"
@@ -116,20 +123,20 @@ export default function AdminUsersPage() {
         ) : users.length === 0 ? (
           <div className="admin-empty">
             <div className="admin-empty-icon"><Users /></div>
-            <p className="admin-empty-title">Aucun utilisateur trouvé</p>
-            <p className="admin-empty-desc">Modifiez vos filtres pour voir plus de résultats</p>
+            <p className="admin-empty-title">{t('Aucun utilisateur trouvé')}</p>
+            <p className="admin-empty-desc">{t('Modifiez vos filtres pour voir plus de résultats')}</p>
           </div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
             <table className="admin-table">
               <thead>
                 <tr>
-                  <th>Utilisateur</th>
-                  <th>Email</th>
-                  <th>Rôle</th>
-                  <th>Statut</th>
-                  <th>Inscrit le</th>
-                  <th style={{ textAlign: 'right' }}>Actions</th>
+                  <th>{t('Utilisateur')}</th>
+                  <th>{t('Email')}</th>
+                  <th>{t('Rôle')}</th>
+                  <th>{t('Statut')}</th>
+                  <th>{t('Inscrit le')}</th>
+                  <th style={{ textAlign: 'right' }}>{t('Actions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -149,16 +156,16 @@ export default function AdminUsersPage() {
                     <td>{u.email}</td>
                     <td>
                       <span className={`admin-badge ${u.role}`}>
-                        {u.role === 'admin' ? 'Admin' : u.role === 'owner' ? 'Hôtelier' : 'Client'}
+                        {ROLE_LABELS[u.role] || u.role}
                       </span>
                     </td>
                     <td>
                       <span className={`admin-badge ${u.isBlocked ? 'blocked' : 'active'}`}>
-                        {u.isBlocked ? 'Bloqué' : 'Actif'}
+                        {u.isBlocked ? t('Bloqué') : t('Actif')}
                       </span>
                     </td>
                     <td style={{ fontSize: 13, color: '#94a3b8' }}>
-                      {new Date(u.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      {new Date(u.createdAt).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short', year: 'numeric' })}
                     </td>
                     <td style={{ textAlign: 'right' }}>
                       {u.role !== 'admin' && (
@@ -169,16 +176,16 @@ export default function AdminUsersPage() {
                             style={{ padding: '6px 12px', fontSize: 12 }}
                           >
                             {u.isBlocked ? (
-                              <><CheckCircle2 style={{ width: 14, height: 14 }} /> Débloquer</>
+                              <><CheckCircle2 style={{ width: 14, height: 14 }} /> {t('Débloquer')}</>
                             ) : (
-                              <><Ban style={{ width: 14, height: 14 }} /> Bloquer</>
+                              <><Ban style={{ width: 14, height: 14 }} /> {t('Bloquer')}</>
                             )}
                           </button>
                           <button
                             onClick={() => deleteUser(u._id, u.fullName)}
                             className="admin-btn admin-btn-danger"
                             style={{ padding: '6px 10px', fontSize: 12 }}
-                            title="Supprimer"
+                            title={t('Supprimer')}
                           >
                             <Trash2 style={{ width: 14, height: 14 }} />
                           </button>

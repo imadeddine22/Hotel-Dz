@@ -85,7 +85,7 @@ export default function HotelsMap({ hotels, activeHotelId, onHotelHover }) {
                ${hotel.type}
             </div>
             <h4 class="font-bold text-ink">${hotel.name}</h4>
-            <div class="mt-1 font-semibold text-brand-600">${hotel.price ? hotel.price.toLocaleString('fr-DZ') + ' DZD' : ''}</div>
+            <div class="mt-1 font-semibold text-brand-600">${hotel.price ? hotel.price.toLocaleString('fr-DZ') + ' ' + (hotel.currency || 'DZD') : ''}</div>
           </div>
         `;
         marker.bindPopup(popupHtml, { offset: [0, -10], closeButton: false, className: 'custom-popup' });

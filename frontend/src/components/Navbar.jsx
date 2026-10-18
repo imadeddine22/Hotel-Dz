@@ -1,21 +1,26 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
 import { usePathname } from 'next/navigation';
-import { ChevronDown, Menu, X, Heart, Building2, User, Globe } from 'lucide-react';
+import { ChevronDown, Menu, X, Heart, User, Globe, MessageCircle } from 'lucide-react';
 import { useAuthStore, useLangStore } from '@/store/authStore';
 import { useFavoritesStore } from '@/store/favoritesStore';
-import { TRANSLATIONS } from '@/lib/data';
+import BrandLogo, { brandName } from '@/components/BrandLogo';
+import { useT } from '@/lib/i18n/useT';
+import { useUrlLang } from '@/components/UrlLang';
+import { localePath, splitLocale } from '@/lib/i18n/locale';
+import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
   const langRef = useRef(null);
-  const pathname = usePathname();
+  const pathname = splitLocale(usePathname() || '/').path; // without the /ar, /en prefix
   const user = useAuthStore((s) => s.user);
-  const { lang, setLang } = useLangStore();
-  const t = TRANSLATIONS[lang] || TRANSLATIONS.fr;
+  const { setLang } = useLangStore();
+  const { t, lang } = useT();
+  const urlLang = useUrlLang();
 
   const { hotelIds, houseIds, load } = useFavoritesStore();
   const [anonCount, setAnonCount] = useState(0);
@@ -61,13 +66,16 @@ export default function Navbar() {
   }, [langOpen]);
 
   const totalFavorites = user ? (hotelIds.length + houseIds.length) : anonCount;
+  const unreadMessages = useUnreadMessages(user);
 
-  useEffect(() => {
-    if (typeof document !== 'undefined') {
-      document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
-      document.documentElement.lang = lang;
-    }
-  }, [lang]);
+  // Public pages: go to the same page's URL in that language (/ar/hotels…), rendered by the
+  // server in it. Private pages have one URL: reload so listings are fetched again, localized.
+  const changeLang = (code) => {
+    if (code === lang) return;
+    setLang(code);
+    if (urlLang) window.location.assign(localePath(code, splitLocale(pathname).path) + window.location.search);
+    else window.location.reload();
+  };
 
   const dashHref =
     user?.role === 'admin' ? '/admin' : user?.role === 'owner' ? '/owner/dashboard' : user?.role === 'seller' ? '/seller/dashboard' : '/my-bookings';
@@ -86,18 +94,8 @@ export default function Navbar() {
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         
         {/* Left: Brand Logo */}
-        <Link href="/" className="flex items-center gap-3 shrink-0 group">
-          <span className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-br from-sky-400 to-brand-600 text-white shadow-md shadow-brand-500/20 group-hover:scale-105 transition-transform duration-300">
-            <Building2 className="h-6 w-6" />
-          </span>
-          <div className="flex flex-col">
-            <span className="text-2xl font-extrabold tracking-tight text-gray-900 leading-none">
-              hotels<span className="text-brand-500">dz</span>
-            </span>
-            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] leading-none mt-1">
-              {t.tagline}
-            </span>
-          </div>
+        <Link href="/" className="flex items-center shrink-0 group" aria-label={`${brandName(lang)} — ${t.tagline}`}>
+          <span className="inline-block transition-transform duration-300 group-hover:scale-[1.03]"><BrandLogo className="h-10 sm:h-11" textClassName="text-2xl sm:text-[1.7rem]" alt="" priority /></span>
         </Link>
 
         {/* Center: Navigation Links */}
@@ -114,7 +112,7 @@ export default function Navbar() {
                     : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
                 }`}
               >
-                {link.label}
+                {t(link.label)}
               </Link>
             );
           })}
@@ -139,6 +137,22 @@ export default function Navbar() {
               </span>
             )}
           </Link>
+
+          {/* Messages (logged-in) */}
+          {user && (
+            <Link
+              href="/messages"
+              aria-label={unreadMessages ? t('{n} message(s) non lu(s)', { n: unreadMessages }) : t('Messages')}
+              className={`relative grid h-10 w-10 place-items-center rounded-full transition ${pathname.startsWith('/messages') ? 'bg-brand-50 text-brand-600' : 'text-gray-600 hover:bg-gray-100'}`}
+            >
+              <MessageCircle className="h-5 w-5" />
+              {unreadMessages > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-brand-500 px-1 text-[9px] font-extrabold text-white ring-2 ring-white">
+                  {unreadMessages}
+                </span>
+              )}
+            </Link>
+          )}
 
           {/* Add Hotel Button */}
           <Link
@@ -178,7 +192,7 @@ export default function Navbar() {
                   <button
                     key={l.code}
                     onClick={() => {
-                      setLang(l.code);
+                      changeLang(l.code);
                       setLangOpen(false);
                     }}
                     className={`w-full rounded-xl px-3 py-2 text-xs font-bold text-left transition ${
@@ -187,7 +201,7 @@ export default function Navbar() {
                         : 'text-gray-700 hover:bg-gray-50'
                     }`}
                   >
-                    {l.label}
+                    {t(l.label)}
                   </button>
                 ))}
               </div>
@@ -197,10 +211,13 @@ export default function Navbar() {
 
         {/* Mobile Toggle */}
         <button
+          type="button"
           onClick={() => setOpen(!open)}
+          aria-label={open ? t('Fermer le menu') : t('Ouvrir le menu')}
+          aria-expanded={open}
           className="grid h-11 w-11 place-items-center rounded-xl text-gray-700 hover:bg-gray-100 lg:hidden"
         >
-          {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          {open ? <X className="h-6 w-6" aria-hidden="true" /> : <Menu className="h-6 w-6" aria-hidden="true" />}
         </button>
       </div>
 
@@ -213,7 +230,7 @@ export default function Navbar() {
             {['fr', 'ar', 'en'].map((code) => (
               <button
                 key={code}
-                onClick={() => setLang(code)}
+                onClick={() => changeLang(code)}
                 className={`px-3 py-1 text-xs font-bold rounded-lg transition ${
                   lang === code ? 'bg-brand-500 text-white' : 'text-gray-600 hover:bg-gray-200'
                 }`}
@@ -234,10 +251,21 @@ export default function Navbar() {
                   isActive ? 'bg-brand-50 text-brand-600' : 'text-gray-700 hover:bg-gray-50'
                 }`}
               >
-                {link.label}
+                {t(link.label)}
               </Link>
             );
           })}
+
+          {user && (
+            <Link
+              href="/messages"
+              onClick={() => setOpen(false)}
+              className="flex items-center justify-between rounded-xl px-4 py-3 text-base font-bold text-gray-700 transition hover:bg-gray-50"
+            >
+              <span className="flex items-center gap-2"><MessageCircle className="h-5 w-5 text-brand-500" /> {t('Messages')}</span>
+              {unreadMessages > 0 && <span className="rounded-full bg-brand-500 px-2.5 py-0.5 text-xs font-bold text-white">{unreadMessages}</span>}
+            </Link>
+          )}
 
           {/* Mobile Favorites Link */}
           <Link

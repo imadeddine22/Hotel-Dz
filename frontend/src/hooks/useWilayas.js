@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '@/lib/api';
 import { WILAYAS as STATIC_WILAYAS } from '@/lib/wilayas';
+import { regionNames } from '@/lib/countries';
 
 export function useWilayas() {
   const [wilayas, setWilayas] = useState(STATIC_WILAYAS);
@@ -39,3 +40,6 @@ export function useWilayas() {
 
   return { wilayas, loading, addWilaya };
 }
+
+/** Regions offered in a listing form: Algerian wilayas (from the API) or the selected country's regions. */
+export const regionsFor = (country, wilayas) => (country && country !== 'DZ' ? regionNames(country) : wilayas);

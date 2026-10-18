@@ -23,9 +23,11 @@ module.exports = {
         ink: '#1a2332',
       },
       fontFamily: {
-        sans: ['"Plus Jakarta Sans"', 'var(--font-poppins)', 'system-ui', 'sans-serif'],
-        serif: ['"Playfair Display"', 'Georgia', 'serif'],
-        display: ['"Playfair Display"', 'Georgia', 'serif'],
+        // Fredoka everywhere (loaded by next/font in app/layout.jsx). It has no Arabic glyphs:
+        // Arabic letters use Cairo (next in the stack), then the system fonts.
+        sans: ['var(--font-fredoka)', 'var(--font-cairo)', 'system-ui', '"Segoe UI"', 'Tahoma', 'sans-serif'],
+        serif: ['var(--font-fredoka)', 'var(--font-cairo)', 'system-ui', '"Segoe UI"', 'Tahoma', 'sans-serif'],
+        display: ['var(--font-fredoka)', 'var(--font-cairo)', 'system-ui', '"Segoe UI"', 'Tahoma', 'sans-serif'],
       },
       boxShadow: {
         card: '0 6px 24px -8px rgba(0,0,0,0.18)',

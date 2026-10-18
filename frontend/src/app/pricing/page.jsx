@@ -4,13 +4,14 @@ import { useEffect, useState } from 'react';
 import { ChevronDown, ChevronUp, HelpCircle } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
 import api from '@/lib/api';
 
+import { useT } from '@/lib/i18n/useT';
 const FAQS = [
   {
     q: "Quels sont les modes de paiement acceptés ?",
-    a: "Nous acceptons les paiements sécurisés par carte CIB et Edahabia pour tous les abonnements. Vous pouvez également payer par virement ou versement CCP si nécessaire."
+    a: "Les abonnements se règlent par virement bancaire ou versement CCP. Contactez-nous depuis la page Contact pour recevoir les coordonnées de paiement."
   },
   {
     q: "Puis-je changer de plan ou annuler mon abonnement à tout moment ?",
@@ -22,7 +23,7 @@ const FAQS = [
   },
   {
     q: "Y a-t-il des frais ou commissions supplémentaires sur mes réservations ?",
-    a: "Non. Contrairement à d'autres plateformes, HotelsDZ fonctionne sur un modèle d'abonnement pur. Vous gardez 100% de vos gains sans aucune commission prélevée sur vos réservations."
+    a: "Non. Contrairement à d'autres plateformes, Meskan fonctionne sur un modèle d'abonnement pur. Vous gardez 100% de vos gains sans aucune commission prélevée sur vos réservations."
   },
   {
     q: "Que se passe-t-il si je dépasse la limite d'établissements de mon plan ?",
@@ -74,6 +75,7 @@ function FaqItem({ q, a }) {
 }
 
 export default function PricingPage() {
+  const { t } = useT();
   const [billing, setBilling] = useState('monthly'); // 'monthly' | 'yearly'
   const [prices, setPrices] = useState({
     growthMonthly: 2900,
@@ -106,15 +108,14 @@ export default function PricingPage() {
         <div className="absolute inset-0 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:16px_16px] opacity-60"></div>
         <div className="relative z-10 max-w-4xl mx-auto">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-100 px-4 py-1.5 text-xs font-extrabold text-brand-600 uppercase tracking-widest mb-4 border border-brand-200 shadow-sm animate-pulse">
-            ✦ Nouveau Modèle d'Abonnement
+            {t('✦ Nouveau Modèle d\'Abonnement')}
           </span>
           <h1 className="text-4xl md:text-6xl font-black font-serif text-slate-800 tracking-tight leading-none">
-            Flexible pricing plans <br />
-            for <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-slate-500">every growing business</span>
+            {t('Flexible pricing plans')} <br />
+            {t('for')} <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-slate-500">{t('every growing business')}</span>
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-slate-500 text-sm md:text-base font-medium leading-relaxed">
-            Start free, scale as you grow. Choose the plan that matches your customer engagement goals. 
-            Aucune commission sur vos gains.
+            {t('Start free, scale as you grow. Choose the plan that matches your customer engagement goals. Aucune commission sur vos gains.')}
           </p>
 
           {/* Billing Switch Toggle */}
@@ -125,7 +126,7 @@ export default function PricingPage() {
                 billing === 'monthly' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-800'
               }`}
             >
-              Mensuel
+              {t('Mensuel')}
             </button>
             <button
               onClick={() => setBilling('yearly')}
@@ -133,7 +134,7 @@ export default function PricingPage() {
                 billing === 'yearly' ? 'bg-brand-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-800'
               }`}
             >
-              Annuel
+              {t('Annuel')}
               <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-extrabold ${billing === 'yearly' ? 'bg-white text-brand-700' : 'bg-brand-100 text-brand-700'}`}>
                 -17%
               </span>
@@ -145,9 +146,9 @@ export default function PricingPage() {
       {/* Compare Plans Desktop Unified Grid (Matches Screenshot) */}
       <section className="max-w-7xl mx-auto px-4 pb-20 relative z-10">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-black font-serif text-slate-800">Compare plans</h2>
+          <h2 className="text-3xl font-black font-serif text-slate-800">{t('Compare plans')}</h2>
           <p className="text-slate-500 text-sm mt-2 max-w-xl mx-auto">
-            See which plan fits your team's goals — from essential customer data tools to advanced automation and analytics.
+            {t('See which plan fits your team\'s goals — from essential customer data tools to advanced automation and analytics.')}
           </p>
         </div>
 
@@ -157,7 +158,7 @@ export default function PricingPage() {
             
             {/* Header Column 1: Title card */}
             <div className="p-8 flex flex-col justify-end bg-slate-50/30">
-              <h4 className="text-2xl font-black text-slate-800 font-serif leading-none">Features</h4>
+              <h4 className="text-2xl font-black text-slate-800 font-serif leading-none">{t('Features')}</h4>
             </div>
 
             {/* Header Column 2: Starter Card */}
@@ -166,44 +167,44 @@ export default function PricingPage() {
                 <div className="mb-4">
                   <DoubleLoopIcon color="text-slate-200" />
                 </div>
-                <h3 className="text-lg font-bold text-slate-800 font-serif">Starter Plan</h3>
-                <p className="text-[11px] text-slate-400 font-bold mt-1 min-h-[32px]">Best for small teams getting started.</p>
+                <h3 className="text-lg font-bold text-slate-800 font-serif">{t('Starter Plan')}</h3>
+                <p className="text-[11px] text-slate-400 font-bold mt-1 min-h-[32px]">{t('Best for small teams getting started.')}</p>
                 <div className="flex items-baseline gap-1 mt-6">
                   <span className="text-4xl font-black text-slate-800 tracking-tight">0</span>
-                  <span className="text-xs font-bold text-slate-400">DZD / {billing === 'monthly' ? 'mois' : 'an'}</span>
+                  <span className="text-xs font-bold text-slate-400">{t('DZD /')} {billing === 'monthly' ? t('mois') : 'an'}</span>
                 </div>
               </div>
               <Link
                 href="/register"
                 className="mt-8 block w-full text-center py-2.5 px-4 rounded-full font-bold text-xs text-slate-700 border border-slate-200 hover:bg-slate-50 hover:border-slate-300 transition"
               >
-                Get started free
+                {t('Get started free')}
               </Link>
             </div>
 
             {/* Header Column 3: Growth Card (Teal border highlight) */}
             <div className="p-8 flex flex-col justify-between bg-teal-50/5 relative ring-2 ring-teal-500/50 ring-inset">
               <div className="absolute -top-0.5 left-0 right-0 bg-teal-500 text-white font-extrabold text-[10px] text-center py-1 uppercase tracking-widest">
-                Most Popular
+                {t('Most Popular')}
               </div>
               <div className="pt-2">
                 <div className="mb-4">
                   <DoubleLoopIcon color="text-teal-400" />
                 </div>
-                <h3 className="text-lg font-bold text-slate-800 font-serif">Growth Plan</h3>
-                <p className="text-[11px] text-slate-400 font-bold mt-1 min-h-[32px]">For scaling teams ready to automate journeys.</p>
+                <h3 className="text-lg font-bold text-slate-800 font-serif">{t('Growth Plan')}</h3>
+                <p className="text-[11px] text-slate-400 font-bold mt-1 min-h-[32px]">{t('For scaling teams ready to automate journeys.')}</p>
                 <div className="flex items-baseline gap-1 mt-6">
                   <span className="text-4xl font-black text-slate-800 tracking-tight">
                     {new Intl.NumberFormat('fr-DZ').format(billing === 'monthly' ? prices.growthMonthly : prices.growthYearly)}
                   </span>
-                  <span className="text-xs font-bold text-slate-400">DZD / {billing === 'monthly' ? 'mois' : 'an'}</span>
+                  <span className="text-xs font-bold text-slate-400">{t('DZD /')} {billing === 'monthly' ? t('mois') : 'an'}</span>
                 </div>
               </div>
               <Link
                 href="/register?plan=growth"
                 className="mt-8 block w-full text-center py-2.5 px-4 rounded-full font-bold text-xs text-white bg-slate-900 hover:bg-slate-800 shadow-md transition"
               >
-                Start free trial
+                {t('Start free trial')}
               </Link>
             </div>
 
@@ -213,20 +214,20 @@ export default function PricingPage() {
                 <div className="mb-4">
                   <DoubleLoopIcon color="text-emerald-300" />
                 </div>
-                <h3 className="text-lg font-bold text-slate-800 font-serif">Pro Plan</h3>
-                <p className="text-[11px] text-slate-400 font-bold mt-1 min-h-[32px]">For businesses that need customization.</p>
+                <h3 className="text-lg font-bold text-slate-800 font-serif">{t('Pro Plan')}</h3>
+                <p className="text-[11px] text-slate-400 font-bold mt-1 min-h-[32px]">{t('For businesses that need customization.')}</p>
                 <div className="flex items-baseline gap-1 mt-6">
                   <span className="text-4xl font-black text-slate-800 tracking-tight">
                     {new Intl.NumberFormat('fr-DZ').format(billing === 'monthly' ? prices.proMonthly : prices.proYearly)}
                   </span>
-                  <span className="text-xs font-bold text-slate-400">DZD / {billing === 'monthly' ? 'mois' : 'an'}</span>
+                  <span className="text-xs font-bold text-slate-400">{t('DZD /')} {billing === 'monthly' ? t('mois') : 'an'}</span>
                 </div>
               </div>
               <Link
                 href="/contact?subject=pro-plan"
                 className="mt-8 block w-full text-center py-2.5 px-4 rounded-full font-bold text-xs text-slate-700 border border-slate-200 hover:bg-slate-50 hover:border-slate-300 transition"
               >
-                Book demo
+                {t('Book demo')}
               </Link>
             </div>
 
@@ -237,27 +238,27 @@ export default function PricingPage() {
             {COMPARISON_FEATURES.map((feat, idx) => (
               <div key={idx} className="grid grid-cols-4 items-center divide-x divide-slate-100 hover:bg-slate-50/20 transition-colors">
                 {/* Feature Name */}
-                <div className="p-5 text-sm font-bold text-slate-700 bg-slate-50/10">{feat.name}</div>
+                <div className="p-5 text-sm font-bold text-slate-700 bg-slate-50/10">{t(feat.name)}</div>
                 
                 {/* Starter */}
                 <div className="p-5 text-sm font-semibold text-slate-500 text-center">
                   {typeof feat.starter === 'boolean' ? (
                     feat.starter ? <span className="text-emerald-500 text-base">✔</span> : <span className="text-slate-300">✕</span>
-                  ) : feat.starter}
+                  ) : t(feat.starter)}
                 </div>
 
                 {/* Growth (Highlighted border) */}
                 <div className="p-5 text-sm font-bold text-teal-600 text-center bg-teal-50/5 ring-2 ring-teal-500/50 ring-inset">
                   {typeof feat.growth === 'boolean' ? (
                     feat.growth ? <span className="text-emerald-500 text-base">✔</span> : <span className="text-slate-300">✕</span>
-                  ) : feat.growth}
+                  ) : t(feat.growth)}
                 </div>
 
                 {/* Pro */}
                 <div className="p-5 text-sm font-semibold text-slate-500 text-center">
                   {typeof feat.pro === 'boolean' ? (
                     feat.pro ? <span className="text-emerald-500 text-base">✔</span> : <span className="text-slate-300">✕</span>
-                  ) : feat.pro}
+                  ) : t(feat.pro)}
                 </div>
               </div>
             ))}
@@ -268,50 +269,50 @@ export default function PricingPage() {
         <div className="grid gap-6 lg:hidden">
           {/* Card 1 */}
           <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
-            <h3 className="text-lg font-bold text-slate-800 font-serif">Starter Plan</h3>
-            <p className="text-4xl font-black text-slate-800 mt-2">0 DZD <span className="text-xs text-slate-400 font-bold">/ {billing === 'monthly' ? 'mois' : 'an'}</span></p>
+            <h3 className="text-lg font-bold text-slate-800 font-serif">{t('Starter Plan')}</h3>
+            <p className="text-4xl font-black text-slate-800 mt-2">{t('0 DZD')} <span className="text-xs text-slate-400 font-bold">/ {billing === 'monthly' ? t('mois') : 'an'}</span></p>
             <ul className="mt-4 space-y-2">
-              <li className="text-xs text-slate-600 font-semibold">1 établissement</li>
-              <li className="text-xs text-slate-600 font-semibold">5 photos max</li>
-              <li className="text-xs text-slate-600 font-semibold">Support par email</li>
+              <li className="text-xs text-slate-600 font-semibold">{t('1 établissement')}</li>
+              <li className="text-xs text-slate-600 font-semibold">{t('5 photos max')}</li>
+              <li className="text-xs text-slate-600 font-semibold">{t('Support par email')}</li>
             </ul>
             <Link href="/register" className="mt-6 block text-center py-2.5 rounded-full font-bold text-xs text-slate-700 border border-slate-200">
-              Get started free
+              {t('Get started free')}
             </Link>
           </div>
           {/* Card 2 */}
           <div className="bg-white rounded-2xl p-6 border-2 border-teal-500 shadow-sm relative">
-            <span className="absolute -top-3.5 right-6 bg-teal-500 text-white font-extrabold text-[8px] uppercase px-3 py-0.5 rounded-full">Most Popular</span>
-            <h3 className="text-lg font-bold text-slate-800 font-serif">Growth Plan</h3>
+            <span className="absolute -top-3.5 right-6 bg-teal-500 text-white font-extrabold text-[8px] uppercase px-3 py-0.5 rounded-full">{t('Most Popular')}</span>
+            <h3 className="text-lg font-bold text-slate-800 font-serif">{t('Growth Plan')}</h3>
             <p className="text-4xl font-black text-slate-800 mt-2">
-              {new Intl.NumberFormat('fr-DZ').format(billing === 'monthly' ? prices.growthMonthly : prices.growthYearly)} DZD
-              <span className="text-xs text-slate-400 font-bold"> / {billing === 'monthly' ? 'mois' : 'an'}</span>
+              {new Intl.NumberFormat('fr-DZ').format(billing === 'monthly' ? prices.growthMonthly : prices.growthYearly)} {t('DZD')}
+              <span className="text-xs text-slate-400 font-bold"> / {billing === 'monthly' ? t('mois') : 'an'}</span>
             </p>
             <ul className="mt-4 space-y-2">
-              <li className="text-xs text-slate-600 font-semibold">Jusqu'à 5 établissements</li>
-              <li className="text-xs text-slate-600 font-semibold">Photos illimitées</li>
-              <li className="text-xs text-slate-600 font-semibold">Mise en avant (Featured)</li>
-              <li className="text-xs text-slate-600 font-semibold">Support prioritaire 7j/7</li>
+              <li className="text-xs text-slate-600 font-semibold">{t('Jusqu\'à 5 établissements')}</li>
+              <li className="text-xs text-slate-600 font-semibold">{t('Photos illimitées')}</li>
+              <li className="text-xs text-slate-600 font-semibold">{t('Mise en avant (Featured)')}</li>
+              <li className="text-xs text-slate-600 font-semibold">{t('Support prioritaire 7j/7')}</li>
             </ul>
             <Link href="/register?plan=growth" className="mt-6 block text-center py-2.5 rounded-full font-bold text-xs text-white bg-slate-900">
-              Start free trial
+              {t('Start free trial')}
             </Link>
           </div>
           {/* Card 3 */}
           <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
-            <h3 className="text-lg font-bold text-slate-800 font-serif">Pro Plan</h3>
+            <h3 className="text-lg font-bold text-slate-800 font-serif">{t('Pro Plan')}</h3>
             <p className="text-4xl font-black text-slate-800 mt-2">
-              {new Intl.NumberFormat('fr-DZ').format(billing === 'monthly' ? prices.proMonthly : prices.proYearly)} DZD
-              <span className="text-xs text-slate-400 font-bold"> / {billing === 'monthly' ? 'mois' : 'an'}</span>
+              {new Intl.NumberFormat('fr-DZ').format(billing === 'monthly' ? prices.proMonthly : prices.proYearly)} {t('DZD')}
+              <span className="text-xs text-slate-400 font-bold"> / {billing === 'monthly' ? t('mois') : 'an'}</span>
             </p>
             <ul className="mt-4 space-y-2">
-              <li className="text-xs text-slate-600 font-semibold">Établissements illimités</li>
-              <li className="text-xs text-slate-600 font-semibold">Badge vérifié</li>
-              <li className="text-xs text-slate-600 font-semibold">API Sync Calendrier</li>
-              <li className="text-xs text-slate-600 font-semibold">Dossiers de location</li>
+              <li className="text-xs text-slate-600 font-semibold">{t('Établissements illimités')}</li>
+              <li className="text-xs text-slate-600 font-semibold">{t('Badge vérifié')}</li>
+              <li className="text-xs text-slate-600 font-semibold">{t('API Sync Calendrier')}</li>
+              <li className="text-xs text-slate-600 font-semibold">{t('Dossiers de location')}</li>
             </ul>
             <Link href="/contact?subject=pro-plan" className="mt-6 block text-center py-2.5 rounded-full font-bold text-xs text-slate-700 border border-slate-200">
-              Book demo
+              {t('Book demo')}
             </Link>
           </div>
         </div>
@@ -321,37 +322,37 @@ export default function PricingPage() {
       <section className="bg-white py-14 border-y border-slate-100 select-none">
         <div className="max-w-7xl mx-auto px-4 text-center">
           <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase mb-8">
-            REJOINT PAR LES LEADERS DE L'HÔTELLERIE 5 ÉTOILES EN ALGÉRIE
+            {t('REJOINT PAR LES LEADERS DE L\'HÔTELLERIE 5 ÉTOILES EN ALGÉRIE')}
           </p>
           <div className="flex flex-wrap items-center justify-center gap-10 md:gap-16 opacity-75">
             {/* Sheraton */}
             <div className="flex items-center gap-2 text-slate-700 font-serif font-bold text-lg md:text-xl tracking-tight">
-              <span className="w-7 h-7 rounded-full border-2 border-slate-700 flex items-center justify-center font-serif text-sm font-bold shadow-sm">S</span>
-              <span>Sheraton</span>
+              <span className="w-7 h-7 rounded-full border-2 border-slate-700 flex items-center justify-center font-serif text-sm font-bold shadow-sm">{t('S')}</span>
+              <span>{t('Sheraton')}</span>
             </div>
             {/* Sofitel */}
             <div className="flex items-center gap-2 text-slate-700 font-serif font-bold text-lg md:text-xl tracking-widest uppercase">
-              <span>Sofitel</span>
+              <span>{t('Sofitel')}</span>
             </div>
             {/* Marriott */}
             <div className="flex items-center gap-1 text-slate-800 font-sans font-black text-lg md:text-xl tracking-tight uppercase">
-              <span className="text-red-700 font-serif text-2xl font-black leading-none mr-0.5">M</span>
-              <span>Marriott</span>
+              <span className="text-red-700 font-serif text-2xl font-black leading-none mr-0.5">{t('M')}</span>
+              <span>{t('Marriott')}</span>
             </div>
             {/* Hyatt Regency */}
             <div className="flex flex-col items-center text-slate-700 font-sans font-bold text-xs tracking-[0.2em] uppercase leading-none">
-              <span>Hyatt</span>
-              <span className="text-[8px] font-medium text-slate-400 mt-1 tracking-widest">Regency</span>
+              <span>{t('Hyatt')}</span>
+              <span className="text-[8px] font-medium text-slate-400 mt-1 tracking-widest">{t('Regency')}</span>
             </div>
             {/* El Aurassi */}
             <div className="flex items-center gap-1.5 text-slate-700 font-serif font-bold text-lg md:text-xl">
               <span className="text-lg text-slate-500">🌙</span>
-              <span>El Aurassi</span>
+              <span>{t('El Aurassi')}</span>
             </div>
             {/* Royal Hotel */}
             <div className="flex items-center gap-1.5 text-slate-700 font-serif font-bold text-lg md:text-xl">
               <span className="text-amber-500 text-lg">👑</span>
-              <span>Royal Hotel</span>
+              <span>{t('Royal Hotel')}</span>
             </div>
           </div>
         </div>
@@ -366,26 +367,26 @@ export default function PricingPage() {
             <div className="w-full lg:w-[40%] sticky top-8">
               <div className="border border-slate-200 rounded-lg px-3 py-1 flex items-center gap-1.5 text-xs font-black text-slate-500 bg-white w-fit shadow-sm">
                 <HelpCircle className="h-3.5 w-3.5 text-teal-600" />
-                <span>FAQ</span>
+                <span>{t('FAQ')}</span>
               </div>
               <h2 className="text-4xl md:text-5xl font-black font-serif text-slate-800 mt-4 tracking-tight leading-none">
-                Frequently asked <br />questions
+                {t('Frequently asked')} <br />{t('questions')}
               </h2>
               <p className="text-slate-500 text-sm mt-4 font-medium max-w-sm leading-relaxed">
-                These are the most commonly asked questions about HotelsDZ. Can't find what you're looking for?
+                {t('These are the most commonly asked questions about Meskan. Can\'t find what you\'re looking for?')}
               </p>
               <Link
                 href="/contact"
                 className="inline-block mt-6 px-6 py-3 rounded-full font-bold text-xs text-white bg-gradient-to-r from-slate-900 to-slate-800 hover:from-slate-800 hover:to-slate-700 transition shadow-md hover:scale-102"
               >
-                Help Center
+                {t('Help Center')}
               </Link>
             </div>
 
             {/* Right Column (60% width) */}
             <div className="w-full lg:w-[60%] flex flex-col gap-4">
               {FAQS.map((faq, i) => (
-                <FaqItem key={i} q={faq.q} a={faq.a} />
+                <FaqItem key={i} q={t(faq.q)} a={t(faq.a)} />
               ))}
             </div>
 
@@ -399,23 +400,23 @@ export default function PricingPage() {
           <div className="absolute inset-0 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:24px_24px] opacity-[0.03]"></div>
           <div className="relative z-10">
             <h2 className="text-3xl md:text-4xl font-serif font-black tracking-tight leading-tight">
-              Prêt à publier vos biens et garder 100% de vos gains ?
+              {t('Prêt à publier vos biens et garder 100% de vos gains ?')}
             </h2>
             <p className="mx-auto mt-4 max-w-lg text-slate-400 text-xs md:text-sm font-medium">
-              Inscrivez-vous dès aujourd'hui sur HotelsDZ. Choisissez le plan d'abonnement idéal et touchez des clients dans les 58 wilayas d'Algérie.
+              {t('Inscrivez-vous dès aujourd\'hui sur Meskan. Choisissez le plan d\'abonnement idéal et touchez des clients dans les 69 wilayas d\'Algérie.')}
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-4">
               <Link
                 href="/register"
                 className="rounded-full bg-white px-8 py-3.5 font-bold text-slate-900 shadow-md hover:bg-slate-50 transition hover:scale-102"
               >
-                Inscrire mon établissement
+                {t('Inscrire mon établissement')}
               </Link>
               <Link
                 href="/contact"
                 className="rounded-full border border-slate-700 bg-slate-800/40 px-8 py-3.5 font-bold text-white backdrop-blur-sm transition hover:bg-slate-800/80 hover:scale-102"
               >
-                Nous contacter
+                {t('Nous contacter')}
               </Link>
             </div>
           </div>

@@ -6,6 +6,7 @@ import { Heart } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useFavoritesStore } from '@/store/favoritesStore';
 
+import { useT } from '@/lib/i18n/useT';
 // ─── localStorage helpers for anonymous favorites ───────────────────
 const ANON_KEY = 'anon_favorites';
 
@@ -31,6 +32,7 @@ function setAnonFavs(favs) {
  * Props: type ('hotel' | 'house'), id, and optional className for positioning.
  */
 export default function FavoriteButton({ type, id, className = '', size = 18 }) {
+  const { t } = useT();
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const { isHotelFav, isHouseFav, toggleHotel, toggleHouse } = useFavoritesStore();
@@ -119,8 +121,8 @@ export default function FavoriteButton({ type, id, className = '', size = 18 }) 
       `}</style>
       <button
         onClick={onClick}
-        aria-label={fav ? 'Retirer des favoris' : 'Ajouter aux favoris'}
-        title={fav ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+        aria-label={fav ? t('Retirer des favoris') : t('Ajouter aux favoris')}
+        title={fav ? t('Retirer des favoris') : t('Ajouter aux favoris')}
         className={`fav-btn relative grid place-items-center rounded-full shadow transition-all duration-200 hover:scale-110 active:scale-95 ${animating ? 'fav-btn-animating' : ''} ${className}`}
         style={{
           width: 36,

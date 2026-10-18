@@ -1,10 +1,10 @@
 'use client';
 
-import Link from 'next/link';
-import { useLangStore } from '@/store/authStore';
+import Link from '@/components/LocaleLink';
+import { useT } from '@/lib/i18n/useT';
 
 export default function CtaBanner() {
-  const { lang } = useLangStore();
+  const { lang } = useT();
   const isRtl = lang === 'ar';
 
   const text = {

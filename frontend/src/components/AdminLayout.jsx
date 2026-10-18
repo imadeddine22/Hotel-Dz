@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
+import BrandLogo from '@/components/BrandLogo';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
@@ -15,15 +16,16 @@ import {
   ChevronDown,
   Menu,
   X,
-  Search,
   Building2,
   Home,
   Mail,
   Tag,
+  MessageSquareQuote,
 } from 'lucide-react';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
 
+import { useT } from '@/lib/i18n/useT';
 const ADMIN_MENU = [
   { href: '/admin', label: 'Tableau de bord', icon: LayoutDashboard },
   { href: '/admin/hotels', label: 'Approbations', icon: CheckSquare },
@@ -32,17 +34,20 @@ const ADMIN_MENU = [
   { href: '/admin/all-sales', label: 'Ventes immobilières', icon: Tag },
   { href: '/admin/users', label: 'Utilisateurs', icon: Users },
   { href: '/admin/messages', label: 'Messages', icon: Mail },
+  { href: '/admin/testimonials', label: 'Avis clients', icon: MessageSquareQuote },
   { href: '/admin/bookings', label: 'Réservations', icon: CalendarCheck },
   { href: '/admin/pricing', label: 'Tarification', icon: Settings },
 ];
 
 export default function AdminLayout({ children }) {
+  const { t } = useT();
   const router = useRouter();
   const pathname = usePathname();
   const { user, loading, logout, isRole } = useAuthStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [unread, setUnread] = useState(0);
+  const [pendingReviews, setPendingReviews] = useState(0);
 
   useEffect(() => {
     if (loading) return;
@@ -56,13 +61,16 @@ export default function AdminLayout({ children }) {
     api.get('/messages')
       .then(({ data }) => setUnread((data.messages || []).filter((m) => !m.isRead).length))
       .catch(() => {});
+    api.get('/testimonials/admin?status=pending', { localize: false })
+      .then(({ data }) => setPendingReviews(data.pending || 0))
+      .catch(() => {});
   }, [user, pathname]);
 
   if (loading || !user) {
     return (
       <div className="admin-loading">
         <div className="admin-loading-spinner" />
-        <p>Chargement...</p>
+        <p>{t('Chargement...')}</p>
       </div>
     );
   }
@@ -78,12 +86,7 @@ export default function AdminLayout({ children }) {
       <aside className={`admin-sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="admin-sidebar-header">
           <Link href="/" className="admin-logo">
-            <span className="admin-logo-icon">
-              <Hotel className="w-5 h-5" />
-            </span>
-            <span className="admin-logo-text">
-              hotels<span className="admin-logo-accent">dz</span>
-            </span>
+            <BrandLogo className="h-9" textClassName="text-xl" />
           </Link>
           <button className="admin-sidebar-close" onClick={() => setSidebarOpen(false)}>
             <X className="w-5 h-5" />
@@ -94,7 +97,7 @@ export default function AdminLayout({ children }) {
           {ADMIN_MENU.map((item) => {
             const Icon = item.icon;
             const active = pathname === item.href;
-            const showBadge = item.href === '/admin/messages' && unread > 0;
+            const badge = item.href === '/admin/messages' ? unread : item.href === '/admin/testimonials' ? pendingReviews : 0;
             return (
               <Link
                 key={item.href}
@@ -103,8 +106,8 @@ export default function AdminLayout({ children }) {
                 className={`admin-nav-item ${active ? 'active' : ''}`}
               >
                 <Icon className="admin-nav-icon" />
-                <span>{item.label}</span>
-                {showBadge && <span className="admin-nav-badge">{unread}</span>}
+                <span>{t(item.label)}</span>
+                {badge > 0 && <span className="admin-nav-badge">{badge}</span>}
               </Link>
             );
           })}
@@ -116,7 +119,7 @@ export default function AdminLayout({ children }) {
             className="admin-nav-item logout"
           >
             <LogOut className="admin-nav-icon" />
-            <span>Déconnexion</span>
+            <span>{t('Déconnexion')}</span>
           </button>
         </div>
       </aside>
@@ -126,16 +129,12 @@ export default function AdminLayout({ children }) {
         {/* Top Bar */}
         <header className="admin-topbar">
           <div className="admin-topbar-left">
-            <button className="admin-menu-btn" onClick={() => setSidebarOpen(true)}>
+            <button className="admin-menu-btn" onClick={() => setSidebarOpen(true)} aria-label={t('Ouvrir le menu')}>
               <Menu className="w-5 h-5" />
             </button>
-            <div className="admin-search-box">
-              <Search className="admin-search-icon" />
-              <input type="text" placeholder="Rechercher..." className="admin-search-input" />
-            </div>
           </div>
           <div className="admin-topbar-right">
-            <Link href="/admin/messages" className="admin-notif-btn" aria-label="Messages">
+            <Link href="/admin/messages" className="admin-notif-btn" aria-label={t('Messages')}>
               <Bell className="w-5 h-5" />
               {unread > 0 && <span className="admin-notif-badge">{unread}</span>}
             </Link>
@@ -145,24 +144,24 @@ export default function AdminLayout({ children }) {
                 onClick={() => setProfileOpen(!profileOpen)}
               >
                 <div className="admin-avatar">
-                  {user.fullName?.charAt(0)?.toUpperCase() || 'A'}
+                  {user.fullName?.charAt(0)?.toUpperCase() || t('A')}
                 </div>
                 <div className="admin-profile-info">
                   <span className="admin-profile-name">{user.fullName}</span>
-                  <span className="admin-profile-role">Administrateur</span>
+                  <span className="admin-profile-role">{t('Administrateur')}</span>
                 </div>
                 <ChevronDown className={`admin-chevron ${profileOpen ? 'rotated' : ''}`} />
               </button>
               {profileOpen && (
                 <div className="admin-profile-dropdown">
                   <Link href="/profile" className="admin-dropdown-item">
-                    <Settings className="w-4 h-4" /> Paramètres
+                    <Settings className="w-4 h-4" /> {t('Paramètres')}
                   </Link>
                   <button
                     onClick={async () => { await logout(); router.push('/'); }}
                     className="admin-dropdown-item danger"
                   >
-                    <LogOut className="w-4 h-4" /> Déconnexion
+                    <LogOut className="w-4 h-4" /> {t('Déconnexion')}
                   </button>
                 </div>
               )}

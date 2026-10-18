@@ -8,9 +8,11 @@ import Footer from '@/components/Footer';
 import { useAuthStore } from '@/store/authStore';
 import api from '@/lib/api';
 
+import { useT } from '@/lib/i18n/useT';
 const ROLE_LABELS = { customer: 'Client', owner: 'Hôtelier', admin: 'Administrateur' };
 
 export default function ProfilePage() {
+  const { t } = useT();
   const router = useRouter();
   const { user, loading } = useAuthStore();
   const [form, setForm] = useState({ fullName: '', phone: '', password: '', confirm: '' });
@@ -52,6 +54,8 @@ export default function ProfilePage() {
       if (form.password) payload.password = form.password;
 
       const { data } = await api.put('/auth/update-profile', payload);
+      // changing the password revokes old tokens; the answer carries a fresh one
+      if (data.token) localStorage.setItem('token', data.token);
       useAuthStore.setState({ user: data.user });
       setForm((f) => ({ ...f, password: '', confirm: '' }));
       setSaved(true);
@@ -66,7 +70,7 @@ export default function ProfilePage() {
     return (
       <main className="min-h-screen">
         <Navbar />
-        <div className="mx-auto max-w-2xl px-4 py-24 text-center text-gray-400">Chargement...</div>
+        <div className="mx-auto max-w-2xl px-4 py-24 text-center text-gray-400">{t('Chargement...')}</div>
         <Footer />
       </main>
     );
@@ -97,7 +101,7 @@ export default function ProfilePage() {
 
         {/* Edit form */}
         <form onSubmit={submit} noValidate className="rounded-2xl bg-white p-6 shadow-card sm:p-8">
-          <h2 className="mb-6 text-lg font-bold text-ink">Modifier mon profil</h2>
+          <h2 className="mb-6 text-lg font-bold text-ink">{t('Modifier mon profil')}</h2>
 
           {apiError && (
             <p role="alert" className="mb-5 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -106,14 +110,14 @@ export default function ProfilePage() {
           )}
           {saved && (
             <p role="status" className="mb-5 flex items-center gap-2 rounded-xl bg-brand-50 px-4 py-3 text-sm text-brand-700">
-              <CheckCircle2 className="h-5 w-5" /> Profil mis à jour avec succès.
+              <CheckCircle2 className="h-5 w-5" /> {t('Profil mis à jour avec succès.')}
             </p>
           )}
 
           <div className="grid gap-5 sm:grid-cols-2">
             <div>
               <label htmlFor="fullName" className="mb-1.5 block text-sm font-medium text-gray-700">
-                Nom complet <span className="text-red-500">*</span>
+                {t('Nom complet')} <span className="text-red-500">*</span>
               </label>
               <div className="relative">
                 <User className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
@@ -133,7 +137,7 @@ export default function ProfilePage() {
 
             <div>
               <label htmlFor="phone" className="mb-1.5 block text-sm font-medium text-gray-700">
-                Téléphone
+                {t('Téléphone')}
               </label>
               <div className="relative">
                 <Phone className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
@@ -143,7 +147,7 @@ export default function ProfilePage() {
                   value={form.phone}
                   onChange={set('phone')}
                   autoComplete="tel"
-                  placeholder="05 XX XX XX XX"
+                  placeholder={t('05 XX XX XX XX')}
                   className="w-full rounded-xl border border-gray-200 py-3 pl-11 pr-4 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
                 />
               </div>
@@ -151,7 +155,7 @@ export default function ProfilePage() {
 
             <div>
               <label htmlFor="password" className="mb-1.5 block text-sm font-medium text-gray-700">
-                Nouveau mot de passe
+                {t('Nouveau mot de passe')}
               </label>
               <div className="relative">
                 <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
@@ -161,7 +165,7 @@ export default function ProfilePage() {
                   value={form.password}
                   onChange={set('password')}
                   autoComplete="new-password"
-                  placeholder="Laisser vide pour ne pas changer"
+                  placeholder={t('Laisser vide pour ne pas changer')}
                   className={`w-full rounded-xl border py-3 pl-11 pr-4 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100 ${
                     errors.password ? 'border-red-400' : 'border-gray-200'
                   }`}
@@ -172,7 +176,7 @@ export default function ProfilePage() {
 
             <div>
               <label htmlFor="confirm" className="mb-1.5 block text-sm font-medium text-gray-700">
-                Confirmer le mot de passe
+                {t('Confirmer le mot de passe')}
               </label>
               <div className="relative">
                 <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
@@ -197,7 +201,7 @@ export default function ProfilePage() {
             className="mt-7 flex items-center gap-2 rounded-full bg-brand-500 px-8 py-3 font-semibold text-white transition hover:bg-brand-600 disabled:opacity-60"
           >
             <Save className="h-5 w-5" />
-            {saving ? 'Enregistrement...' : 'Enregistrer'}
+            {saving ? t('Enregistrement...') : t('Enregistrer')}
           </button>
         </form>
       </section>

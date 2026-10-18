@@ -165,8 +165,10 @@ export const HOTELS = [
   },
 ];
 
-export const formatDZD = (n) =>
-  new Intl.NumberFormat('fr-DZ').format(n) + ' DZD';
+/** Price in its currency: formatDZD(14000) → "14 000 DZD", formatDZD(180, 'TND') → "180 TND". */
+export const formatDZD = (n, currency = 'DZD') =>
+  `${new Intl.NumberFormat('fr-DZ', { maximumFractionDigits: 2 }).format(Number(n) || 0)} ${currency || 'DZD'}`;
+export const formatPrice = formatDZD;
 
 export const TRANSLATIONS = {
   fr: {
@@ -183,7 +185,7 @@ export const TRANSLATIONS = {
     favorites: 'Favoris',
     tagline: "Séjournez l'Algérie",
     heroTitle: "Trouvez votre séjour idéal en Algérie",
-    heroSubtitle: "Hôtels de luxe, maisons traditionnelles, appartements et riads dans les 58 wilayas",
+    heroSubtitle: "Hôtels de luxe, maisons traditionnelles, appartements et riads dans les 69 wilayas",
     searchDestination: "Où souhaitez-vous aller ?",
     searchWilayaPlaceholder: "Wilaya ou ville (ex: Alger, Oran...)",
     checkIn: "Arrivée",
@@ -212,7 +214,7 @@ export const TRANSLATIONS = {
     subscribe: "S'abonner",
     subscribed: "Inscrit !",
     emailPlaceholder: "Votre adresse email",
-    footerDesc: "Réservez les meilleurs hôtels et maisons dans les 58 wilayas d'Algérie.",
+    footerDesc: "Réservez les meilleurs hôtels et maisons dans les 69 wilayas d'Algérie.",
     becomeOwner: "Devenir hôtelier",
     myBookings: "Mes réservations",
     helpCenter: "Centre d'aide",
@@ -232,7 +234,7 @@ export const TRANSLATIONS = {
     favorites: 'المفضلة',
     tagline: 'إقامتك في الجزائر',
     heroTitle: 'اعثر على إقامتك المثالية في الجزائر',
-    heroSubtitle: 'فنادق فاخرة، منازل تقليدية، شقق ورياض في 58 ولاية',
+    heroSubtitle: 'فنادق فاخرة، منازل تقليدية، شقق ورياض في 69 ولاية',
     searchDestination: 'أين تريد الذهاب؟',
     searchWilayaPlaceholder: 'الولاية أو المدينة (مثال: الجزائر، وهران...)',
     checkIn: 'تاريخ الوصول',
@@ -261,7 +263,7 @@ export const TRANSLATIONS = {
     subscribe: 'اشتراك',
     subscribed: 'تم الاشتراك!',
     emailPlaceholder: 'بريدك الإلكتروني',
-    footerDesc: 'احجز أفضل الفنادق والمنازل في 58 ولاية جزائرية.',
+    footerDesc: 'احجز أفضل الفنادق والمنازل في 69 ولاية جزائرية.',
     becomeOwner: 'أضف عقارك',
     myBookings: 'حجوزاتي',
     helpCenter: 'مركز المساعدة',
@@ -269,7 +271,7 @@ export const TRANSLATIONS = {
   },
   en: {
     navHome: 'Home',
-    navHotels: 'DZ Hotels',
+    navHotels: 'Hotels',
     navHouses: 'Houses',
     navDestinations: 'Destinations',
     navPricing: 'Pricing',
@@ -281,7 +283,7 @@ export const TRANSLATIONS = {
     favorites: 'Favorites',
     tagline: 'Stay in Algeria',
     heroTitle: 'Find Your Perfect Stay in Algeria',
-    heroSubtitle: 'Luxury hotels, traditional houses, apartments, and riads across all 58 provinces',
+    heroSubtitle: 'Luxury hotels, traditional houses, apartments, and riads across all 69 provinces',
     searchDestination: 'Where do you want to go?',
     searchWilayaPlaceholder: 'Province or city (e.g. Algiers, Oran...)',
     checkIn: 'Check-in',
@@ -310,10 +312,16 @@ export const TRANSLATIONS = {
     subscribe: 'Subscribe',
     subscribed: 'Subscribed!',
     emailPlaceholder: 'Your email address',
-    footerDesc: 'Book the best hotels and houses across Algeria’s 58 provinces.',
+    footerDesc: 'Book the best hotels and houses across Algeria’s 69 provinces.',
     becomeOwner: 'Become a Host',
     myBookings: 'My Bookings',
     helpCenter: 'Help Center',
     copyright: 'All rights reserved.',
   },
+};
+
+/** { DZD: 120000, TND: 540 } → "120 000 DZD + 540 TND" (amounts in different currencies are never added up). */
+export const formatAmounts = (byCurrency, fallback = 0) => {
+  const parts = Object.entries(byCurrency || {}).filter(([, v]) => v > 0);
+  return parts.length ? parts.map(([cur, v]) => formatDZD(v, cur)).join(' + ') : formatDZD(fallback);
 };

@@ -1,15 +1,34 @@
+import { isCountry } from '../utils/countries.js';
+import { paging, num } from '../utils/query.js';
 import HouseForSale from '../models/HouseForSale.js';
-import { searchRegex, wilayaRegex } from '../utils/searchRegex.js';
+import { searchRegex, wilayaRegex, placeFilter } from '../utils/searchRegex.js';
+import { canView } from '../middlewares/auth.middleware.js';
 
 // GET /sales — public list of APPROVED sale listings with filters
 export const getListings = async (req, res, next) => {
   try {
-    const { wilaya, city, type, minPrice, maxPrice, priceRanges, reference, q, sort, order = 'desc', page = 1, limit = 12 } = req.query;
+    const { wilaya, city, place, type, minPrice, maxPrice, priceRanges, reference, q, sort, order = 'desc' } = req.query;
 
     const filter = { status: 'approved' };
+    if (isCountry(req.query.country)) filter.country = req.query.country;
     if (wilaya) filter.wilaya = wilayaRegex(wilaya);
+    const where = place && placeFilter(place); // undefined for blank input
+    if (where) (filter.$and = filter.$and || []).push(where);
     if (city) filter.city = searchRegex(city);
     if (type && type !== 'Tous') filter.type = type;
+    // Rooms like Algerian "F" sizes: rooms=3 → exactly 3 (F3), rooms=5+ → 5 or more
+    if (req.query.rooms) {
+      const r = String(req.query.rooms);
+      const n = parseInt(r, 10);
+      if (Number.isInteger(n) && n > 0) filter.rooms = r.endsWith('+') ? { $gte: n } : n;
+    }
+    const minArea = Number(req.query.minArea);
+    const maxArea = Number(req.query.maxArea);
+    if (minArea > 0 || maxArea > 0) {
+      filter.area = {};
+      if (minArea > 0) filter.area.$gte = minArea;
+      if (maxArea > 0) filter.area.$lte = maxArea;
+    }
     if (reference) filter.reference = searchRegex(reference);
     if (q) {
       const rx = searchRegex(q);
@@ -18,15 +37,18 @@ export const getListings = async (req, res, next) => {
 
     // Handle price range filters
     const priceConditions = [];
-    if (minPrice || maxPrice) {
+    const lo = num(minPrice);
+    const hi = num(maxPrice);
+    if (lo !== undefined || hi !== undefined) {
       const cond = {};
-      if (minPrice) cond.$gte = Number(minPrice);
-      if (maxPrice) cond.$lte = Number(maxPrice);
+      if (lo !== undefined) cond.$gte = lo;
+      if (hi !== undefined) cond.$lte = hi;
       priceConditions.push({ price: cond });
     }
 
     if (priceRanges) {
-      const ranges = Array.isArray(priceRanges) ? priceRanges : priceRanges.split(',');
+      // "min-max" strings, comma-separated or repeated (anything else, e.g. ?priceRanges[x]=…, is ignored)
+      const ranges = [].concat(priceRanges).filter((r) => typeof r === 'string').flatMap((r) => r.split(','));
       ranges.forEach(r => {
         const parts = r.split('-');
         if (parts.length === 2) {
@@ -67,8 +89,7 @@ export const getListings = async (req, res, next) => {
 
     let query = HouseForSale.find(filter).sort(sortObj);
 
-    const pageNum = Math.max(1, Number(page));
-    const lim = Math.min(50, Number(limit));
+    const { page: pageNum, limit: lim } = paging(req.query);
     const total = await HouseForSale.countDocuments(filter);
 
     const listings = await query
@@ -92,12 +113,16 @@ export const getListings = async (req, res, next) => {
 // GET /sales/:id — public details (increments view count)
 export const getListing = async (req, res, next) => {
   try {
-    const listing = await HouseForSale.findByIdAndUpdate(
-      req.params.id,
-      { $inc: { views: 1 } },
-      { new: true }
-    ).populate('seller', 'fullName email phone avatar');
-    if (!listing) return res.status(404).json({ success: false, message: 'Listing not found' });
+    const listing = await HouseForSale.findById(req.params.id).populate('seller', 'fullName email phone avatar');
+    // Pending/rejected listings are only visible to their seller and admins
+    if (!listing || !canView(req, listing, 'seller')) {
+      return res.status(404).json({ success: false, message: 'Listing not found' });
+    }
+    // Count public views only; ?noview=1 lets server-side renderers (SEO metadata) read without inflating them
+    if (listing.status === 'approved' && !req.query.noview) {
+      await HouseForSale.updateOne({ _id: listing._id }, { $inc: { views: 1 } });
+      listing.views += 1;
+    }
 
     res.json({ success: true, listing });
   } catch (err) {

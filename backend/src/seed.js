@@ -13,9 +13,12 @@ import Hotel from './models/Hotel.js';
 import House from './models/House.js';
 import Room from './models/Room.js';
 import Booking from './models/Booking.js';
-import Payment from './models/Payment.js';
 import Review from './models/Review.js';
 import Message from './models/Message.js';
+import Testimonial from './models/Testimonial.js';
+import Conversation from './models/Conversation.js';
+import HouseForSale from './models/HouseForSale.js';
+import { ENABLED_COUNTRIES } from './utils/countries.js';
 
 const img = (id) => ({
   url: `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=1200&q=80`,
@@ -64,12 +67,12 @@ export const seedDatabase = async () => {
   // Wipe
   await Promise.all([
     User.deleteMany({}), Hotel.deleteMany({}), House.deleteMany({}), Room.deleteMany({}),
-    Booking.deleteMany({}), Payment.deleteMany({}), Review.deleteMany({}), Message.deleteMany({}),
+    Booking.deleteMany({}), Review.deleteMany({}), Message.deleteMany({}), Testimonial.deleteMany({}), Conversation.deleteMany({}), HouseForSale.deleteMany({}),
   ]);
 
   // --- Users ---
   const admin = await User.create({
-    fullName: 'Admin HotelsDZ', email: 'admin@hotelsdz.dz', password: 'admin123',
+    fullName: 'Admin Meskan', email: 'admin@hotelsdz.dz', password: 'admin123',
     phone: '0550000000', role: 'admin', isVerified: true,
   });
   const owner = await User.create({
@@ -124,9 +127,84 @@ export const seedDatabase = async () => {
   }
   console.log(`🏠 Houses: ${HOUSES.length} (4 approved, 2 pending)`);
 
+  // --- Booking policies on a few demo listings (instant booking, free cancellation) ---
+  await Hotel.updateOne({ name: 'Sofitel Algiers Hamma' }, { policies: { checkInFrom: '15:00', checkOutUntil: '12:00', freeCancellationDays: 3, instantBooking: true, childrenAllowed: true, petsAllowed: false, smokingAllowed: false } });
+  await House.updateOne({ name: 'Villa Yasmine' }, { policies: { checkInFrom: '16:00', checkOutUntil: '11:00', freeCancellationDays: 7, instantBooking: false, childrenAllowed: true, petsAllowed: true, smokingAllowed: false, customRules: ['Familles uniquement', 'Pas de fêtes ni d’événements'] } });
+
+  // --- Outside Algeria (only when those countries are open): prices in TND / MAD ---
+  if (ENABLED_COUNTRIES.includes('TN')) {
+  const tnHotel = await Hotel.create({
+    owner: owner._id,
+    name: 'Dar Sousse Médina',
+    description: 'Hôtel de charme au cœur de la médina de Sousse, à dix minutes de la plage.',
+    country: 'TN', wilaya: 'Sousse', city: 'Sousse', address: 'Médina, Sousse, Tunisie',
+    coordinates: { lat: 35.8256, lng: 10.6411 },
+    images: [img('1551882547-ff40c63fe5fa')], amenities: ['Wifi', 'Climatisation', 'Petit-déjeuner'],
+    starRating: 4, type: 'Boutique', status: 'approved',
+    policies: { checkInFrom: '15:00', checkOutUntil: '11:00', freeCancellationDays: 3, instantBooking: true, petsAllowed: true },
+  });
+  for (const rt of [
+    { type: 'double', title: 'Chambre Double', pricePerNight: 180, capacity: 2, bedsCount: 2, quantity: 6 },
+    { type: 'suite', title: 'Suite Médina', pricePerNight: 320, capacity: 3, bedsCount: 2, quantity: 2 },
+  ]) await Room.create({ ...rt, hotel: tnHotel._id, images: [img('1551882547-ff40c63fe5fa')], amenities: ['Wifi', 'TV'] });
+  }
+  if (ENABLED_COUNTRIES.includes('MA')) await House.create({
+    owner: owner._id,
+    name: 'Riad Jardin Marrakech',
+    description: 'Riad traditionnel avec patio et piscine, à cinq minutes de la place Jemaa el-Fna.',
+    country: 'MA', wilaya: 'Marrakech', city: 'Marrakech', address: 'Médina, Marrakech, Maroc',
+    coordinates: { lat: 31.6295, lng: -7.9811 },
+    images: [img('1539437829697-1b4ed5aebd19')], amenities: ['Wifi', 'Piscine', 'Climatisation'],
+    type: 'Riad', rooms: 4, bathrooms: 3, capacity: 8, pricePerNight: 1400, status: 'approved',
+    policies: { checkInFrom: '16:00', checkOutUntil: '10:00', freeCancellationDays: 7, childrenAllowed: true, smokingAllowed: false },
+  });
+  if (ENABLED_COUNTRIES.length > 1) console.log(`🌍 Abroad: demo listings for ${ENABLED_COUNTRIES.filter((c) => c !== 'DZ').join(', ')}`);
+
+  // --- Properties for sale (realistic prices in DZD) ---
+  const seller = await User.create({
+    fullName: 'Nadia Immobilier', email: 'vendeur@hotelsdz.dz', password: 'seller123',
+    phone: '0552222222', role: 'seller', isVerified: true,
+  });
+  const SALES = [
+    { title: 'Appartement F4 vue sur la baie', type: 'Appartement', wilaya: 'Alger', city: 'Hydra', price: 38000000, area: 120, rooms: 4, bathrooms: 2, lat: 36.7431, lng: 3.0303, photo: '1502672260266-1c1ef2d93688', days: 2, amenities: ['Ascenseur', 'Parking', 'Climatisation'] },
+    { title: 'F3 rénové proche du front de mer', type: 'Appartement', wilaya: 'Oran', city: 'Oran', price: 16500000, area: 85, rooms: 3, bathrooms: 1, lat: 35.7058, lng: -0.6497, photo: '1522708323590-d24dbb6b0267', days: 5, amenities: ['Balcon', 'Climatisation'] },
+    { title: 'Villa avec jardin et vue mer', type: 'Villa', wilaya: 'Béjaïa', city: 'Tichy', price: 45000000, area: 250, rooms: 6, bathrooms: 3, lat: 36.6667, lng: 5.1667, photo: '1564013799919-ab600027ffc6', days: 12, amenities: ['Jardin', 'Garage', 'Terrasse'] },
+    { title: 'Terrain constructible 400 m²', type: 'Terrain', wilaya: 'Tlemcen', city: 'Mansourah', price: 9000000, area: 400, rooms: 0, bathrooms: 0, lat: 34.8667, lng: -1.3333, photo: '1500382017468-9049fed747ef', days: 20, amenities: ['Acte notarié', 'Viabilisé'] },
+    { title: 'F2 au centre-ville', type: 'Appartement', wilaya: 'Constantine', city: 'Constantine', price: 9800000, area: 60, rooms: 2, bathrooms: 1, lat: 36.365, lng: 6.6147, photo: '1493809842364-78817add7ffb', days: 1, amenities: ['Ascenseur'] },
+    { title: 'Grande villa avec piscine', type: 'Villa', wilaya: 'Tipaza', city: 'Chenoua', price: 62000000, area: 300, rooms: 7, bathrooms: 4, lat: 36.6, lng: 2.4, photo: '1499793983690-e29da59ef1c2', days: 30, amenities: ['Piscine', 'Jardin', 'Garage'] },
+    { title: 'Local commercial sur grand boulevard', type: 'Local commercial', wilaya: 'Sétif', city: 'Sétif', price: 14000000, area: 80, rooms: 1, bathrooms: 1, lat: 36.1911, lng: 5.4137, photo: '1497366216548-37526070297c', days: 9, amenities: ['Vitrine', 'Rideau métallique'] },
+    { title: 'Duplex lumineux avec terrasse', type: 'Duplex', wilaya: 'Annaba', city: 'Annaba', price: 28000000, area: 160, rooms: 5, bathrooms: 2, lat: 36.9, lng: 7.7667, photo: '1505691938895-1758d7feb511', days: 4, amenities: ['Terrasse', 'Parking', 'Climatisation'] },
+  ];
+  for (const x of SALES) {
+    const listing = await HouseForSale.create({
+      seller: seller._id, title: x.title, type: x.type, wilaya: x.wilaya, city: x.city,
+      address: `${x.city}, ${x.wilaya}`, price: x.price, area: x.area, rooms: x.rooms, bathrooms: x.bathrooms,
+      description: `${x.title} à ${x.city} (${x.wilaya}) : ${x.area} m²${x.rooms ? `, ${x.rooms} pièce(s)` : ''}. Visite sur rendez-vous, papiers en règle.`,
+      coordinates: { lat: x.lat, lng: x.lng }, images: [img(x.photo)], amenities: x.amenities,
+      contactPhone: seller.phone, contactEmail: seller.email, status: 'approved',
+    });
+    // spread the publication dates so "Nouveau" (< 7 days) and sorting are visible
+    const created = daysFromNow(-x.days);
+    await HouseForSale.collection.updateOne({ _id: listing._id }, { $set: { createdAt: created, updatedAt: created } });
+  }
+  console.log(`🏷️  Sales: ${SALES.length} (seller vendeur@hotelsdz.dz / seller123)`);
+
   // --- Contact messages ---
   await Message.create(MESSAGES);
   console.log(`✉️  Messages: ${MESSAGES.length}`);
+
+  // --- Home page testimonials (3 published, 1 waiting for the admin) ---
+  await Testimonial.create([
+    { user: customers[0]._id, name: customers[0].fullName, title: 'Cliente, Alger', rating: 5, status: 'approved',
+      comment: "Réservation très simple : l'hôtel a confirmé ma demande en quelques heures et j'ai payé sur place. Je recommande !" },
+    { user: owner._id, name: owner.fullName, title: 'Hôtelier, Oran', rating: 5, status: 'approved',
+      comment: "Inscrire mon hôtel a pris dix minutes. Je reçois les demandes directement et je garde le contrôle sur chaque réservation." },
+    { user: customers[1]._id, name: customers[1].fullName, title: 'Client, Constantine', rating: 4, status: 'approved',
+      comment: "Large choix de maisons dans toutes les wilayas, avec les prix clairs par nuit. Une vraie aide pour les vacances en famille." },
+    { user: customers[2]._id, name: customers[2].fullName, title: 'Cliente, Béjaïa', rating: 5, status: 'pending',
+      comment: "Super expérience pour notre séjour à Béjaïa, la maison était exactement comme sur les photos." },
+  ]);
+  console.log('💬 Testimonials: 3 approved, 1 pending');
 
   // --- A few favorites for the first customer ---
   const fav = customers[0];
@@ -137,7 +215,7 @@ export const seedDatabase = async () => {
   await fav.save();
   console.log(`❤️  Favorites: ${fav.favoriteHotels.length} hotels + ${fav.favoriteHouses.length} houses for ${fav.email}`);
 
-  // --- Bookings + Payments spread over the last 6 months ---
+  // --- Bookings spread over the last 6 months ---
   const statuses = ['confirmed', 'confirmed', 'confirmed', 'completed', 'pending', 'cancelled'];
   let bookingCount = 0;
   for (let m = 5; m >= 0; m--) {
@@ -158,32 +236,70 @@ export const seedDatabase = async () => {
       const checkOut = new Date(checkIn); checkOut.setDate(checkOut.getDate() + nights);
       const status = rand(statuses);
       const totalPrice = nights * room.pricePerNight;
+      // Paid on site: only stays that are confirmed/completed are marked paid by the owner
       const paid = status === 'confirmed' || status === 'completed';
 
       const booking = await Booking.create({
         customer: customer._id, hotel: hotel._id, room: room._id,
         checkIn, checkOut, nights, guests: 1 + Math.floor(Math.random() * 2),
         totalPrice, status, paymentStatus: paid ? 'paid' : 'unpaid',
-      });
-      const payment = await Payment.create({
-        booking: booking._id, customer: customer._id, amount: totalPrice,
-        currency: 'dzd', method: rand(['cib', 'edahabia']),
-        status: paid ? 'paid' : 'pending',
+        ...(paid && { paidAt: created }),
       });
       // Force the historical createdAt via the raw driver — Mongoose marks
       // the timestamps `createdAt` as immutable, so $set through the model
       // is dropped. The native collection bypasses that, so the charts populate.
       await Booking.collection.updateOne({ _id: booking._id }, { $set: { createdAt: created } });
-      await Payment.collection.updateOne({ _id: payment._id }, { $set: { createdAt: created } });
       bookingCount++;
     }
   }
-  console.log(`📅 Bookings + payments: ${bookingCount}`);
+  console.log(`📅 Bookings: ${bookingCount}`);
+
+  // --- Guest reviews (score /10 + categories) on a few paid stays ---
+  const COMMENTS = [
+    'Très bon accueil, chambre propre et bien située.',
+    'Personnel aux petits soins, je reviendrai.',
+    'Bon rapport qualité-prix, petit-déjeuner correct.',
+    'Emplacement idéal, un peu de bruit le soir.',
+    'Séjour parfait, tout était conforme aux photos.',
+  ];
+  const paidStays = await Booking.find({ paymentStatus: 'paid', hotel: { $exists: true } }).limit(8);
+  for (const [i, b] of paidStays.entries()) {
+    const base = 7 + (i % 4); // 7–10
+    const cat = () => Math.min(10, Math.max(6, base + Math.round(Math.random() * 2 - 1)));
+    await Review.create({
+      hotel: b.hotel, customer: b.customer, booking: b._id, score: base,
+      categories: { cleanliness: cat(), location: cat(), value: cat(), staff: cat(), comfort: cat() },
+      comment: COMMENTS[i % COMMENTS.length],
+    });
+  }
+  console.log(`⭐ Reviews: ${paidStays.length}`);
+
+  // --- A demo guest ↔ owner conversation on one of Sara's bookings ---
+  const saraBooking = await Booking.findOne({ customer: customers[0]._id, hotel: { $exists: true }, status: { $ne: 'cancelled' } }).populate('hotel', 'name');
+  if (saraBooking) {
+    await Conversation.create({
+      booking: saraBooking._id, customer: customers[0]._id, owner: owner._id,
+      propertyType: 'hotel', propertyName: saraBooking.hotel?.name || '',
+      messages: [
+        { sender: customers[0]._id, text: 'Bonjour, est-il possible d’arriver vers 22 h ?', readAt: new Date() },
+        { sender: owner._id, text: 'Bonjour Sara, oui sans problème, la réception est ouverte 24 h/24.' },
+      ],
+      lastMessageAt: new Date(),
+    });
+    console.log('💬 Conversations: 1 (sara ↔ hôtelier)');
+  }
+
+  // --- Deals: discounts set by owners ---
+  const inMonth = daysFromNow(30);
+  await Room.updateOne({ hotel: (await Hotel.findOne({ name: 'Le Méridien Oran' }))?._id, type: 'single' }, { discountPercent: 15, discountUntil: inMonth });
+  await House.updateOne({ name: 'Chalet Tikjda' }, { discountPercent: 10, discountUntil: inMonth });
+  console.log('🏷️  Deals: -15 % at Le Méridien Oran (single room), -10 % at Chalet Tikjda');
 
   console.log('\n✅ Seed complete!\n');
   console.log('   Admin   →  admin@hotelsdz.dz  /  admin123');
   console.log('   Hôtelier→  owner@hotelsdz.dz  /  owner123');
-  console.log('   Client  →  sara@example.com   /  pass123\n');
+  console.log('   Client  →  sara@example.com   /  pass123');
+  console.log('   Vendeur →  vendeur@hotelsdz.dz / seller123\n');
 };
 
 // CLI entry: `npm run seed` connects to the configured DB, seeds, disconnects.

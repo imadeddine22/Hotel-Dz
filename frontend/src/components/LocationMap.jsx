@@ -4,11 +4,13 @@ import { useEffect, useRef } from 'react';
 import { MapPin } from 'lucide-react';
 import { loadLeaflet, markerIcon } from '@/lib/leaflet';
 
+import { useT } from '@/lib/i18n/useT';
 /**
  * Read-only map showing a single marker at {lat, lng}. Renders a placeholder
  * when no coordinates are available. Uses Leaflet + OpenStreetMap (no API key).
  */
 export default function LocationMap({ lat, lng, zoom = 14, height = 320, label, accent = '#3b82f6' }) {
+  const { t } = useT();
   const elRef = useRef(null);
   const mapRef = useRef(null);
 
@@ -56,7 +58,7 @@ export default function LocationMap({ lat, lng, zoom = 14, height = 320, label, 
       >
         <div style={{ textAlign: 'center' }}>
           <MapPin size={28} style={{ marginBottom: 6, opacity: 0.5 }} />
-          <p style={{ fontSize: 13, margin: 0 }}>Localisation non renseignée</p>
+          <p style={{ fontSize: 13, margin: 0 }}>{t('Localisation non renseignée')}</p>
         </div>
       </div>
     );
@@ -75,7 +77,7 @@ export default function LocationMap({ lat, lng, zoom = 14, height = 320, label, 
           textDecoration: 'none', borderTop: '1px solid #f1f5f9',
         }}
       >
-        <MapPin size={15} /> Ouvrir dans OpenStreetMap
+        <MapPin size={15} /> {t('Ouvrir dans OpenStreetMap')}
       </a>
     </div>
   );

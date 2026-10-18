@@ -19,6 +19,10 @@ export const errorHandler = (err, req, res, next) => {
   if (err.name === 'CastError' && err.kind === 'ObjectId') {
     statusCode = 404;
     message = 'Resource not found';
+  } else if (err.name === 'CastError') {
+    // a filter/field of the wrong type (e.g. ?type[x]=1, "abc" for a number): client error, not a crash
+    statusCode = 400;
+    message = `Invalid value for ${err.path}`;
   }
 
   // Mongoose duplicate key
@@ -68,6 +72,8 @@ export const errorHandler = (err, req, res, next) => {
   // Log the real error server-side for any 5xx so we don't lose the detail.
   if (statusCode >= 500) {
     console.error(`[${req.method} ${req.originalUrl}]`, err.name, '-', err.message);
+    // …but never send internal details (casts, paths, driver messages) to clients in production
+    if (process.env.NODE_ENV === 'production' && !looksLikeInfra) message = 'Server error';
   }
 
   res.status(statusCode).json({

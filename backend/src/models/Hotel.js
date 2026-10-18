@@ -1,4 +1,7 @@
 import mongoose from 'mongoose';
+import { autoTranslate } from '../utils/autoTranslate.js';
+import { countryPlugin } from '../utils/countryPlugin.js';
+import { policiesPlugin } from '../utils/policies.js';
 
 const hotelSchema = new mongoose.Schema(
   {
@@ -39,13 +42,21 @@ const hotelSchema = new mongoose.Schema(
       index: true,
     },
     rejectionReason: { type: String, default: '' },
-    avgRating: { type: Number, default: 0 },
+    avgRating: { type: Number, default: 0 }, // out of 10
     reviewsCount: { type: Number, default: 0 },
+    // Category averages (/10) from reviews: cleanliness, location, value, staff, comfort
+    scores: { type: mongoose.Schema.Types.Mixed, default: {} },
   },
   { timestamps: true }
 );
 
 hotelSchema.index({ wilaya: 1, status: 1 });
+
+// Name/description/amenities are machine-translated into the other site languages after each save
+export const TRANSLATED_FIELDS = ['name', 'description', 'amenities'];
+countryPlugin(hotelSchema);
+policiesPlugin(hotelSchema);
+autoTranslate(hotelSchema, TRANSLATED_FIELDS);
 
 const Hotel = mongoose.model('Hotel', hotelSchema);
 export default Hotel;

@@ -4,7 +4,10 @@ import { useEffect, useState } from 'react';
 import { Mail, Trash2, CheckCircle, Search, User, Clock } from 'lucide-react';
 import api from '@/lib/api';
 
+import { useT } from '@/lib/i18n/useT';
+import { dateLocale } from '@/lib/i18n/format';
 export default function AdminMessagesPage() {
+  const { t } = useT();
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedMessage, setSelectedMessage] = useState(null);
@@ -40,7 +43,7 @@ export default function AdminMessagesPage() {
   };
 
   const deleteMessage = async (id) => {
-    if (!confirm('Supprimer ce message définitivement ?')) return;
+    if (!confirm(t('Supprimer ce message définitivement ?'))) return;
     try {
       await api.delete(`/messages/${id}`);
       setMessages((prev) => prev.filter((msg) => msg._id !== id));
@@ -57,9 +60,9 @@ export default function AdminMessagesPage() {
   return (
     <div>
       <div className="admin-page-header">
-        <h1 className="admin-page-title">Messages reçus</h1>
+        <h1 className="admin-page-title">{t('Messages reçus')}</h1>
         <p className="admin-page-subtitle">
-          {unreadCount > 0 ? `${unreadCount} message(s) non lu(s)` : 'Tous les messages sont lus'}
+          {unreadCount > 0 ? t('{unreadCount} message(s) non lu(s)', { unreadCount }) : t('Tous les messages sont lus')}
         </p>
       </div>
 
@@ -71,16 +74,16 @@ export default function AdminMessagesPage() {
               <Search className="h-4 w-4" />
               <input
                 type="text"
-                placeholder="Rechercher..."
+                placeholder={t('Rechercher...')}
                 className="w-full bg-transparent outline-none"
               />
             </div>
           </div>
           <div className="flex-1 overflow-y-auto p-2 no-scrollbar">
             {loading ? (
-              <p className="p-4 text-center text-sm text-gray-400">Chargement...</p>
+              <p className="p-4 text-center text-sm text-gray-400">{t('Chargement...')}</p>
             ) : messages.length === 0 ? (
-              <p className="p-4 text-center text-sm text-gray-400">Aucun message.</p>
+              <p className="p-4 text-center text-sm text-gray-400">{t('Aucun message.')}</p>
             ) : (
               messages.map((msg) => (
                 <button
@@ -98,11 +101,11 @@ export default function AdminMessagesPage() {
                       {msg.name}
                     </p>
                     <span className="shrink-0 text-xs text-gray-400">
-                      {new Date(msg.createdAt).toLocaleDateString('fr-FR')}
+                      {new Date(msg.createdAt).toLocaleDateString(dateLocale())}
                     </span>
                   </div>
                   <p className={`truncate text-sm ${msg.isRead ? 'text-gray-500' : 'font-bold text-brand-600'}`}>
-                    {msg.subject}
+                    {t(msg.subject)}
                   </p>
                   <p className="mt-1 truncate text-xs text-gray-400">{msg.content}</p>
                 </button>
@@ -119,7 +122,7 @@ export default function AdminMessagesPage() {
               <div className="border-b border-gray-100 p-6">
                 <div className="flex items-start justify-between">
                   <div>
-                    <h2 className="mb-2 text-xl font-bold text-ink">{selectedMessage.subject}</h2>
+                    <h2 className="mb-2 text-xl font-bold text-ink">{t(selectedMessage.subject)}</h2>
                     <div className="flex items-center gap-4 text-sm text-gray-500">
                       <span className="flex items-center gap-1">
                         <User className="h-4 w-4 text-gray-400" /> {selectedMessage.name} ({selectedMessage.email})
@@ -133,14 +136,14 @@ export default function AdminMessagesPage() {
                   <div className="flex gap-2">
                     <button
                       onClick={() => markAsRead(selectedMessage._id)}
-                      title="Marquer comme lu"
+                      title={t('Marquer comme lu')}
                       className="grid h-9 w-9 place-items-center rounded-lg bg-gray-50 text-gray-500 transition hover:bg-gray-100 hover:text-ink"
                     >
                       <CheckCircle className="h-5 w-5" />
                     </button>
                     <button
                       onClick={() => deleteMessage(selectedMessage._id)}
-                      title="Supprimer"
+                      title={t('Supprimer')}
                       className="grid h-9 w-9 place-items-center rounded-lg bg-red-50 text-red-500 transition hover:bg-red-100"
                     >
                       <Trash2 className="h-5 w-5" />
@@ -164,14 +167,14 @@ export default function AdminMessagesPage() {
                   href={`mailto:${selectedMessage.email}?subject=Re: ${selectedMessage.subject}`}
                   className="block w-full rounded-lg bg-brand-500 py-3 text-center text-sm font-semibold text-white transition hover:bg-brand-600"
                 >
-                  Répondre par Email
+                  {t('Répondre par Email')}
                 </a>
               </div>
             </>
           ) : (
             <div className="flex h-full flex-col items-center justify-center text-gray-400">
               <Mail className="mb-4 h-16 w-16 opacity-20" />
-              <p>Sélectionnez un message pour le lire</p>
+              <p>{t('Sélectionnez un message pour le lire')}</p>
             </div>
           )}
         </div>

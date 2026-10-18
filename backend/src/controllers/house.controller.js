@@ -1,22 +1,36 @@
+import { parseDiscount } from '../utils/pricing.js';
+import { paging, num } from '../utils/query.js';
+import { parsePolicies } from '../utils/policies.js';
+import { isCountry } from '../utils/countries.js';
 import House from '../models/House.js';
 import { uploadMany, destroyImage } from '../utils/cloudinaryUpload.js';
 import { parseCoordinates } from '../utils/parseCoordinates.js';
-import { searchRegex, wilayaRegex } from '../utils/searchRegex.js';
+import { searchRegex, wilayaRegex, placeFilter } from '../utils/searchRegex.js';
+import { canView } from '../middlewares/auth.middleware.js';
+
+// Fields an owner may set. Status, ratings and owner are server-controlled.
+const EDITABLE = ['name', 'description', 'country', 'wilaya', 'city', 'address', 'type', 'starRating', 'rooms', 'bathrooms', 'capacity', 'pricePerNight'];
+const pick = (body, keys) => Object.fromEntries(keys.filter((k) => body[k] !== undefined).map((k) => [k, body[k]]));
 
 // GET /houses — public list of APPROVED houses with filters
 export const getHouses = async (req, res, next) => {
   try {
-    const { wilaya, city, type, minPrice, maxPrice, q, sort, page = 1, limit = 12 } = req.query;
+    const { wilaya, city, place, type, minPrice, maxPrice, q, sort } = req.query;
 
     const filter = { status: 'approved' };
+    if (isCountry(req.query.country)) filter.country = req.query.country;
     if (wilaya) filter.wilaya = wilayaRegex(wilaya);
+    const where = place && placeFilter(place); // undefined for blank input
+    if (where) (filter.$and = filter.$and || []).push(where);
     if (city) filter.city = searchRegex(city);
     if (type) filter.type = type;
     if (q) filter.name = searchRegex(q);
-    if (minPrice || maxPrice) {
+    const lo = num(minPrice);
+    const hi = num(maxPrice);
+    if (lo !== undefined || hi !== undefined) {
       filter.pricePerNight = {};
-      if (minPrice) filter.pricePerNight.$gte = Number(minPrice);
-      if (maxPrice) filter.pricePerNight.$lte = Number(maxPrice);
+      if (lo !== undefined) filter.pricePerNight.$gte = lo;
+      if (hi !== undefined) filter.pricePerNight.$lte = hi;
     }
 
     let query = House.find(filter);
@@ -26,8 +40,7 @@ export const getHouses = async (req, res, next) => {
     else if (sort === 'newest') query = query.sort({ createdAt: -1 });
     else query = query.sort({ avgRating: -1, createdAt: -1 });
 
-    const pageNum = Math.max(1, Number(page));
-    const lim = Math.min(50, Number(limit));
+    const { page: pageNum, limit: lim } = paging(req.query);
     const total = await House.countDocuments(filter);
 
     const houses = await query
@@ -52,7 +65,8 @@ export const getHouses = async (req, res, next) => {
 export const getHouse = async (req, res, next) => {
   try {
     const house = await House.findById(req.params.id).populate('owner', 'fullName email phone');
-    if (!house) return res.status(404).json({ success: false, message: 'House not found' });
+    // Pending/rejected houses are only visible to their owner and admins
+    if (!house || !canView(req, house)) return res.status(404).json({ success: false, message: 'House not found' });
     res.json({ success: true, house });
   } catch (err) {
     next(err);
@@ -79,9 +93,11 @@ export const createHouse = async (req, res, next) => {
 
     const coordinates = parseCoordinates(req.body);
     const house = await House.create({
-      ...req.body,
+      ...pick(req.body, EDITABLE),
       amenities: parseArray(req.body.amenities),
       suitableFor: parseArray(req.body.suitableFor),
+      ...(parsePolicies(req.body.policies) && { policies: parsePolicies(req.body.policies) }),
+      ...parseDiscount(req.body),
       ...(coordinates && { coordinates }),
       owner: req.user._id,
       images,
@@ -103,12 +119,14 @@ export const updateHouse = async (req, res, next) => {
       return res.status(403).json({ success: false, message: 'Not your house' });
     }
 
-    const fields = ['name', 'description', 'wilaya', 'city', 'address', 'type', 'rooms', 'bathrooms', 'capacity', 'pricePerNight'];
-    fields.forEach((f) => {
+    EDITABLE.forEach((f) => {
       if (req.body[f] !== undefined) house[f] = req.body[f];
     });
     if (req.body.amenities !== undefined) house.amenities = parseArray(req.body.amenities);
     if (req.body.suitableFor !== undefined) house.suitableFor = parseArray(req.body.suitableFor);
+    const policies = parsePolicies(req.body.policies, house.policies);
+    if (policies) house.policies = policies;
+    Object.assign(house, parseDiscount(req.body));
     const coordinates = parseCoordinates(req.body);
     if (coordinates) house.coordinates = coordinates;
 

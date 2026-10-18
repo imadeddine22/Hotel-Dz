@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Search, SlidersHorizontal, BedDouble, Bath, Users, Home, LayoutGrid, List } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -8,6 +8,10 @@ import HouseCard from '@/components/HouseCard';
 import api from '@/lib/api';
 import { useWilayas } from '@/hooks/useWilayas';
 
+import { useT } from '@/lib/i18n/useT';
+import { useInitialData } from '@/components/InitialData';
+import { COUNTRY_LIST, MULTI_COUNTRY, countryName } from '@/lib/countries';
+import { regionsFor } from '@/hooks/useWilayas';
 const TYPES = ['Villa', 'Appartement', 'Maison', 'Chalet', 'Studio', 'Duplex', 'Riad', 'Ferme'];
 // Static WILAYAS list removed, loaded dynamically via useWilayas hook.
 
@@ -23,15 +27,19 @@ const MOCK = [
 ];
 
 export default function HousesPage() {
+  const { t, lang } = useT();
   const { wilayas } = useWilayas();
-  const [filters, setFilters] = useState({ wilaya: '', type: '', q: '', sort: '' });
-  const [houses, setHouses] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [filters, setFilters] = useState({ country: '', wilaya: '', type: '', q: '', sort: '' });
+  const initial = useInitialData();
+  const [houses, setHouses] = useState(initial?.houses ?? []);
+  const [loading, setLoading] = useState(!initial?.houses);
   const [usingMock, setUsingMock] = useState(false);
   const [view, setView] = useState('grid');
 
+  const silentFirstFetch = useRef(Boolean(initial));
   const fetchHouses = async () => {
-    setLoading(true);
+    if (!silentFirstFetch.current) setLoading(true);
+    silentFirstFetch.current = false;
     try {
       const params = Object.fromEntries(Object.entries(filters).filter(([, v]) => v));
       const { data } = await api.get('/houses', { params });
@@ -49,13 +57,16 @@ export default function HousesPage() {
     }
   };
 
-  useEffect(() => { fetchHouses(); }, []); // eslint-disable-line
+  useEffect(() => { fetchHouses(); }, [filters.country, filters.wilaya]); // eslint-disable-line
 
   const normalizeHouse = (h) => ({
     _id: h._id || h.id,
     name: h.name, city: h.city, wilaya: h.wilaya, type: h.type,
     rooms: h.rooms, bathrooms: h.bathrooms, capacity: h.capacity,
     pricePerNight: h.pricePerNight ?? h.price ?? 0,
+    discountPercent: h.discountPercent || 0, discountUntil: h.discountUntil || null, avgRating: h.avgRating || 0, reviewsCount: h.reviewsCount || 0,
+    currency: h.currency || 'DZD',
+    policies: h.policies,
     images: h.images || (h.img ? [{ url: h.img }] : []),
   });
 
@@ -77,11 +88,11 @@ export default function HousesPage() {
               <Home size={22} />
             </span>
             <h1 style={{ fontSize: 30, fontWeight: 800, color: '#fff', margin: 0 }}>
-              Locations de Maisons
+              {t('Maisons et appartements à louer')}
             </h1>
           </div>
           <p style={{ color: '#e9d5ff', marginBottom: 24, fontSize: 15 }}>
-            Villas, chalets, appartements et bien plus en Algérie
+            {t('Villas, chalets, appartements et bien plus en Algérie')}
           </p>
 
           {/* Search bar */}
@@ -95,17 +106,28 @@ export default function HousesPage() {
                 value={filters.q}
                 onChange={(e) => setFilters({ ...filters, q: e.target.value })}
                 onKeyDown={(e) => e.key === 'Enter' && fetchHouses()}
-                placeholder="Rechercher une maison..."
+                placeholder={t('Rechercher une maison...')}
                 style={{ flex: 1, border: 'none', outline: 'none', fontSize: 14, background: 'transparent', color: '#1e293b' }}
               />
             </div>
+            {MULTI_COUNTRY && (
+<select
+              value={filters.country}
+              onChange={(e) => setFilters({ ...filters, country: e.target.value, wilaya: '' })}
+              aria-label={t('Pays')}
+              style={{ borderRadius: 10, border: '1px solid #e2e8f0', padding: '8px 12px', fontSize: 13, color: '#374151', background: '#f8fafc' }}
+            >
+              <option value="">{t('Tous les pays')}</option>
+              {COUNTRY_LIST.map((c) => <option key={c.code} value={c.code}>{countryName(c.code, lang)}</option>)}
+            </select>
+)}
             <select
               value={filters.wilaya}
               onChange={(e) => setFilters({ ...filters, wilaya: e.target.value })}
               style={{ borderRadius: 10, border: '1px solid #e2e8f0', padding: '8px 12px', fontSize: 13, color: '#374151', background: '#f8fafc' }}
             >
-              <option value="">Toutes les wilayas</option>
-              {wilayas.map((w) => <option key={w} value={w}>{w}</option>)}
+              <option value="">{filters.country && filters.country !== 'DZ' ? t('Toutes les régions') : t('Toutes les wilayas')}</option>
+              {regionsFor(filters.country, wilayas).map((w) => <option key={w} value={w}>{t(w)}</option>)}
             </select>
             <button
               onClick={fetchHouses}
@@ -115,7 +137,7 @@ export default function HousesPage() {
                 fontSize: 14, cursor: 'pointer'
               }}
             >
-              Rechercher
+              {t('Rechercher')}
             </button>
           </div>
         </div>
@@ -135,20 +157,20 @@ export default function HousesPage() {
                 border: !filters.type ? 'none' : '1px solid #e2e8f0',
               }}
             >
-              Tous
+              {t('Tous')}
             </button>
-            {TYPES.map((t) => (
+            {TYPES.map((item) => (
               <button
-                key={t}
-                onClick={() => setFilters({ ...filters, type: t })}
+                key={item}
+                onClick={() => setFilters({ ...filters, type: item })}
                 style={{
                   borderRadius: 999, padding: '6px 16px', fontSize: 13, cursor: 'pointer', flexShrink: 0, fontWeight: 500,
-                  background: filters.type === t ? 'linear-gradient(135deg, #7c3aed, #a855f7)' : '#fff',
-                  color: filters.type === t ? '#fff' : '#64748b',
-                  border: filters.type === t ? 'none' : '1px solid #e2e8f0',
+                  background: filters.type === item ? 'linear-gradient(135deg, #7c3aed, #a855f7)' : '#fff',
+                  color: filters.type === item ? '#fff' : '#64748b',
+                  border: filters.type === item ? 'none' : '1px solid #e2e8f0',
                 }}
               >
-                {t}
+                {t(item)}
               </button>
             ))}
           </div>
@@ -162,12 +184,12 @@ export default function HousesPage() {
 
         {usingMock && (
           <p style={{ marginBottom: 16, background: '#fef3c7', borderRadius: 10, padding: '8px 14px', fontSize: 13, color: '#92400e' }}>
-            API hors ligne — affichage de données de démonstration.
+            {t('API hors ligne — affichage de données de démonstration.')}
           </p>
         )}
 
         <h2 style={{ fontSize: 18, fontWeight: 700, color: '#1e293b', marginBottom: 16 }}>
-          Maisons <span style={{ color: '#94a3b8', fontWeight: 400 }}>({houses.length})</span>
+          {t('Maisons')} <span style={{ color: '#94a3b8', fontWeight: 400 }}>({houses.length})</span>
         </h2>
 
         {loading ? (
@@ -185,8 +207,8 @@ export default function HousesPage() {
         ) : houses.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '60px 0', color: '#94a3b8' }}>
             <Home size={48} style={{ marginBottom: 12, opacity: 0.3 }} />
-            <p style={{ fontSize: 16, fontWeight: 600 }}>Aucune maison trouvée</p>
-            <p style={{ fontSize: 14 }}>Modifiez vos filtres ou revenez plus tard</p>
+            <p style={{ fontSize: 16, fontWeight: 600 }}>{t('Aucune maison trouvée')}</p>
+            <p style={{ fontSize: 14 }}>{t('Modifiez vos filtres ou revenez plus tard')}</p>
           </div>
         ) : view === 'grid' ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 24 }}>

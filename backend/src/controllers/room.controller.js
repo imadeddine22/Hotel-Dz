@@ -1,3 +1,4 @@
+import { parseDiscount } from '../utils/pricing.js';
 import Room from '../models/Room.js';
 import Hotel from '../models/Hotel.js';
 import { uploadMany, destroyImage } from '../utils/cloudinaryUpload.js';
@@ -20,8 +21,11 @@ const ownsHotel = (req, hotel) =>
 // GET /hotels/:hotelId/rooms
 export const getRoomsByHotel = async (req, res, next) => {
   try {
-    const rooms = await Room.find({ hotel: req.params.hotelId, isActive: true });
-    res.json({ success: true, count: rooms.length, rooms });
+    const [rooms, hotel] = await Promise.all([
+      Room.find({ hotel: req.params.hotelId, isActive: true }),
+      Hotel.findById(req.params.hotelId).select('currency'),
+    ]);
+    res.json({ success: true, count: rooms.length, currency: hotel?.currency || 'DZD', rooms });
   } catch (err) {
     next(err);
   }
@@ -30,7 +34,7 @@ export const getRoomsByHotel = async (req, res, next) => {
 // GET /rooms/:id
 export const getRoom = async (req, res, next) => {
   try {
-    const room = await Room.findById(req.params.id).populate('hotel', 'name wilaya city');
+    const room = await Room.findById(req.params.id).populate('hotel', 'name wilaya city country currency policies');
     if (!room) return res.status(404).json({ success: false, message: 'Room not found' });
     res.json({ success: true, room });
   } catch (err) {
@@ -51,6 +55,7 @@ export const createRoom = async (req, res, next) => {
 
     const room = await Room.create({
       ...req.body,
+      ...parseDiscount(req.body),
       amenities: parseArray(req.body.amenities),
       hotel: hotel._id,
       images,
@@ -76,6 +81,7 @@ export const updateRoom = async (req, res, next) => {
       if (req.body[f] !== undefined) room[f] = req.body[f];
     });
     if (req.body.amenities !== undefined) room.amenities = parseArray(req.body.amenities);
+    Object.assign(room, parseDiscount(req.body));
     if (req.files?.length) {
       const uploaded = await uploadMany(req.files, 'dzhotels/rooms');
       room.images.push(...uploaded);

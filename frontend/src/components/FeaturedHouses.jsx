@@ -1,14 +1,15 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
 import { Home, ChevronLeft, ChevronRight, MapPin, BedDouble, Bath, Users, Plus } from 'lucide-react';
 import api from '@/lib/api';
-import { useAuthStore, useLangStore } from '@/store/authStore';
-import { TRANSLATIONS } from '@/lib/data';
+import { useAuthStore } from '@/store/authStore';
 import FavoriteButton from '@/components/FavoriteButton';
 
 import { getServerURL } from '@/lib/api';
+import { useT } from '@/lib/i18n/useT';
+import { formatDZD } from '@/lib/data';
 
 const SERVER = getServerURL();
 function resolveImg(url) {
@@ -17,63 +18,38 @@ function resolveImg(url) {
   return `${SERVER}${url}`;
 }
 
-const MOCK_HOUSES = [
-  {
-    id: 'hm1', name: 'Villa Yasmine', city: 'Alger', wilaya: 'Alger', type: 'Villa',
-    rooms: 4, bathrooms: 2, capacity: 8, pricePerNight: 15000,
-    img: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&q=80',
-  },
-  {
-    id: 'hm2', name: 'Chalet Forêt de Tikjda', city: 'Bouira', wilaya: 'Bouira', type: 'Chalet',
-    rooms: 3, bathrooms: 1, capacity: 6, pricePerNight: 9000,
-    img: 'https://images.unsplash.com/photo-1518780664697-55e3ad937233?w=800&q=80',
-  },
-  {
-    id: 'hm3', name: 'Appartement Vue Mer Béjaïa', city: 'Béjaïa', wilaya: 'Béjaïa', type: 'Appartement',
-    rooms: 2, bathrooms: 1, capacity: 4, pricePerNight: 6000,
-    img: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&q=80',
-  },
-  {
-    id: 'hm4', name: 'Riad Tlemcen', city: 'Tlemcen', wilaya: 'Tlemcen', type: 'Riad',
-    rooms: 3, bathrooms: 2, capacity: 6, pricePerNight: 11000,
-    img: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800&q=80',
-  },
-  {
-    id: 'hm5', name: 'Ferme Ouargla', city: 'Ouargla', wilaya: 'Ouargla', type: 'Ferme',
-    rooms: 5, bathrooms: 3, capacity: 10, pricePerNight: 8000,
-    img: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80',
-  },
-];
 
 export default function FeaturedHouses({ selectedCity }) {
-  const [houses, setHouses] = useState(MOCK_HOUSES);
+  const [houses, setHouses] = useState([]);
+  const [loaded, setLoaded] = useState(false);
   const scroller = { current: null };
   const user = useAuthStore((s) => s.user);
-  const { lang } = useLangStore();
-  const t = TRANSLATIONS[lang] || TRANSLATIONS.fr;
+  const { t, lang } = useT();
   const isOwner = user?.role === 'owner';
 
+  // Newest approved houses, filtered by the selected wilaya on the server
   useEffect(() => {
-    api.get('/houses', { params: { limit: 6, sort: 'newest' } })
-      .then(({ data }) => { if (data.houses?.length) setHouses(data.houses); })
-      .catch(() => {});
-  }, []);
+    const params = { limit: 6, sort: 'newest' };
+    if (selectedCity) params.place = selectedCity; // wilaya or commune
+    api.get('/houses', { params })
+      .then(({ data }) => setHouses(data.houses || []))
+      .catch(() => setHouses([]))
+      .finally(() => setLoaded(true));
+  }, [selectedCity]);
 
-  const filteredHouses = selectedCity
-    ? houses.filter((h) =>
-        (h.city || h.wilaya || '').toLowerCase().includes(selectedCity.toLowerCase())
-      )
-    : houses;
+  const filteredHouses = houses;
 
   const scroll = (dir) => {
     const el = document.getElementById('houses-scroller');
     el?.scrollBy({ left: dir * 380, behavior: 'smooth' });
   };
 
+  if (loaded && houses.length === 0 && !selectedCity) return null;
+
   return (
     <section style={{ maxWidth: 1280, margin: '0 auto', padding: '48px 24px' }}>
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <span style={{
             display: 'grid', placeItems: 'center', width: 48, height: 48,
@@ -83,7 +59,7 @@ export default function FeaturedHouses({ selectedCity }) {
             <Home size={22} />
           </span>
           <div>
-            <h2 style={{ fontSize: 22, fontWeight: 800, color: '#1e293b', margin: 0 }}>{t.featuredHouses}</h2>
+            <h2 style={{ fontSize: 22, fontWeight: 800, color: '#1e293b', margin: 0 }}>{selectedCity && lang !== 'ar' ? t('Maisons à louer · {selectedCity}', { selectedCity }) : t.featuredHouses}</h2>
             <p style={{ fontSize: 13, color: '#94a3b8', margin: '2px 0 0' }}>{t.featuredHousesSubtitle}</p>
           </div>
         </div>
@@ -153,7 +129,7 @@ export default function FeaturedHouses({ selectedCity }) {
                       background: 'rgba(15,23,42,0.9)', color: '#fff',
                       borderRadius: 999, padding: '4px 12px', fontSize: 11, fontWeight: 700
                     }}>
-                      {h.type || 'Maison'}
+                      {t(h.type || 'Maison')}
                     </span>
                     {/* Details overlay */}
                     <div style={{
@@ -164,16 +140,16 @@ export default function FeaturedHouses({ selectedCity }) {
                       <div style={{ position: 'absolute', bottom: 16, left: 16, right: 16 }}>
                         <h3 style={{ fontSize: 17, fontWeight: 700, color: '#fff', margin: '0 0 4px' }}>{h.name}</h3>
                         <p style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, color: '#e2e8f0', margin: '0 0 8px' }}>
-                          <MapPin size={14} /> {h.city}
+                          <MapPin size={14} /> {t(h.city)}
                         </p>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                           <div style={{ display: 'flex', gap: 10, fontSize: 12, color: '#cbd5e1' }}>
-                            {h.rooms && <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}><BedDouble size={13} /> {h.rooms} ch.</span>}
-                            {h.capacity && <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}><Users size={13} /> {h.capacity} pers.</span>}
+                            {h.rooms && <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}><BedDouble size={13} /> {h.rooms} {t('ch.')}</span>}
+                            {h.capacity && <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}><Users size={13} /> {h.capacity} {t('pers.')}</span>}
                           </div>
                           <span style={{ fontSize: 14, fontWeight: 800, color: '#cbd5e1' }}>
-                            {price > 0 ? new Intl.NumberFormat('fr-DZ').format(price) + ' DZD' : '—'}
-                            <span style={{ fontWeight: 400, fontSize: 11 }}>/nuit</span>
+                            {price > 0 ? formatDZD(price, h.currency) : '—'}
+                            <span style={{ fontWeight: 400, fontSize: 11 }}>{t('/nuit')}</span>
                           </span>
                         </div>
                       </div>
@@ -187,7 +163,7 @@ export default function FeaturedHouses({ selectedCity }) {
               );
             })
           ) : (
-            <p style={{ padding: '40px 0', color: '#94a3b8', fontSize: 14 }}>Aucune maison disponible dans cette ville.</p>
+            <p style={{ padding: '40px 0', color: '#94a3b8', fontSize: 14 }}>{t('Aucune maison à louer pour «')} {selectedCity} {t('» pour le moment.')}</p>
           )}
         </div>
 

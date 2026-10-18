@@ -7,8 +7,11 @@ const PORT = process.env.PORT || 5000;
 const start = async () => {
   await connectDB();
   app.listen(PORT, () => {
-    console.log(`🚀 DzHotels API listening on port ${PORT} (${process.env.NODE_ENV || 'development'})`);
+    console.log(`🚀 Meskan API listening on port ${PORT} (${process.env.NODE_ENV || 'development'})`);
   });
+  // Translate listings that predate automatic translation (background, quota-limited)
+  const { startTranslationBackfill } = await import('./src/utils/translationBackfill.js');
+  startTranslationBackfill();
 };
 
 start();

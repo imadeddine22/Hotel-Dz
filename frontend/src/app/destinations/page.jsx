@@ -5,41 +5,14 @@ import { Search, MapPin, Compass, Navigation, Building2, Home, Star, ArrowRight 
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import api from '@/lib/api';
-import { HOTELS as MOCK_HOTELS } from '@/lib/data';
 import { formatDZD } from '@/lib/data';
 import dynamic from 'next/dynamic';
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
 
+import { useT } from '@/lib/i18n/useT';
 // Dynamically load Map component to prevent window references and SSR hydrations mismatches
 const NearbyMap = dynamic(() => import('@/components/NearbyMap'), { ssr: false });
 
-const MOCK_HOUSES = [
-  {
-    id: 'hm1', name: 'Villa Yasmine', city: 'Alger', wilaya: 'Alger', type: 'Villa',
-    rooms: 4, bathrooms: 2, capacity: 8, pricePerNight: 15000,
-    img: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&q=80',
-  },
-  {
-    id: 'hm2', name: 'Chalet Forêt de Tikjda', city: 'Bouira', wilaya: 'Bouira', type: 'Chalet',
-    rooms: 3, bathrooms: 1, capacity: 6, pricePerNight: 9000,
-    img: 'https://images.unsplash.com/photo-1518780664697-55e3ad937233?w=800&q=80',
-  },
-  {
-    id: 'hm3', name: 'Appartement Vue Mer Béjaïa', city: 'Béjaïa', wilaya: 'Béjaïa', type: 'Appartement',
-    rooms: 2, bathrooms: 1, capacity: 4, pricePerNight: 6000,
-    img: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&q=80',
-  },
-  {
-    id: 'hm4', name: 'Riad Tlemcen', city: 'Tlemcen', wilaya: 'Tlemcen', type: 'Riad',
-    rooms: 3, bathrooms: 2, capacity: 6, pricePerNight: 11000,
-    img: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800&q=80',
-  },
-  {
-    id: 'hm5', name: 'Ferme Ouargla', city: 'Ouargla', wilaya: 'Ouargla', type: 'Ferme',
-    rooms: 5, bathrooms: 3, capacity: 10, pricePerNight: 8000,
-    img: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80',
-  }
-];
 
 const CITY_COORDS = {
   'Alger': { lat: 36.7538, lng: 3.0588 },
@@ -65,6 +38,7 @@ function getDistance(lat1, lon1, lat2, lon2) {
 }
 
 export default function DestinationsPage() {
+  const { t } = useT();
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -88,9 +62,9 @@ export default function DestinationsPage() {
       const hList = hotelsRes.data.hotels || [];
       const mList = housesRes.data.houses || [];
 
-      // Fallbacks if backend DB is clean/empty
-      const finalHotels = hList.length ? hList : MOCK_HOTELS;
-      const finalHouses = mList.length ? mList : MOCK_HOUSES;
+      // Real listings only — demo fallbacks produced cards linking to non-existent pages
+      const finalHotels = hList;
+      const finalHouses = mList;
 
       const normalized = [
         ...finalHotels.map(h => ({
@@ -100,6 +74,9 @@ export default function DestinationsPage() {
           name: h.name,
           city: h.city,
           price: h.price || 0,
+          originalPrice: h.originalPrice || null,
+          discountPercent: h.discountPercent || 0,
+          currency: h.currency || 'DZD',
           coordinates: h.coordinates || CITY_COORDS[h.city] || CITY_COORDS['Alger'],
           rating: h.avgRating ?? h.rating ?? 0,
           reviews: h.reviewsCount ?? h.reviews ?? 0,
@@ -113,6 +90,7 @@ export default function DestinationsPage() {
           name: m.name,
           city: m.city,
           price: m.pricePerNight ?? m.price ?? 0,
+          currency: m.currency || 'DZD',
           coordinates: m.coordinates || CITY_COORDS[m.city] || CITY_COORDS['Alger'],
           rooms: m.rooms,
           capacity: m.capacity,
@@ -135,7 +113,7 @@ export default function DestinationsPage() {
 
     setGpsLoading(true);
     if (!navigator.geolocation) {
-      alert("La géolocalisation n'est pas supportée par votre navigateur.");
+      alert(t('La géolocalisation n\'est pas supportée par votre navigateur.'));
       setGpsLoading(false);
       return;
     }
@@ -151,7 +129,7 @@ export default function DestinationsPage() {
       },
       (err) => {
         console.error(err);
-        alert("Impossible d'accéder à votre position. Veuillez accorder l'autorisation d'accès GPS.");
+        alert(t('Impossible d\'accéder à votre position. Veuillez accorder l\'autorisation d\'accès GPS.'));
         setGpsLoading(false);
       },
       { enableHighAccuracy: true, timeout: 10000 }
@@ -212,8 +190,8 @@ export default function DestinationsPage() {
                 <Compass className="h-6 w-6 animate-spin-slow" />
               </span>
               <div>
-                <h1 className="text-xl font-black text-slate-800 tracking-tight">Recherche géolocalisée</h1>
-                <p className="text-xs text-slate-400 font-medium">Découvrez les hébergements en location les plus proches</p>
+                <h1 className="text-xl font-black text-slate-800 tracking-tight">{t('Destinations en Algérie')}</h1>
+                <p className="text-xs text-slate-400 font-medium">{t('Découvrez les hébergements en location les plus proches')}</p>
               </div>
             </div>
 
@@ -223,7 +201,7 @@ export default function DestinationsPage() {
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Rechercher une destination, ville ou nom..."
+                placeholder={t('Rechercher une destination, ville ou nom...')}
                 className="w-full outline-none bg-transparent text-sm text-slate-800 placeholder:text-slate-400 font-medium"
               />
               {search && (
@@ -242,7 +220,7 @@ export default function DestinationsPage() {
                     selectedKind === 'all' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-800'
                   }`}
                 >
-                  Tous
+                  {t('Tous')}
                 </button>
                 <button
                   onClick={() => setSelectedKind('hotel')}
@@ -250,7 +228,7 @@ export default function DestinationsPage() {
                     selectedKind === 'hotel' ? 'bg-cyan-500 text-white shadow-sm' : 'text-slate-500 hover:text-slate-800'
                   }`}
                 >
-                  <Building2 className="h-3.5 w-3.5" /> Hôtels
+                  <Building2 className="h-3.5 w-3.5" /> {t('Hôtels')}
                 </button>
                 <button
                   onClick={() => setSelectedKind('house')}
@@ -258,7 +236,7 @@ export default function DestinationsPage() {
                     selectedKind === 'house' ? 'bg-purple-500 text-white shadow-sm' : 'text-slate-500 hover:text-slate-800'
                   }`}
                 >
-                  <Home className="h-3.5 w-3.5" /> Maisons
+                  <Home className="h-3.5 w-3.5" /> {t('Maisons')}
                 </button>
               </div>
 
@@ -273,7 +251,7 @@ export default function DestinationsPage() {
                 }`}
               >
                 <Navigation className={`h-3.5 w-3.5 ${gpsLoading ? 'animate-pulse' : ''} ${gpsActive ? 'fill-rose-600 rotate-45' : ''}`} />
-                {gpsLoading ? 'Localisation...' : gpsActive ? 'Désactiver le GPS' : 'Autour de moi (GPS)'}
+                {gpsLoading ? t('Localisation...') : gpsActive ? t('Désactiver le GPS') : t('Autour de moi (GPS)')}
               </button>
             </div>
 
@@ -281,7 +259,7 @@ export default function DestinationsPage() {
             {gpsActive && userPos && (
               <div className="mt-4 p-3 bg-slate-50 border border-slate-100 rounded-xl animate-fade-in">
                 <div className="flex justify-between items-center mb-1.5">
-                  <span className="text-xs font-extrabold text-slate-600">Rayon de recherche</span>
+                  <span className="text-xs font-extrabold text-slate-600">{t('Rayon de recherche')}</span>
                   <span className="text-xs font-black text-cyan-600 bg-cyan-50 px-2 py-0.5 rounded-md">{radius} km</span>
                 </div>
                 <input
@@ -294,9 +272,9 @@ export default function DestinationsPage() {
                   className="w-full accent-cyan-600 h-1.5 bg-slate-200 rounded-lg cursor-pointer"
                 />
                 <div className="flex justify-between text-[10px] text-slate-400 font-bold mt-1">
-                  <span>5 km</span>
-                  <span>100 km</span>
-                  <span>200 km</span>
+                  <span>{t('5 km')}</span>
+                  <span>{t('100 km')}</span>
+                  <span>{t('200 km')}</span>
                 </div>
               </div>
             )}
@@ -306,20 +284,20 @@ export default function DestinationsPage() {
           <div className="p-4 sm:p-5 flex-1 bg-slate-50">
             <div className="flex justify-between items-center mb-4">
               <span className="text-xs font-bold text-slate-400 tracking-wider uppercase">
-                {processedProperties.length} hébergements trouvés
+                {processedProperties.length} {t('hébergements trouvés')}
               </span>
             </div>
 
             {loading ? (
               <div className="flex flex-col gap-4 py-8 items-center justify-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-500"></div>
-                <p className="text-sm font-semibold text-slate-400">Recherche des hébergements...</p>
+                <p className="text-sm font-semibold text-slate-400">{t('Recherche des hébergements...')}</p>
               </div>
             ) : processedProperties.length === 0 ? (
               <div className="text-center py-12 px-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
                 <MapPin className="h-10 w-10 text-slate-300 mx-auto mb-3" />
-                <h3 className="text-sm font-bold text-slate-700">Aucun résultat</h3>
-                <p className="text-xs text-slate-400 mt-1">Aucun hôtel ou maison ne correspond à votre recherche à cette distance.</p>
+                <h3 className="text-sm font-bold text-slate-700">{t('Aucun résultat')}</h3>
+                <p className="text-xs text-slate-400 mt-1">{t('Aucun hôtel ou maison ne correspond à votre recherche à cette distance.')}</p>
               </div>
             ) : (
               <div className="grid gap-4">
@@ -345,7 +323,7 @@ export default function DestinationsPage() {
                         <span className={`absolute left-3 top-3 rounded-md px-2 py-0.5 text-[10px] font-black uppercase text-white shadow-sm ${
                           isHotel ? 'bg-cyan-500' : 'bg-purple-500'
                         }`}>
-                          {isHotel ? '🏨 Hôtel' : '🏠 Maison'}
+                          {isHotel ? t('🏨 Hôtel') : t('🏠 Maison')}
                         </span>
                       </div>
 
@@ -354,7 +332,7 @@ export default function DestinationsPage() {
                         <div>
                           <div className="flex items-center justify-between gap-2">
                             <span className="text-[10px] font-black text-slate-400 tracking-wide uppercase">
-                              {p.type}
+                              {t(p.type)}
                             </span>
                             {isHotel && p.rating > 0 && (
                               <span className="flex items-center gap-0.5 text-xs font-bold text-amber-500">
@@ -369,14 +347,14 @@ export default function DestinationsPage() {
 
                           <p className="text-xs text-slate-400 mt-1.5 flex items-center gap-1">
                             <MapPin className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                            {p.city}
+                            {t(p.city)}
                           </p>
 
                           {/* House specific details */}
                           {!isHotel && (p.rooms || p.capacity) && (
                             <div className="flex gap-3 text-[11px] text-slate-500 font-bold mt-2 bg-slate-50 p-1.5 px-2 rounded-lg w-fit">
-                              {p.rooms && <span>{p.rooms} ch.</span>}
-                              {p.capacity && <span>{p.capacity} pers.</span>}
+                              {p.rooms && <span>{p.rooms} {t('ch.')}</span>}
+                              {p.capacity && <span>{p.capacity} {t('pers.')}</span>}
                             </div>
                           )}
                         </div>
@@ -385,7 +363,7 @@ export default function DestinationsPage() {
                           {/* Distance badge if geolocation is active */}
                           {p.distance !== null ? (
                             <span className="inline-flex items-center gap-1 rounded bg-emerald-50 px-2 py-1 text-[11px] font-extrabold text-emerald-600">
-                              📍 À {p.distance < 1 ? Math.round(p.distance * 1000) + ' m' : p.distance.toFixed(1) + ' km'}
+                              {t('📍 À')} {p.distance < 1 ? Math.round(p.distance * 1000) + ' m' : p.distance.toFixed(1) + ' km'}
                             </span>
                           ) : (
                             <div />
@@ -394,9 +372,9 @@ export default function DestinationsPage() {
                           <div className="text-right flex items-center gap-4">
                             <div>
                               <span className="text-lg font-black text-slate-800">
-                                {formatDZD(p.price)}
+                                {formatDZD(p.price, p.currency)}
                               </span>
-                              <span className="text-[10px] text-slate-400 font-bold"> / nuit</span>
+                              <span className="text-[10px] text-slate-400 font-bold"> {t('/ nuit')}</span>
                             </div>
                             <Link 
                               href={linkHref}
@@ -431,7 +409,7 @@ export default function DestinationsPage() {
             onClick={() => setShowMapOnMobile(false)}
             className="absolute bottom-4 left-4 lg:hidden z-10 flex items-center gap-1.5 bg-slate-800 text-white px-4 py-2.5 rounded-full shadow-lg font-bold text-xs"
           >
-            📋 Afficher la liste
+            {t('📋 Afficher la liste')}
           </button>
         </div>
 
@@ -441,7 +419,7 @@ export default function DestinationsPage() {
             onClick={() => setShowMapOnMobile(true)}
             className="absolute bottom-4 right-4 lg:hidden z-10 flex items-center gap-1.5 bg-cyan-600 text-white px-4 py-2.5 rounded-full shadow-lg font-bold text-xs"
           >
-            🗺️ Afficher la carte
+            {t('🗺️ Afficher la carte')}
           </button>
         )}
       </div>

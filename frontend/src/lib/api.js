@@ -1,4 +1,7 @@
 import axios from 'axios';
+import { translateMessage } from './i18n/messages';
+import { localize } from './i18n/localizeData';
+import { isLocalizable, splitLocale } from './i18n/locale';
 
 const PRODUCTION_API = 'https://backend-yikc.onrender.com/api/v1';
 const PRODUCTION_SERVER = 'https://backend-yikc.onrender.com';
@@ -43,13 +46,37 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Normalize errors to a thrown Error with a friendly message
+// The page's language: the URL prefix (/ar/…, /en/…; French root) on public pages, else the
+// saved choice (private pages have a single URL)
+const currentLang = () => {
+  const { lang } = splitLocale(window.location.pathname);
+  if (lang) return lang;
+  if (isLocalizable(window.location.pathname)) return 'fr';
+  try {
+    return JSON.parse(localStorage.getItem('dz-lang-storage'))?.state?.lang || 'fr';
+  } catch {
+    return 'fr';
+  }
+};
+
+// Owner/seller/admin screens edit the original text: never hand them a translation,
+// or saving the form would overwrite the original with it.
+const EDITING_PATHS = /\/(my\/list|seller\/|admin\/|owner\/)/;
+
 api.interceptors.response.use(
-  (res) => res,
+  (res) => {
+    if (typeof window !== 'undefined' && res.config.localize !== false && !EDITING_PATHS.test(res.config.url || '')) {
+      localize(res.data, currentLang());
+    }
+    return res;
+  },
+  // Normalize errors to a thrown Error with a friendly message, in the user's language
   (error) => {
     const message =
       error.response?.data?.message || error.message || 'Une erreur est survenue';
-    return Promise.reject(new Error(message));
+    const err = new Error(typeof window === 'undefined' ? message : translateMessage(currentLang(), message));
+    err.status = error.response?.status; // HTTP status, for callers that react to a specific error
+    return Promise.reject(err);
   }
 );
 

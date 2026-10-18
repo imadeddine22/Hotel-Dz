@@ -9,6 +9,11 @@ import FavoriteButton from '@/components/FavoriteButton';
 import LocationMap from '@/components/LocationMap';
 import api, { getImageUrl, resolveImg } from '@/lib/api';
 
+import { useT } from '@/lib/i18n/useT';
+import { useInitialData } from '@/components/InitialData';
+import Policies, { PolicyBadges } from '@/components/Policies';
+import { ScoreBadge, ScoreBars } from '@/components/Score';
+import { effectivePrice } from '@/lib/scores';
 const MOCK = {
   name: 'Villa Yasmine', city: 'Alger', wilaya: 'Alger', type: 'Villa',
   rooms: 4, bathrooms: 2, capacity: 8, pricePerNight: 15000,
@@ -20,21 +25,26 @@ const MOCK = {
 };
 
 export default function HouseDetailPage() {
+  const { t, lang } = useT();
   const { id } = useParams();
-  const [house, setHouse] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const initial = useInitialData();
+  const [house, setHouse] = useState(initial?.house ?? null);
+  const [loading, setLoading] = useState(!initial?.house);
   const [activeImg, setActiveImg] = useState(0);
   const [mock, setMock] = useState(false);
+  const [reviews, setReviews] = useState([]);
 
   useEffect(() => {
     (async () => {
-      setLoading(true);
       try {
         const { data } = await api.get(`/houses/${id}`);
+        api.get(`/houses/${id}/reviews`).then((r) => setReviews(r.data.reviews || [])).catch(() => {});
         setHouse(data.house);
       } catch {
-        setHouse({ ...MOCK, _id: id });
-        setMock(true);
+        if (!initial?.house) {
+          setHouse({ ...MOCK, _id: id });
+          setMock(true);
+        }
       } finally {
         setLoading(false);
       }
@@ -43,18 +53,19 @@ export default function HouseDetailPage() {
 
   if (loading) return (
     <main className="min-h-screen"><Navbar />
-      <p style={{ textAlign: 'center', padding: '80px 0', color: '#94a3b8', fontSize: 16 }}>Chargement...</p>
+      <p style={{ textAlign: 'center', padding: '80px 0', color: '#94a3b8', fontSize: 16 }}>{t('Chargement...')}</p>
     </main>
   );
 
   if (!house) return (
     <main className="min-h-screen"><Navbar />
-      <p style={{ textAlign: 'center', padding: '80px 0', color: '#94a3b8' }}>Maison introuvable.</p>
+      <p style={{ textAlign: 'center', padding: '80px 0', color: '#94a3b8' }}>{t('Maison introuvable.')}</p>
     </main>
   );
 
   const images = house.images?.length ? house.images : [{ url: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=1200&q=80' }];
-  const price = house.pricePerNight ?? 0;
+  const deal = effectivePrice(house); // running owner discount, if any
+  const price = deal.price;
 
   return (
     <main className="min-h-screen" style={{ background: '#f8fafc' }}>
@@ -81,11 +92,12 @@ export default function HouseDetailPage() {
             background: 'linear-gradient(135deg, #7c3aed, #a855f7)',
             color: '#fff', borderRadius: 999, padding: '4px 14px', fontSize: 12, fontWeight: 700
           }}>
-            {house.type || 'Maison'}
+            {t(house.type || 'Maison')}
           </span>
           <h1 style={{ fontSize: 34, fontWeight: 800, color: '#fff', margin: '0 0 6px' }}>{house.name}</h1>
+          <PolicyBadges policies={house.policies} className="mb-2" />
           <p style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#e2e8f0', fontSize: 15, margin: 0 }}>
-            <MapPin size={16} /> {house.city}{house.wilaya !== house.city ? `, ${house.wilaya}` : ''}
+            <MapPin size={16} /> {t(house.city)}{house.wilaya && house.wilaya !== house.city ? `${lang === 'ar' ? '، ' : ', '}${t(house.wilaya)}` : ''}
           </p>
         </div>
 
@@ -116,7 +128,7 @@ export default function HouseDetailPage() {
         <div>
           {mock && (
             <p style={{ marginBottom: 16, background: '#fef3c7', borderRadius: 10, padding: '8px 14px', fontSize: 13, color: '#92400e' }}>
-              API hors ligne — données de démonstration.
+              {t('API hors ligne — données de démonstration.')}
             </p>
           )}
 
@@ -139,7 +151,7 @@ export default function HouseDetailPage() {
                   {item.icon}
                 </span>
                 <div>
-                  <p style={{ fontSize: 11, color: '#94a3b8', margin: 0 }}>{item.label}</p>
+                  <p style={{ fontSize: 11, color: '#94a3b8', margin: 0 }}>{t(item.label)}</p>
                   <p style={{ fontSize: 15, fontWeight: 700, color: '#1e293b', margin: 0 }}>{item.value}</p>
                 </div>
               </div>
@@ -148,14 +160,14 @@ export default function HouseDetailPage() {
 
           {/* Description */}
           <div style={{ background: '#fff', borderRadius: 16, padding: 24, marginBottom: 24, boxShadow: '0 1px 8px rgba(0,0,0,0.05)' }}>
-            <h2 style={{ fontSize: 18, fontWeight: 700, color: '#1e293b', margin: '0 0 12px' }}>À propos</h2>
-            <p style={{ color: '#64748b', lineHeight: 1.7, margin: 0 }}>{house.description || 'Aucune description disponible.'}</p>
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: '#1e293b', margin: '0 0 12px' }}>{t('À propos')}</h2>
+            <p style={{ color: '#64748b', lineHeight: 1.7, margin: 0 }}>{house.description || t('Aucune description disponible.')}</p>
           </div>
 
           {/* Amenities */}
           {house.amenities?.length > 0 && (
             <div style={{ background: '#fff', borderRadius: 16, padding: 24, marginBottom: 24, boxShadow: '0 1px 8px rgba(0,0,0,0.05)' }}>
-              <h2 style={{ fontSize: 18, fontWeight: 700, color: '#1e293b', margin: '0 0 16px' }}>Équipements</h2>
+              <h2 style={{ fontSize: 18, fontWeight: 700, color: '#1e293b', margin: '0 0 16px' }}>{t('Équipements')}</h2>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
                 {house.amenities.map((a) => (
                   <span key={a} style={{
@@ -172,9 +184,9 @@ export default function HouseDetailPage() {
 
           {/* Location map */}
           <div style={{ background: '#fff', borderRadius: 16, padding: 24, marginBottom: 24, boxShadow: '0 1px 8px rgba(0,0,0,0.05)' }}>
-            <h2 style={{ fontSize: 18, fontWeight: 700, color: '#1e293b', margin: '0 0 4px' }}>Localisation</h2>
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: '#1e293b', margin: '0 0 4px' }}>{t('Localisation')}</h2>
             <p style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#94a3b8', margin: '0 0 16px' }}>
-              <MapPin size={14} /> {house.address || `${house.city}, ${house.wilaya}`}
+              <MapPin size={14} /> {house.address || t(`${house.city}, ${house.wilaya}`)}
             </p>
             <LocationMap
               lat={house.coordinates?.lat}
@@ -184,25 +196,31 @@ export default function HouseDetailPage() {
             />
           </div>
 
-          {/* Rating */}
-          {house.avgRating > 0 && (
-            <div style={{ background: '#fff', borderRadius: 16, padding: 24, boxShadow: '0 1px 8px rgba(0,0,0,0.05)' }}>
-              <h2 style={{ fontSize: 18, fontWeight: 700, color: '#1e293b', margin: '0 0 12px' }}>Note globale</h2>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <span style={{
-                  fontSize: 42, fontWeight: 900, color: '#7c3aed'
-                }}>{house.avgRating}</span>
-                <div>
-                  <div style={{ display: 'flex', gap: 3, marginBottom: 4 }}>
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} size={18} style={{ fill: i < Math.round(house.avgRating) ? '#a855f7' : '#e2e8f0', color: i < Math.round(house.avgRating) ? '#a855f7' : '#e2e8f0' }} />
-                    ))}
-                  </div>
-                  <p style={{ fontSize: 13, color: '#64748b', margin: 0 }}>{house.reviewsCount || 0} avis</p>
+          <div style={{ marginBottom: 24 }}>
+            <Policies policies={house.policies} />
+          </div>
+
+          {/* Reviews (score /10 + categories) */}
+          <div style={{ background: '#fff', borderRadius: 16, padding: 24, boxShadow: '0 1px 8px rgba(0,0,0,0.05)' }} className="space-y-5">
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: '#1e293b', margin: 0 }}>{t('Avis des clients')}</h2>
+            {house.reviewsCount > 0 ? (
+              <>
+                <ScoreBadge score={house.avgRating} count={house.reviewsCount} size="lg" />
+                <ScoreBars scores={house.scores} />
+              </>
+            ) : (
+              <p className="text-sm text-gray-400">{t("Pas encore d'avis.")}</p>
+            )}
+            {reviews.map((rev) => (
+              <div key={rev._id} className="rounded-xl border border-gray-100 p-4">
+                <div className="mb-1 flex items-center justify-between">
+                  <span className="font-semibold text-gray-900">{rev.customer?.fullName || t('Client')}</span>
+                  <span className="rounded-md bg-brand-600 px-2 py-0.5 text-sm font-bold text-white" dir="ltr">{Number(rev.score).toFixed(1)}</span>
                 </div>
+                {rev.comment && <p className="text-sm text-gray-600">{rev.comment}</p>}
               </div>
-            </div>
-          )}
+            ))}
+          </div>
         </div>
 
         {/* Right: booking card */}
@@ -214,10 +232,15 @@ export default function HouseDetailPage() {
           }}>
             {/* Price header */}
             <div style={{ background: 'linear-gradient(135deg, #4c1d95, #7c3aed)', padding: '20px 24px' }}>
-              <p style={{ color: '#e9d5ff', fontSize: 13, margin: '0 0 4px' }}>Prix par nuit</p>
+              <p style={{ color: '#e9d5ff', fontSize: 13, margin: '0 0 4px' }}>{t('Prix par nuit')}</p>
               <p style={{ fontSize: 32, fontWeight: 900, color: '#fff', margin: 0 }}>
+                {deal.discountPercent > 0 && (
+                  <span style={{ display: 'block', fontSize: 14, fontWeight: 600, color: '#fecaca' }}>
+                    <s>{new Intl.NumberFormat('fr-DZ').format(deal.original)}</s> <span dir="ltr">-{deal.discountPercent} %</span>
+                  </span>
+                )}
                 {price > 0 ? new Intl.NumberFormat('fr-DZ').format(price) : '—'}
-                <span style={{ fontSize: 14, fontWeight: 400, color: '#c4b5fd' }}> DZD</span>
+                <span style={{ fontSize: 14, fontWeight: 400, color: '#c4b5fd' }}> {house.currency || 'DZD'}</span>
               </p>
             </div>
 
@@ -225,13 +248,13 @@ export default function HouseDetailPage() {
               {/* Features */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 20 }}>
                 {[
-                  { icon: <BedDouble size={16} />, label: `${house.rooms || '—'} chambres` },
+                  { icon: <BedDouble size={16} />, label: t('{n} chambres', { n: house.rooms || '—' }) },
                   { icon: <Bath size={16} />, label: `${house.bathrooms || '—'} salles de bain` },
-                  { icon: <Users size={16} />, label: `Jusqu'à ${house.capacity || '—'} personnes` },
+                  { icon: <Users size={16} />, label: t("Jusqu'à {n} personnes", { n: house.capacity || '—' }) },
                 ].map((f) => (
                   <div key={f.label} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: '#475569' }}>
                     <span style={{ color: '#a855f7' }}>{f.icon}</span>
-                    {f.label}
+                    {t(f.label)}
                   </div>
                 ))}
               </div>
@@ -246,34 +269,37 @@ export default function HouseDetailPage() {
                   boxShadow: '0 4px 14px rgba(124,58,237,0.35)', marginBottom: 12
                 }}
               >
-                Réserver maintenant
+                {t('Réserver maintenant')}
               </button>
 
-              <button
-                onClick={() => alert(house.owner?.phone || '+213 XXX XXX XXX')}
-                style={{
-                  width: '100%', padding: '12px', borderRadius: 14,
-                  border: '1px solid #ede9fe', background: '#faf5ff',
-                  color: '#7c3aed', fontSize: 14, fontWeight: 600, cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8
-                }}
-              >
-                <Phone size={16} /> Contacter le propriétaire
-              </button>
+              {/* Calls the owner; hidden when no number was given (it used to show a fake "+213 XXX XXX XXX") */}
+              {house.owner?.phone && (
+                <a
+                  href={`tel:${String(house.owner.phone).replace(/[^\d+]/g, '')}`}
+                  style={{
+                    width: '100%', padding: '12px', borderRadius: 14,
+                    border: '1px solid #ede9fe', background: '#faf5ff',
+                    color: '#7c3aed', fontSize: 14, fontWeight: 600, cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, textDecoration: 'none'
+                  }}
+                >
+                  <Phone size={16} aria-hidden="true" /> {t('Contacter le propriétaire')} · <span dir="ltr">{house.owner.phone}</span>
+                </a>
+              )}
 
               {/* Owner info */}
               {house.owner && (
                 <div style={{
                   marginTop: 20, paddingTop: 20, borderTop: '1px solid #f1f5f9'
                 }}>
-                  <p style={{ fontSize: 11, color: '#94a3b8', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: 1 }}>Propriétaire</p>
+                  <p style={{ fontSize: 11, color: '#94a3b8', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: 1 }}>{t('Propriétaire')}</p>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <div style={{
                       width: 40, height: 40, borderRadius: '50%',
                       background: 'linear-gradient(135deg, #7c3aed, #a855f7)',
                       color: '#fff', display: 'grid', placeItems: 'center', fontWeight: 700, fontSize: 16
                     }}>
-                      {house.owner.fullName?.charAt(0) || 'P'}
+                      {house.owner.fullName?.charAt(0) || t('P')}
                     </div>
                     <div>
                       <p style={{ fontSize: 14, fontWeight: 600, color: '#1e293b', margin: 0 }}>{house.owner.fullName}</p>

@@ -1,15 +1,25 @@
-import Link from 'next/link';
+'use client';
+
+import Link from '@/components/LocaleLink';
 import { MapPin, BedDouble, Bath, Users } from 'lucide-react';
 import FavoriteButton from '@/components/FavoriteButton';
 
 import { getImageUrl } from '@/lib/api';
 
+import { useT } from '@/lib/i18n/useT';
+import ApproxPrice from '@/components/ApproxPrice';
+import { formatDZD } from '@/lib/data';
+import { PolicyBadges } from '@/components/Policies';
+import { DealPrice, ScoreBadge } from '@/components/Score';
+import { effectivePrice } from '@/lib/scores';
 export default function HouseCard({ house, list = false }) {
+  const { t, lang } = useT();
   const rawImg = house.images?.[0]?.url || house.img || null;
   const img = getImageUrl(rawImg) ||
     'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&q=80';
 
-  const price = house.pricePerNight ?? house.price ?? 0;
+  const deal = effectivePrice({ ...house, pricePerNight: house.pricePerNight ?? house.price ?? 0 });
+  const price = deal.price;
 
   return (
     <div
@@ -29,11 +39,11 @@ export default function HouseCard({ house, list = false }) {
           />
           {/* Type badge */}
           <span className="absolute left-3 top-3 rounded-full bg-white/95 px-2.5 py-1 text-xs font-bold text-brand-500 shadow">
-            {house.type || 'Maison'}
+            {t(house.type || 'Maison')}
           </span>
           {/* Price badge */}
           <span className="absolute right-3 top-3 rounded-full bg-brand-500 px-2.5 py-1 text-xs font-bold text-white shadow">
-            {price > 0 ? new Intl.NumberFormat('fr-DZ').format(price) + ' DZD' : 'Sur demande'}
+            {price > 0 ? formatDZD(price, house.currency) : t('Sur demande')}
           </span>
         </div>
 
@@ -42,39 +52,42 @@ export default function HouseCard({ house, list = false }) {
           <h3 className="text-base font-bold text-gray-900">{house.name}</h3>
           <p className="mt-1 flex items-center gap-1 text-sm text-gray-500">
             <MapPin className="h-4 w-4 text-brand-500" />
-            {house.city}{house.wilaya && house.wilaya !== house.city ? `, ${house.wilaya}` : ''}
+            {t(house.city)}{house.wilaya && house.wilaya !== house.city ? `${lang === 'ar' ? '، ' : ', '}${t(house.wilaya)}` : ''}
           </p>
+
+          {house.reviewsCount > 0 && <ScoreBadge score={house.avgRating} count={house.reviewsCount} className="mt-2" />}
+          <PolicyBadges policies={house.policies} className="mt-2" />
 
           {/* Details row */}
           <div className="mt-3 flex items-center gap-3 text-xs text-gray-500">
             {house.rooms && (
               <span className="flex items-center gap-1">
-                <BedDouble className="h-3.5 w-3.5" /> {house.rooms} ch.
+                <BedDouble className="h-3.5 w-3.5" /> {house.rooms} {t('ch.')}
               </span>
             )}
             {house.bathrooms && (
               <span className="flex items-center gap-1">
-                <Bath className="h-3.5 w-3.5" /> {house.bathrooms} SDB
+                <Bath className="h-3.5 w-3.5" /> {house.bathrooms} {t('SDB')}
               </span>
             )}
             {house.capacity && (
               <span className="flex items-center gap-1">
-                <Users className="h-3.5 w-3.5" /> {house.capacity} pers.
+                <Users className="h-3.5 w-3.5" /> {house.capacity} {t('pers.')}
               </span>
             )}
           </div>
 
           {/* Price */}
           <div className="mt-auto pt-4">
-            <span className="text-xl font-extrabold text-brand-500">
-              {price > 0 ? new Intl.NumberFormat('fr-DZ').format(price) + ' DZD' : '—'}
-            </span>
-            <span className="text-sm text-gray-400"> / nuit</span>
+            {price > 0 ? <DealPrice {...deal} currency={house.currency} className="text-xl font-extrabold text-brand-500" /> : <span className="text-xl font-extrabold text-brand-500">—</span>}
+            <span className="text-sm text-gray-400"> {t('/ nuit')}</span>
+            <ApproxPrice amount={price} currency={house.currency} className="block text-xs text-gray-400" />
           </div>
         </div>
       </Link>
       {(house._id || house.id) && (
-        <div className="absolute left-3 bottom-3 z-20">
+        // on the photo (bottom corner), never over the price; outside the Link so a click doesn't navigate
+        <div className={`absolute z-20 ${list ? 'left-3 bottom-3' : 'right-3 top-[10.25rem]'}`}>
           <FavoriteButton type="house" id={house._id || house.id} />
         </div>
       )}

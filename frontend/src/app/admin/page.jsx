@@ -1,14 +1,16 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
 import {
   CalendarCheck, Hotel, Users, Wallet, Store,
-  TrendingUp, CheckSquare, Building2, ArrowUpRight, Home, Tag,
+  TrendingUp, TrendingDown, CheckSquare, Building2, ArrowUpRight, Home, Tag,
 } from 'lucide-react';
 import api from '@/lib/api';
-import { formatDZD } from '@/lib/data';
+import { formatDZD, formatAmounts } from '@/lib/data';
 
+import { useT } from '@/lib/i18n/useT';
+import { dateLocale } from '@/lib/i18n/format';
 const MONTHS_FR = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
 
 const STATUS_COLORS = {
@@ -62,6 +64,7 @@ function timeAgo(dateStr) {
 
 /* ═══════════════════════════════════════════════════════ */
 export default function AdminDashboard() {
+  const { t } = useT();
   const [stats, setStats]       = useState(null);
   const [activity, setActivity] = useState(null);
   const [tab, setTab]           = useState('bookings');
@@ -80,6 +83,29 @@ export default function AdminDashboard() {
       finally { setLoading(false); }
     })();
   }, []);
+
+  /* Real month-over-month change from a monthly series ([{ _id: { year, month }, [key] }]).
+     Replaces hard-coded "+18% vs mois dernier" figures. Returns null when there's nothing to compare. */
+  const monthTrend = (series = [], key = 'count') => {
+    const now = new Date();
+    const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const valueFor = (d) =>
+      series.find((s) => s._id.year === d.getFullYear() && s._id.month === d.getMonth() + 1)?.[key] || 0;
+    const cur = valueFor(now);
+    const last = valueFor(prev);
+    if (!last) return null;
+    return Math.round(((cur - last) / last) * 100);
+  };
+  const TrendBadge = ({ value }) =>
+    { const { t } = useT(); return (value === null ? (
+      <span className="an-change">{t('Pas de comparaison disponible')}</span>
+    ) : (
+      <span className={`an-change ${value >= 0 ? 'up' : 'down'}`}>
+        {value >= 0 ? <TrendingUp /> : <TrendingDown />} {value >= 0 ? '+' : ''}{value}{t('% vs mois dernier')}
+      </span>
+    )); };
+  const bookingsTrend = monthTrend(stats?.charts?.monthlyBookings, 'count');
+  const revenueTrend = monthTrend(stats?.charts?.monthlyRevenue, 'total');
 
   /* chart data */
   const chartData  = stats?.charts?.monthlyRevenue || [];
@@ -112,7 +138,7 @@ export default function AdminDashboard() {
   if (loading) return (
     <div>
       <div className="an-page-header">
-        <h1 className="an-page-title">Analytics</h1>
+        <h1 className="an-page-title">{t('Analytics')}</h1>
       </div>
       <div className="an-stats-row">
         {[...Array(4)].map((_, i) => (
@@ -131,9 +157,9 @@ export default function AdminDashboard() {
       {/* ─── Header ─── */}
       <div className="an-page-header">
         <div>
-          <h1 className="an-page-title">Analytics</h1>
+          <h1 className="an-page-title">{t('Analytics')}</h1>
           <p className="an-page-sub">
-            {new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}
+            {new Date().toLocaleDateString(dateLocale(), { day: '2-digit', month: 'long', year: 'numeric' })}
           </p>
         </div>
       </div>
@@ -144,60 +170,60 @@ export default function AdminDashboard() {
         {/* Card: Réservations */}
         <div className="an-stat-card">
           <div className="an-stat-top">
-            <span className="an-stat-label">Réservations</span>
+            <span className="an-stat-label">{t('Réservations')}</span>
             <div className="an-stat-icon" style={{ background: '#eff6ff', color: '#3b82f6' }}>
               <CalendarCheck />
             </div>
           </div>
           <p className="an-stat-num">{stats?.bookings ?? '—'}</p>
-          <span className="an-change up"><TrendingUp /> +18% vs mois dernier</span>
+          <TrendBadge value={bookingsTrend} />
         </div>
 
         {/* Card: Approuvés */}
         <div className="an-stat-card">
           <div className="an-stat-top">
-            <span className="an-stat-label">Hôtels approuvés</span>
+            <span className="an-stat-label">{t('Hôtels approuvés')}</span>
             <div className="an-stat-icon" style={{ background: '#e0f7fa', color: '#00bcd4' }}>
               <Hotel />
             </div>
           </div>
           <p className="an-stat-num">{stats?.hotels ?? '—'}</p>
-          <span className="an-change up"><TrendingUp /> +8% vs mois dernier</span>
+          <span className="an-change">{stats?.pendingHotels ?? 0} {t('en attente de validation')}</span>
         </div>
 
         {/* Card: Maisons */}
         <div className="an-stat-card">
           <div className="an-stat-top">
-            <span className="an-stat-label">Maisons approuvées</span>
+            <span className="an-stat-label">{t('Maisons approuvées')}</span>
             <div className="an-stat-icon" style={{ background: '#fdf4ff', color: '#a855f7' }}>
               <Home />
             </div>
           </div>
           <p className="an-stat-num">{stats?.houses ?? '—'}</p>
-          <span className="an-change up"><TrendingUp /> +{stats?.pendingHouses ?? 0} en attente</span>
+          <span className="an-change up"><TrendingUp /> +{stats?.pendingHouses ?? 0} {t('en attente')}</span>
         </div>
 
         {/* Card: Ventes */}
         <div className="an-stat-card">
           <div className="an-stat-top">
-            <span className="an-stat-label">Ventes immobilières</span>
+            <span className="an-stat-label">{t('Ventes immobilières')}</span>
             <div className="an-stat-icon" style={{ background: '#ecfdf5', color: '#10b981' }}>
               <Tag />
             </div>
           </div>
           <p className="an-stat-num">{stats?.sales ?? '—'}</p>
-          <span className="an-change up"><TrendingUp /> +{stats?.pendingSales ?? 0} en attente</span>
+          <span className="an-change up"><TrendingUp /> +{stats?.pendingSales ?? 0} {t('en attente')}</span>
         </div>
 
         {/* Card: Utilisateurs + mini donut */}
         <div className="an-stat-card an-stat-card--split">
           <div className="an-stat-split-left">
-            <span className="an-stat-label">Utilisateurs</span>
+            <span className="an-stat-label">{t('Utilisateurs')}</span>
             <p className="an-stat-num">{stats?.users?.toLocaleString('fr-FR') ?? '—'}</p>
             <div className="an-legend-list">
-              <span><span className="an-dot" style={{ background: '#f59e0b' }} />Clients</span>
-              <span><span className="an-dot" style={{ background: '#3b82f6' }} />Hôteliers</span>
-              <span><span className="an-dot" style={{ background: '#00bcd4' }} />Admins</span>
+              <span><span className="an-dot" style={{ background: '#f59e0b' }} />{t('Clients')}</span>
+              <span><span className="an-dot" style={{ background: '#3b82f6' }} />{t('Hôteliers')}</span>
+              <span><span className="an-dot" style={{ background: '#00bcd4' }} />{t('Admins')}</span>
             </div>
           </div>
           <MiniDonut segments={userSegs} />
@@ -206,11 +232,11 @@ export default function AdminDashboard() {
         {/* Card: En attente + mini donut */}
         <div className="an-stat-card an-stat-card--split">
           <div className="an-stat-split-left">
-            <span className="an-stat-label">En attente</span>
+            <span className="an-stat-label">{t('En attente')}</span>
             <p className="an-stat-num">{stats?.pendingHotels ?? '—'}</p>
             <div className="an-legend-list">
-              <span><span className="an-dot" style={{ background: '#00bcd4' }} />Approuvés</span>
-              <span><span className="an-dot" style={{ background: '#f59e0b' }} />En attente</span>
+              <span><span className="an-dot" style={{ background: '#00bcd4' }} />{t('Approuvés')}</span>
+              <span><span className="an-dot" style={{ background: '#f59e0b' }} />{t('En attente')}</span>
             </div>
           </div>
           <MiniDonut segments={hotelSegs} />
@@ -224,13 +250,15 @@ export default function AdminDashboard() {
             <Wallet />
           </div>
           <div className="an-wide-body">
-            <p className="an-wide-label">Revenu total</p>
-            <p className="an-wide-val">{stats ? formatDZD(stats.revenue) : '—'}</p>
-            <span className="an-change up"><TrendingUp /> +22% vs mois dernier</span>
+            <p className="an-wide-label">{t('Revenu total')}</p>
+            <p className="an-wide-val">{stats ? formatAmounts(stats.revenueByCurrency, stats.revenue) : '—'}</p>
+            <TrendBadge value={revenueTrend} />
           </div>
-          <div className="an-wide-badge" style={{ background: '#e0f7fa', color: '#00bcd4' }}>
-            +22%
-          </div>
+          {revenueTrend !== null && (
+            <div className="an-wide-badge" style={{ background: '#e0f7fa', color: '#00bcd4' }}>
+              {revenueTrend >= 0 ? '+' : ''}{revenueTrend}%
+            </div>
+          )}
         </div>
 
         <div className="an-wide-card">
@@ -238,12 +266,9 @@ export default function AdminDashboard() {
             <Store />
           </div>
           <div className="an-wide-body">
-            <p className="an-wide-label">Hôteliers inscrits</p>
+            <p className="an-wide-label">{t('Hôteliers inscrits')}</p>
             <p className="an-wide-val">{stats?.owners ?? '—'}</p>
-            <span className="an-change up"><TrendingUp /> +5% vs mois dernier</span>
-          </div>
-          <div className="an-wide-badge" style={{ background: '#f5f3ff', color: '#8b5cf6' }}>
-            +5%
+            <span className="an-change">{stats?.users ?? 0} {t('utilisateurs au total')}</span>
           </div>
         </div>
 
@@ -252,9 +277,9 @@ export default function AdminDashboard() {
             <Tag />
           </div>
           <div className="an-wide-body">
-            <p className="an-wide-label">Vendeurs inscrits</p>
+            <p className="an-wide-label">{t('Vendeurs inscrits')}</p>
             <p className="an-wide-val">{stats?.sellers ?? '—'}</p>
-            <span className="an-change up"><TrendingUp /> +{stats?.pendingSales ?? 0} annonces en attente</span>
+            <span className="an-change up"><TrendingUp /> +{stats?.pendingSales ?? 0} {t('annonces en attente')}</span>
           </div>
           <div className="an-wide-badge" style={{ background: '#ecfdf5', color: '#10b981' }}>
             +{stats?.pendingSales ?? 0}
@@ -269,8 +294,8 @@ export default function AdminDashboard() {
         <div className="an-card">
           <div className="an-card-head">
             <div>
-              <h3 className="an-card-title">Revenus mensuels</h3>
-              <p className="an-card-sub">6 derniers mois</p>
+              <h3 className="an-card-title">{t('Revenus mensuels')}</h3>
+              <p className="an-card-sub">{t('6 derniers mois')}</p>
             </div>
             <span className="an-card-tag">2026</span>
           </div>
@@ -301,7 +326,7 @@ export default function AdminDashboard() {
                       style={{ height: `${Math.max((d.total / maxRevenue) * 80, 4)}%` }}
                     />
                     <span className="an-bar-month">
-                      {MONTHS_FR[(d._id.month - 1)] ?? d._id.month}
+                      {t(MONTHS_FR[d._id.month - 1] ?? String(d._id.month))}
                     </span>
                   </div>
                 ))
@@ -309,7 +334,7 @@ export default function AdminDashboard() {
                   <div key={i} className="an-bar-col">
                     <div className="an-bar" style={{ height: `${h}%` }} />
                     <span className="an-bar-month">
-                      {MONTHS_FR[(new Date().getMonth() - 5 + i + 12) % 12]}
+                      {t(MONTHS_FR[(new Date().getMonth() - 5 + i + 12) % 12])}
                     </span>
                   </div>
                 ))
@@ -324,7 +349,7 @@ export default function AdminDashboard() {
           {/* Booking status donut */}
           <div className="an-card">
             <div className="an-card-head">
-              <h3 className="an-card-title">Statuts réservations</h3>
+              <h3 className="an-card-title">{t('Statuts réservations')}</h3>
             </div>
             <div className="an-donut-wrap">
               <div className="an-donut-svg-wrap">
@@ -356,7 +381,7 @@ export default function AdminDashboard() {
                   <text x="60" y="70" textAnchor="middle"
                     transform="rotate(90 60 60)"
                     style={{ fontSize: 9, fill: '#94a3b8' }}>
-                    Total
+                    {t('Total')}
                   </text>
                 </svg>
               </div>
@@ -364,12 +389,12 @@ export default function AdminDashboard() {
                 {bookingStatuses.map(s => (
                   <div key={s._id} className="an-donut-row">
                     <span className="an-dot" style={{ background: STATUS_COLORS[s._id] }} />
-                    <span className="an-donut-lbl">{STATUS_LABELS[s._id] || s._id}</span>
+                    <span className="an-donut-lbl">{t(STATUS_LABELS[s._id] || s._id)}</span>
                     <span className="an-donut-cnt">{s.count}</span>
                   </div>
                 ))}
                 {bookingStatuses.length === 0 && (
-                  <span style={{ fontSize: 13, color: '#94a3b8' }}>Aucune donnée</span>
+                  <span style={{ fontSize: 13, color: '#94a3b8' }}>{t('Aucune donnée')}</span>
                 )}
               </div>
             </div>
@@ -378,22 +403,22 @@ export default function AdminDashboard() {
           {/* Quick actions */}
           <div className="an-quick-grid">
             <Link href="/admin/hotels" className="an-quick-btn" style={{ '--qbg': '#fffbeb', '--qco': '#f59e0b' }}>
-              <CheckSquare className="an-quick-ico" /> Approbations
+              <CheckSquare className="an-quick-ico" /> {t('Approbations')}
             </Link>
             <Link href="/admin/all-hotels" className="an-quick-btn" style={{ '--qbg': '#e0f7fa', '--qco': '#00bcd4' }}>
-              <Building2 className="an-quick-ico" /> Hôtels
+              <Building2 className="an-quick-ico" /> {t('Hôtels')}
             </Link>
             <Link href="/admin/all-houses" className="an-quick-btn" style={{ '--qbg': '#fdf4ff', '--qco': '#a855f7' }}>
-              <Home className="an-quick-ico" /> Maisons
+              <Home className="an-quick-ico" /> {t('Maisons')}
             </Link>
             <Link href="/admin/all-sales" className="an-quick-btn" style={{ '--qbg': '#ecfdf5', '--qco': '#10b981' }}>
-              <Tag className="an-quick-ico" /> Ventes
+              <Tag className="an-quick-ico" /> {t('Ventes')}
             </Link>
             <Link href="/admin/users" className="an-quick-btn" style={{ '--qbg': '#eff6ff', '--qco': '#3b82f6' }}>
-              <Users className="an-quick-ico" /> Utilisateurs
+              <Users className="an-quick-ico" /> {t('Utilisateurs')}
             </Link>
             <Link href="/admin/bookings" className="an-quick-btn" style={{ '--qbg': '#fdf2f8', '--qco': '#ec4899' }}>
-              <CalendarCheck className="an-quick-ico" /> Réservations
+              <CalendarCheck className="an-quick-ico" /> {t('Réservations')}
             </Link>
           </div>
         </div>
@@ -402,18 +427,18 @@ export default function AdminDashboard() {
       {/* ─── Bottom: Activity Table ─── */}
       <div className="an-card an-bottom-card">
         <div className="an-card-head">
-          <h3 className="an-card-title">Activité récente</h3>
+          <h3 className="an-card-title">{t('Activité récente')}</h3>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <div className="an-tabs">
               <button className={`an-tab ${tab === 'bookings' ? 'active' : ''}`} onClick={() => setTab('bookings')}>
-                Réservations
+                {t('Réservations')}
               </button>
               <button className={`an-tab ${tab === 'users' ? 'active' : ''}`} onClick={() => setTab('users')}>
-                Membres
+                {t('Membres')}
               </button>
             </div>
             <Link href={tab === 'bookings' ? '/admin/bookings' : '/admin/users'} className="an-view-all">
-              Voir tout <ArrowUpRight style={{ width: 14, height: 14 }} />
+              {t('Voir tout')} <ArrowUpRight style={{ width: 14, height: 14 }} />
             </Link>
           </div>
         </div>
@@ -422,11 +447,11 @@ export default function AdminDashboard() {
           <table className="an-table">
             <thead>
               <tr>
-                <th>Profil</th>
-                <th>{tab === 'bookings' ? 'Hôtel' : 'Email'}</th>
-                <th>Date</th>
-                <th>Statut</th>
-                {tab === 'bookings' && <th>Montant</th>}
+                <th>{t('Profil')}</th>
+                <th>{tab === 'bookings' ? t('Hôtel') : t('Email')}</th>
+                <th>{t('Date')}</th>
+                <th>{t('Statut')}</th>
+                {tab === 'bookings' && <th>{t('Montant')}</th>}
               </tr>
             </thead>
             <tbody>
@@ -437,21 +462,21 @@ export default function AdminDashboard() {
                       <td>
                         <div className="an-tbl-user">
                           <div className="an-tbl-avatar" style={{ background: 'linear-gradient(135deg,#3b82f6,#6366f1)' }}>
-                            {b.customer?.fullName?.charAt(0)?.toUpperCase() || 'B'}
+                            {b.customer?.fullName?.charAt(0)?.toUpperCase() || t('B')}
                           </div>
                           <div>
-                            <p className="an-tbl-name">{b.customer?.fullName || 'Client'}</p>
-                            <p className="an-tbl-meta">{b.nights} nuit{b.nights > 1 ? 's' : ''}</p>
+                            <p className="an-tbl-name">{b.customer?.fullName || t('Client')}</p>
+                            <p className="an-tbl-meta">{b.nights} {t('nuit')}{b.nights > 1 ? 's' : ''}</p>
                           </div>
                         </div>
                       </td>
                       <td className="an-tbl-sub">{b.hotel?.name || '—'}</td>
-                      <td className="an-tbl-sub">{new Date(b.createdAt).toLocaleDateString('fr-FR')}</td>
-                      <td><span className={`admin-badge ${b.status}`}>{STATUS_LABELS[b.status] || b.status}</span></td>
-                      <td className="an-tbl-bold">{formatDZD(b.totalPrice)}</td>
+                      <td className="an-tbl-sub">{new Date(b.createdAt).toLocaleDateString(dateLocale())}</td>
+                      <td><span className={`admin-badge ${b.status}`}>{t(STATUS_LABELS[b.status] || b.status)}</span></td>
+                      <td className="an-tbl-bold">{formatDZD(b.totalPrice, b.currency)}</td>
                     </tr>
                   ))
-                  : <tr><td colSpan={5} className="an-tbl-empty">Aucune réservation récente</td></tr>
+                  : <tr><td colSpan={5} className="an-tbl-empty">{t('Aucune réservation récente')}</td></tr>
 
                 : activity?.recentUsers?.length > 0
                   ? activity.recentUsers.map(u => (
@@ -459,7 +484,7 @@ export default function AdminDashboard() {
                       <td>
                         <div className="an-tbl-user">
                           <div className="an-tbl-avatar" style={{ background: 'linear-gradient(135deg,#00bcd4,#06b6d4)' }}>
-                            {u.fullName?.charAt(0)?.toUpperCase() || 'U'}
+                            {u.fullName?.charAt(0)?.toUpperCase() || t('U')}
                           </div>
                           <div>
                             <p className="an-tbl-name">{u.fullName}</p>
@@ -468,11 +493,11 @@ export default function AdminDashboard() {
                         </div>
                       </td>
                       <td className="an-tbl-sub">{u.email}</td>
-                      <td className="an-tbl-sub">{new Date(u.createdAt).toLocaleDateString('fr-FR')}</td>
-                      <td><span className={`admin-badge ${u.role}`}>{u.role}</span></td>
+                      <td className="an-tbl-sub">{new Date(u.createdAt).toLocaleDateString(dateLocale())}</td>
+                      <td><span className={`admin-badge ${u.role}`}>{t(u.role)}</span></td>
                     </tr>
                   ))
-                  : <tr><td colSpan={4} className="an-tbl-empty">Aucun nouveau membre</td></tr>
+                  : <tr><td colSpan={4} className="an-tbl-empty">{t('Aucun nouveau membre')}</td></tr>
               }
             </tbody>
           </table>

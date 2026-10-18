@@ -19,10 +19,13 @@ export const protect = async (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id);
+    const user = await User.findById(decoded.id).select('+passwordChangedAt');
 
     if (!user) {
       return res.status(401).json({ success: false, message: 'User no longer exists' });
+    }
+    if (user.changedPasswordAfter(decoded.iat)) {
+      return res.status(401).json({ success: false, message: 'Password changed, please log in again' });
     }
     if (user.isBlocked) {
       return res.status(403).json({ success: false, message: 'Your account has been blocked' });
@@ -50,3 +53,32 @@ export const authorize =
     }
     next();
   };
+
+/**
+ * optionalAuth — like protect, but never rejects: attaches req.user when a valid
+ * token is present, otherwise continues anonymously. For public routes whose
+ * response depends on who is asking (e.g. owners previewing pending listings).
+ */
+export const optionalAuth = async (req, res, next) => {
+  try {
+    const header = req.headers.authorization;
+    const token = header?.startsWith('Bearer ') ? header.split(' ')[1] : req.cookies?.token;
+    if (token) {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const user = await User.findById(decoded.id).select('+passwordChangedAt');
+      if (user && !user.isBlocked && !user.changedPasswordAfter(decoded.iat)) req.user = user;
+    }
+  } catch {
+    // invalid/expired token → treat as anonymous
+  }
+  next();
+};
+
+/** True when the entity is publicly visible, or the requester owns it / is admin. */
+export const canView = (req, entity, ownerField = 'owner') => {
+  if (entity.status === 'approved') return true;
+  if (!req.user) return false;
+  if (req.user.role === 'admin') return true;
+  const owner = entity[ownerField];
+  return String(owner?._id || owner) === String(req.user._id);
+};

@@ -1,11 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
+import BrandLogo from '@/components/BrandLogo';
 import { useAuthStore } from '@/store/authStore';
+import GoogleSignIn from '@/components/GoogleSignIn';
 
+import { useT } from '@/lib/i18n/useT';
 export default function RegisterPage() {
+  const { t } = useT();
   const router = useRouter();
   const register = useAuthStore((s) => s.register);
 
@@ -19,15 +23,26 @@ export default function RegisterPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Links like "Devenir propriétaire" point to /register?role=owner — preselect that role.
+  // (Read from window rather than useSearchParams to keep the page statically renderable.)
+  useEffect(() => {
+    const role = new URLSearchParams(window.location.search).get('role');
+    if (['customer', 'owner', 'seller'].includes(role)) setForm((f) => ({ ...f, role }));
+  }, []);
+
+  const goOn = (user) => {
+    if (user.role === 'admin') router.push('/admin');
+    else if (user.role === 'owner') router.push('/owner/dashboard');
+    else if (user.role === 'seller') router.push('/seller/dashboard');
+    else router.push('/');
+  };
+
   const submit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
     try {
-      const user = await register(form);
-      if (user.role === 'owner') router.push('/owner/dashboard');
-      else if (user.role === 'seller') router.push('/seller/dashboard');
-      else router.push('/');
+      goOn(await register(form));
     } catch (err) {
       setError(err.message);
     } finally {
@@ -38,11 +53,11 @@ export default function RegisterPage() {
   return (
     <div className="grid min-h-screen place-items-center bg-[var(--bg)] px-4 py-10">
       <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-card">
-        <Link href="/" className="mb-6 block text-center text-2xl font-extrabold text-ink">
-          hotels<span className="text-brand-500">dz</span>
+        <Link href="/" className="mb-6 flex justify-center">
+          <BrandLogo className="h-12" textClassName="text-3xl" />
         </Link>
-        <h1 className="mb-1 text-2xl font-bold text-ink">Créer un compte</h1>
-        <p className="mb-6 text-sm text-gray-500">Rejoignez DzHotels</p>
+        <h1 className="mb-1 text-2xl font-bold text-ink">{t('Créer un compte')}</h1>
+        <p className="mb-6 text-sm text-gray-500">{t('Rejoignez Meskan')}</p>
 
         {error && (
           <div className="mb-4 rounded-lg bg-red-50 px-4 py-2 text-sm text-red-600">{error}</div>
@@ -58,6 +73,7 @@ export default function RegisterPage() {
             <button
               key={r.v}
               type="button"
+              aria-pressed={form.role === r.v}
               onClick={() => setForm({ ...form, role: r.v })}
               className={`flex flex-col items-center gap-1 rounded-xl border-2 px-2 py-3 text-center transition ${
                 form.role === r.v
@@ -65,30 +81,32 @@ export default function RegisterPage() {
                   : 'border-gray-100 bg-gray-50 text-gray-500 hover:border-gray-200'
               }`}
             >
-              <span className="text-xl">{r.icon}</span>
-              <span className="text-xs font-bold leading-tight">{r.label}</span>
-              <span className="text-[10px] font-medium leading-tight opacity-70">{r.desc}</span>
+              <span className="text-xl" aria-hidden="true">{r.icon}</span>
+              <span className="text-xs font-bold leading-tight">{t(r.label)}</span>
+              <span className="text-[10px] font-medium leading-tight opacity-70">{t(r.desc)}</span>
             </button>
           ))}
         </div>
 
+        <GoogleSignIn role={form.role} onSuccess={goOn} onError={setError} />
+
         <form onSubmit={submit} className="space-y-4">
-          <Field label="Nom complet" value={form.fullName} onChange={(v) => setForm({ ...form, fullName: v })} />
-          <Field label="Email" type="email" value={form.email} onChange={(v) => setForm({ ...form, email: v })} />
-          <Field label="Téléphone" value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} required={false} />
-          <Field label="Mot de passe" type="password" value={form.password} onChange={(v) => setForm({ ...form, password: v })} />
+          <Field label={t('Nom complet')} value={form.fullName} onChange={(v) => setForm({ ...form, fullName: v })} />
+          <Field label={t('Email')} type="email" value={form.email} onChange={(v) => setForm({ ...form, email: v })} />
+          <Field label={t('Téléphone')} type="tel" value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} required={false} />
+          <Field label={t('Mot de passe')} type="password" value={form.password} onChange={(v) => setForm({ ...form, password: v })} />
           <button
             disabled={loading}
             className="w-full rounded-lg bg-brand-500 py-2.5 font-semibold text-white transition hover:bg-brand-600 disabled:opacity-60"
           >
-            {loading ? 'Création...' : 'Créer mon compte'}
+            {loading ? t('Création...') : t('Créer mon compte')}
           </button>
         </form>
 
         <p className="mt-6 text-center text-sm text-gray-500">
-          Déjà inscrit ?{' '}
+          {t('Déjà inscrit ?')}{' '}
           <Link href="/login" className="font-semibold text-brand-600">
-            Se connecter
+            {t('Se connecter')}
           </Link>
         </p>
       </div>
@@ -96,12 +114,18 @@ export default function RegisterPage() {
   );
 }
 
+const AUTOCOMPLETE = { email: 'email', password: 'new-password', tel: 'tel' };
+
 function Field({ label, value, onChange, type = 'text', required = true }) {
+  const id = useId();
   return (
     <div>
-      <label className="mb-1 block text-sm font-medium text-gray-700">{label}</label>
+      <label htmlFor={id} className="mb-1 block text-sm font-medium text-gray-700">{label}</label>
       <input
+        id={id}
         type={type}
+        autoComplete={AUTOCOMPLETE[type]}
+        minLength={type === 'password' ? 6 : undefined}
         required={required}
         value={value}
         onChange={(e) => onChange(e.target.value)}

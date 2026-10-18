@@ -9,7 +9,7 @@ import {
 } from '../controllers/hotel.controller.js';
 import { getRoomsByHotel, createRoom } from '../controllers/room.controller.js';
 import { addReview, getHotelReviews } from '../controllers/review.controller.js';
-import { protect, authorize } from '../middlewares/auth.middleware.js';
+import { protect, authorize, optionalAuth } from '../middlewares/auth.middleware.js';
 import { upload } from '../middlewares/upload.middleware.js';
 
 const router = Router();
@@ -34,7 +34,7 @@ router.post(
 router.get('/:hotelId/reviews', getHotelReviews);
 router.post('/:hotelId/reviews', protect, authorize('customer', 'owner', 'seller'), addReview);
 
-router.get('/:id', getHotel);
+router.get('/:id', optionalAuth, getHotel);
 
 // Owner CRUD
 router.post('/', protect, authorize('owner', 'admin'), upload.array('images', 10), createHotel);

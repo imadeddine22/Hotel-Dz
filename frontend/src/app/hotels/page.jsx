@@ -1,49 +1,58 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Search, SlidersHorizontal } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import HotelCard from '@/components/HotelCard';
 import api from '@/lib/api';
 import { useWilayas } from '@/hooks/useWilayas';
-import { HOTELS as MOCK_HOTELS } from '@/lib/data';
 
 import HotelsMap from '@/components/HotelsMap';
 
+import { useT } from '@/lib/i18n/useT';
+import { useInitialData } from '@/components/InitialData';
+import { COUNTRY_LIST, MULTI_COUNTRY, countryName } from '@/lib/countries';
+import { regionsFor } from '@/hooks/useWilayas';
 const TYPES = ['Luxe', 'Affaires', 'Balnéaire', 'Riad', 'Boutique', 'Montagne', 'Désert', 'Appart-hôtel', 'Économique'];
 
 export default function HotelsPage() {
+  const { t, lang } = useT();
   const { wilayas } = useWilayas();
-  const [filters, setFilters] = useState({ wilaya: '', type: '', minStars: '', q: '' });
-  const [hotels, setHotels] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [filters, setFilters] = useState({ country: '', wilaya: '', type: '', minStars: '', q: '' });
+  const initial = useInitialData();
+  const [hotels, setHotels] = useState(initial?.hotels ?? []);
+  const [loading, setLoading] = useState(!initial?.hotels);
   const [usingMock, setUsingMock] = useState(false);
   const [activeHotelId, setActiveHotelId] = useState(null);
 
+  const silentFirstFetch = useRef(Boolean(initial));
   const fetchHotels = async () => {
-    setLoading(true);
+    if (!silentFirstFetch.current) setLoading(true);
+    silentFirstFetch.current = false;
     try {
       const params = Object.fromEntries(Object.entries(filters).filter(([, v]) => v));
       const { data } = await api.get('/hotels', { params });
       setHotels(data.hotels);
       setUsingMock(false);
     } catch {
-      let list = MOCK_HOTELS;
-      if (filters.type) list = list.filter((h) => h.type === filters.type);
-      if (filters.q) list = list.filter((h) => h.name.toLowerCase().includes(filters.q.toLowerCase()));
-      if (filters.minStars) list = list.filter((h) => h.stars >= Number(filters.minStars));
-      setHotels(list);
+      setHotels([]);
       setUsingMock(true);
     } finally {
       setLoading(false);
     }
   };
 
+  // Honour /hotels?wilaya=… links (the home search and wilaya pages used to link here and were ignored)
+  useEffect(() => {
+    const w = new URLSearchParams(window.location.search).get('wilaya');
+    if (w) setFilters((f) => ({ ...f, wilaya: w }));
+  }, []);
+
   useEffect(() => {
     fetchHotels();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters.type, filters.wilaya]); // fetch automatically on filter change
+  }, [filters.type, filters.wilaya, filters.country]); // fetch automatically on filter change
 
   const normalize = (h) => ({
     id: h._id || h.id,
@@ -54,6 +63,10 @@ export default function HotelsPage() {
     rating: h.avgRating ?? h.rating ?? 0,
     reviews: h.reviewsCount ?? h.reviews ?? 0,
     price: h.price ?? 0,
+    originalPrice: h.originalPrice || null,
+    discountPercent: h.discountPercent || 0,
+    currency: h.currency || 'DZD',
+    policies: h.policies,
     img: h.images?.[0]?.url || h.img,
     amenities: h.amenities || [],
     coordinates: h.coordinates || null,
@@ -69,7 +82,7 @@ export default function HotelsPage() {
           
           {/* Header & Filters (Sticky) */}
           <div className="sticky top-0 z-10 border-b border-gray-100 bg-white p-4 sm:p-6 shadow-sm">
-            <h1 className="mb-4 text-2xl font-extrabold text-ink">Trouvez votre hôtel de rêve</h1>
+            <h1 className="mb-4 text-2xl font-extrabold text-ink">{t('Hôtels en Algérie')}</h1>
             
             <div className="flex flex-wrap items-center gap-3">
               <div className="flex flex-1 min-w-[200px] items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 bg-gray-50 focus-within:border-brand-500 focus-within:bg-white transition-colors">
@@ -78,19 +91,31 @@ export default function HotelsPage() {
                   value={filters.q}
                   onChange={(e) => setFilters({ ...filters, q: e.target.value })}
                   onKeyDown={(e) => e.key === 'Enter' && fetchHotels()}
-                  placeholder="Rechercher une destination ou un hôtel..."
+                  placeholder={t('Rechercher une destination ou un hôtel...')}
                   className="w-full outline-none bg-transparent text-sm"
                 />
               </div>
+
+              {MULTI_COUNTRY && (
+<select
+                value={filters.country}
+                onChange={(e) => setFilters({ ...filters, country: e.target.value, wilaya: '' })}
+                aria-label={t('Pays')}
+                className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 outline-none hover:border-brand-300 transition-colors"
+              >
+                <option value="">{t('Tous les pays')}</option>
+                {COUNTRY_LIST.map((c) => <option key={c.code} value={c.code}>{countryName(c.code, lang)}</option>)}
+              </select>
+)}
 
               <select
                 value={filters.wilaya}
                 onChange={(e) => setFilters({ ...filters, wilaya: e.target.value })}
                 className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 outline-none hover:border-brand-300 transition-colors"
               >
-                <option value="">Toutes les wilayas</option>
-                {wilayas.map((w) => (
-                  <option key={w} value={w}>{w}</option>
+                <option value="">{filters.country && filters.country !== 'DZ' ? t('Toutes les régions') : t('Toutes les wilayas')}</option>
+                {regionsFor(filters.country, wilayas).map((w) => (
+                  <option key={w} value={w}>{t(w)}</option>
                 ))}
               </select>
             </div>
@@ -102,15 +127,15 @@ export default function HotelsPage() {
                 onClick={() => setFilters({ ...filters, type: '' })}
                 className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${!filters.type ? 'bg-brand-500 text-white shadow-md' : 'border border-gray-200 text-gray-600 hover:bg-gray-50'}`}
               >
-                Tous
+                {t('Tous')}
               </button>
-              {TYPES.map((t) => (
+              {TYPES.map((item) => (
                 <button
-                  key={t}
-                  onClick={() => setFilters({ ...filters, type: t })}
-                  className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${filters.type === t ? 'bg-[#00bcd4] text-white shadow-md' : 'border border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+                  key={item}
+                  onClick={() => setFilters({ ...filters, type: item })}
+                  className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${filters.type === item ? 'bg-[#00bcd4] text-white shadow-md' : 'border border-gray-200 text-gray-600 hover:bg-gray-50'}`}
                 >
-                  {t}
+                  {t(item)}
                 </button>
               ))}
             </div>
@@ -120,18 +145,18 @@ export default function HotelsPage() {
           <div className="p-4 sm:p-6 bg-gray-50/30 flex-1">
             {usingMock && (
               <p className="mb-4 rounded-lg bg-amber-50 px-4 py-2 text-sm text-amber-700 border border-amber-100">
-                API hors ligne — affichage de données de démonstration.
+                {t('Impossible de charger les hôtels pour le moment. Vérifiez votre connexion et réessayez.')}
               </p>
             )}
 
             <h2 className="mb-4 text-lg font-bold text-ink flex items-center gap-2">
-              Résultats de recherche <span className="rounded bg-brand-50 px-2 py-0.5 text-sm text-brand-600">{hotels.length} propriétés</span>
+              {t('Résultats de recherche')} <span className="rounded bg-brand-50 px-2 py-0.5 text-sm text-brand-600">{hotels.length} {t('propriétés')}</span>
             </h2>
 
             {loading ? (
-              <p className="py-10 text-center text-gray-400">Recherche en cours...</p>
+              <p className="py-10 text-center text-gray-400">{t('Recherche en cours...')}</p>
             ) : hotels.length === 0 ? (
-              <p className="py-10 text-center text-gray-400">Aucun hôtel trouvé pour ces critères.</p>
+              <p className="py-10 text-center text-gray-400">{t('Aucun hôtel trouvé pour ces critères.')}</p>
             ) : (
               <div className="flex flex-col gap-5">
                 {hotels.map((h) => (

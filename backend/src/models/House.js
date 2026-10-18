@@ -1,4 +1,8 @@
+import { discountPlugin } from '../utils/pricing.js';
 import mongoose from 'mongoose';
+import { autoTranslate } from '../utils/autoTranslate.js';
+import { countryPlugin } from '../utils/countryPlugin.js';
+import { policiesPlugin } from '../utils/policies.js';
 
 const houseSchema = new mongoose.Schema(
   {
@@ -43,13 +47,22 @@ const houseSchema = new mongoose.Schema(
       index: true,
     },
     rejectionReason: { type: String, default: '' },
-    avgRating: { type: Number, default: 0 },
+    avgRating: { type: Number, default: 0 }, // out of 10
     reviewsCount: { type: Number, default: 0 },
+    // Category averages (/10) from reviews: cleanliness, location, value, staff, comfort
+    scores: { type: mongoose.Schema.Types.Mixed, default: {} },
   },
   { timestamps: true }
 );
 
 houseSchema.index({ wilaya: 1, status: 1 });
+
+// Name/description/amenities are machine-translated into the other site languages after each save
+export const TRANSLATED_FIELDS = ['name', 'description', 'amenities'];
+countryPlugin(houseSchema);
+policiesPlugin(houseSchema);
+discountPlugin(houseSchema);
+autoTranslate(houseSchema, TRANSLATED_FIELDS);
 
 const House = mongoose.model('House', houseSchema);
 export default House;

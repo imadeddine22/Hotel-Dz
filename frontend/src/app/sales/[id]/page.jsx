@@ -2,18 +2,29 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { MapPin, Phone, Mail, ArrowLeft, Eye, Home, Ruler, DoorOpen, Bath, Tag, ChevronLeft, ChevronRight, User } from 'lucide-react';
+import Link from '@/components/LocaleLink';
+import { MapPin, Phone, Mail, ArrowLeft, Eye, Home, Ruler, DoorOpen, Bath, Tag, ChevronLeft, ChevronRight, User, MessageCircle, Calculator } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import api, { getImageUrl } from '@/lib/api';
 import { formatDZD } from '@/lib/data';
+import { monthlyPayment } from '@/components/tools/MortgageCalculator';
+
+import { useT } from '@/lib/i18n/useT';
+import { useInitialData } from '@/components/InitialData';
+/** "0552 22 22 22" → "213552222222" for wa.me links */
+const waNumber = (phone) => {
+  const d = String(phone || '').replace(/\D/g, '');
+  return d.startsWith('213') ? d : d.startsWith('0') ? `213${d.slice(1)}` : `213${d}`;
+};
 
 export default function SaleDetailPage() {
+  const { t } = useT();
   const { id } = useParams();
   const router = useRouter();
-  const [listing, setListing] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const initial = useInitialData();
+  const [listing, setListing] = useState(initial?.listing ?? null);
+  const [loading, setLoading] = useState(!initial?.listing);
   const [imgIdx, setImgIdx] = useState(0);
 
   useEffect(() => {
@@ -22,7 +33,7 @@ export default function SaleDetailPage() {
         const { data } = await api.get(`/sales/${id}`);
         setListing(data.listing);
       } catch {
-        router.push('/sales');
+        if (!initial?.listing) router.push('/sales');
       } finally {
         setLoading(false);
       }
@@ -34,7 +45,7 @@ export default function SaleDetailPage() {
     return (
       <>
         <Navbar />
-        <div className="min-h-screen flex items-center justify-center text-gray-400">Chargement...</div>
+        <div className="min-h-screen flex items-center justify-center text-gray-400">{t('Chargement...')}</div>
       </>
     );
   }
@@ -54,7 +65,7 @@ export default function SaleDetailPage() {
             onClick={() => router.back()}
             className="inline-flex items-center gap-2 text-sm font-semibold text-gray-500 hover:text-gray-700 transition mb-6"
           >
-            <ArrowLeft className="h-4 w-4" /> Retour
+            <ArrowLeft className="h-4 w-4" /> {t('Retour')}
           </button>
         </div>
 
@@ -68,7 +79,7 @@ export default function SaleDetailPage() {
                   <>
                     <img
                       src={getImageUrl(images[imgIdx]?.url)}
-                      alt={listing.title}
+                      alt={t(listing.title)}
                       className="h-full w-full object-cover"
                     />
                     {images.length > 1 && (
@@ -126,18 +137,21 @@ export default function SaleDetailPage() {
                 <div className="flex items-start justify-between mb-4">
                   <div>
                     <div className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-600 mb-3">
-                      <Tag className="h-3 w-3" /> {listing.type} · À vendre
+                      <Tag className="h-3 w-3" /> {t(listing.type)} {t('· À vendre')}
                     </div>
-                    <h1 className="text-2xl font-extrabold text-gray-900 mb-2">{listing.title}</h1>
+                    <h1 className="text-2xl font-extrabold text-gray-900 mb-2">{t(listing.title)}</h1>
                     <p className="text-sm text-gray-500 flex items-center gap-1">
                       <MapPin className="h-4 w-4 text-emerald-500" />
-                      {listing.address && `${listing.address}, `}{listing.city}, {listing.wilaya}
+                      {listing.address && `${listing.address}, `}{t(listing.city)}, {t(listing.wilaya)}
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-2xl font-extrabold text-emerald-600">{formatDZD(listing.price)}</p>
+                    <p className="text-2xl font-extrabold text-emerald-600">{formatDZD(listing.price, listing.currency)}</p>
+                    {listing.area > 0 && (
+                      <p className="text-xs font-semibold text-gray-500">{formatDZD(Math.round(listing.price / listing.area), listing.currency)} / {t('m²')}</p>
+                    )}
                     <p className="text-xs text-gray-400 flex items-center justify-end gap-1 mt-1">
-                      <Eye className="h-3 w-3" /> {listing.views} vues
+                      <Eye className="h-3 w-3" /> {listing.views} {t('vues')}
                     </p>
                   </div>
                 </div>
@@ -147,31 +161,31 @@ export default function SaleDetailPage() {
                   {listing.area > 0 && (
                     <div className="rounded-xl bg-gray-50 p-3 text-center">
                       <Ruler className="h-5 w-5 text-emerald-500 mx-auto mb-1" />
-                      <p className="text-sm font-bold text-gray-900">{listing.area} m²</p>
-                      <p className="text-[10px] text-gray-400">Surface</p>
+                      <p className="text-sm font-bold text-gray-900">{listing.area} {t('m²')}</p>
+                      <p className="text-[10px] text-gray-400">{t('Surface')}</p>
                     </div>
                   )}
                   <div className="rounded-xl bg-gray-50 p-3 text-center">
                     <DoorOpen className="h-5 w-5 text-emerald-500 mx-auto mb-1" />
                     <p className="text-sm font-bold text-gray-900">{listing.rooms}</p>
-                    <p className="text-[10px] text-gray-400">Pièces</p>
+                    <p className="text-[10px] text-gray-400">{t('Pièces')}</p>
                   </div>
                   <div className="rounded-xl bg-gray-50 p-3 text-center">
                     <Bath className="h-5 w-5 text-emerald-500 mx-auto mb-1" />
                     <p className="text-sm font-bold text-gray-900">{listing.bathrooms}</p>
-                    <p className="text-[10px] text-gray-400">Salles de bain</p>
+                    <p className="text-[10px] text-gray-400">{t('Salles de bain')}</p>
                   </div>
                   <div className="rounded-xl bg-gray-50 p-3 text-center">
                     <Home className="h-5 w-5 text-emerald-500 mx-auto mb-1" />
-                    <p className="text-sm font-bold text-gray-900">{listing.type}</p>
-                    <p className="text-[10px] text-gray-400">Type</p>
+                    <p className="text-sm font-bold text-gray-900">{t(listing.type)}</p>
+                    <p className="text-[10px] text-gray-400">{t('Type')}</p>
                   </div>
                 </div>
 
                 {/* Description */}
                 {listing.description && (
                   <div className="mb-6">
-                    <h3 className="font-bold text-gray-900 mb-2">Description</h3>
+                    <h3 className="font-bold text-gray-900 mb-2">{t('Description')}</h3>
                     <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">{listing.description}</p>
                   </div>
                 )}
@@ -179,7 +193,7 @@ export default function SaleDetailPage() {
                 {/* Amenities */}
                 {listing.amenities?.length > 0 && (
                   <div>
-                    <h3 className="font-bold text-gray-900 mb-3">Équipements</h3>
+                    <h3 className="font-bold text-gray-900 mb-3">{t('Équipements')}</h3>
                     <div className="flex flex-wrap gap-2">
                       {listing.amenities.map((a, i) => (
                         <span key={i} className="rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700">
@@ -195,16 +209,16 @@ export default function SaleDetailPage() {
             {/* Right: Contact Card */}
             <div className="space-y-6">
               <div className="rounded-2xl bg-white p-6 shadow-sm border border-gray-100 sticky top-24">
-                <h3 className="font-bold text-gray-900 mb-4">Contacter le vendeur</h3>
+                <h3 className="font-bold text-gray-900 mb-4">{t('Contacter le vendeur')}</h3>
                 
                 {/* Seller Info */}
                 <div className="flex items-center gap-3 mb-6 p-3 rounded-xl bg-gray-50">
                   <div className="grid h-12 w-12 place-items-center rounded-full bg-gradient-to-tr from-emerald-500 to-teal-500 text-white font-bold">
-                    {seller.fullName?.charAt(0)?.toUpperCase() || 'V'}
+                    {seller.fullName?.charAt(0)?.toUpperCase() || t('V')}
                   </div>
                   <div>
-                    <p className="font-bold text-gray-900">{seller.fullName || 'Vendeur'}</p>
-                    <p className="text-xs text-gray-400">Vendeur vérifié</p>
+                    <p className="font-bold text-gray-900">{seller.fullName || t('Vendeur')}</p>
+                    <p className="text-xs text-gray-400">{t('Vendeur vérifié')}</p>
                   </div>
                 </div>
 
@@ -219,6 +233,18 @@ export default function SaleDetailPage() {
                   </a>
                 )}
 
+                {(listing.contactPhone || seller.phone) && (
+                  <a
+                    href={`https://wa.me/${waNumber(listing.contactPhone || seller.phone)}?text=${encodeURIComponent(`${t('Bonjour, votre annonce m’intéresse')} : ${listing.title} (${listing.reference || ''})`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 w-full rounded-xl bg-[#25D366] px-5 py-3.5 font-bold text-white shadow-md hover:bg-[#1fb857] transition mb-3"
+                  >
+                    <MessageCircle className="h-5 w-5" />
+                    <span>WhatsApp</span>
+                  </a>
+                )}
+
                 {(listing.contactEmail || seller.email) && (
                   <a
                     href={`mailto:${listing.contactEmail || seller.email}`}
@@ -229,9 +255,17 @@ export default function SaleDetailPage() {
                   </a>
                 )}
 
+                <Link
+                  href={`/outils/simulateur-credit-immobilier?price=${listing.price}`}
+                  className="mt-4 flex items-center justify-between gap-3 rounded-xl border border-emerald-100 bg-emerald-50 px-5 py-3.5 text-sm font-semibold text-emerald-800 transition hover:bg-emerald-100"
+                >
+                  <span className="flex items-center gap-2"><Calculator className="h-5 w-5" /> {t('Calculer ma mensualité')}</span>
+                  <span className="text-xs font-bold">≈ {formatDZD(Math.round(monthlyPayment(listing.price * 0.8, 6, 20) / 100) * 100, listing.currency)} / {t('mois')}</span>
+                </Link>
+
                 <div className="mt-6 p-4 rounded-xl bg-amber-50 border border-amber-100">
                   <p className="text-xs text-amber-700 font-medium">
-                    💡 Conseil : Vérifiez toujours le bien en personne avant tout engagement financier.
+                    {t('💡 Conseil : Vérifiez toujours le bien en personne avant tout engagement financier.')}
                   </p>
                 </div>
               </div>

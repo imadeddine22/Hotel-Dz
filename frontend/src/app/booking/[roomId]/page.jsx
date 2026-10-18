@@ -2,17 +2,22 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Calendar, Users, ShieldCheck, CreditCard, AlertCircle } from 'lucide-react';
+import { Calendar, Users, Send, Info, AlertCircle } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import api from '@/lib/api';
+import { ROOM_TYPE_LABELS } from '@/lib/statusLabels';
 import { formatDZD } from '@/lib/data';
+import { useAuthStore } from '@/store/authStore';
 
+import { useT } from '@/lib/i18n/useT';
+import { cancellationText } from '@/components/Policies';
+import { effectivePrice } from '@/lib/scores';
 const todayStr = () => new Date().toISOString().split('T')[0];
 const MS_DAY   = 86400000;
-const COMMISSION = 0.10;
 
 export default function BookingPage() {
+  const { t } = useT();
   const { roomId } = useParams();
   const router     = useRouter();
 
@@ -38,26 +43,28 @@ export default function BookingPage() {
   const nights     = form.checkIn && form.checkOut
     ? Math.max(0, Math.round((new Date(form.checkOut) - new Date(form.checkIn)) / MS_DAY))
     : 0;
-  const baseAmount  = room ? nights * room.pricePerNight : 0;
-  const platformFee = Math.round(baseAmount * COMMISSION);
-  const totalAmount = baseAmount + platformFee;
+  // No online payment: the guest pays this amount on site, once the owner has accepted the request
+  const deal = room ? effectivePrice(room) : { price: 0 };
+  const totalAmount = room ? nights * deal.price : 0;
 
-  const pay = async (e) => {
+  const sendRequest = async (e) => {
     e.preventDefault();
     setError('');
-    if (nights < 1) return setError('Sélectionnez des dates valides.');
+    if (nights < 1) return setError(t('Sélectionnez des dates valides.'));
+    // Visitors must log in first; come back to this page afterwards instead of showing a 401 error
+    if (!useAuthStore.getState().user && !localStorage.getItem('token')) {
+      router.push(`/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`);
+      return;
+    }
     setSubmitting(true);
     try {
-      const { data: bookingRes } = await api.post('/bookings', {
+      const { data } = await api.post('/bookings', {
         roomId,
         checkIn:  form.checkIn,
         checkOut: form.checkOut,
         guests:   Number(form.guests),
       });
-      const { data: payRes } = await api.post('/payments/checkout', {
-        bookingId: bookingRes.booking._id,
-      });
-      window.location.href = payRes.url;
+      router.push(data?.booking?.status === 'confirmed' ? '/my-bookings?confirmed=1' : '/my-bookings?requested=1');
     } catch (err) {
       setError(err.response?.data?.message || err.message);
       setSubmitting(false);
@@ -71,8 +78,8 @@ export default function BookingPage() {
       {/* Header */}
       <section className="bg-gradient-to-r from-brand-600 to-cyan-500 py-10 text-white">
         <div className="mx-auto max-w-3xl px-4 sm:px-6">
-          <h1 className="text-3xl font-extrabold">Finaliser la réservation</h1>
-          <p className="mt-1 text-brand-50 text-sm">Paiement sécurisé via Chargily Pay</p>
+          <h1 className="text-3xl font-extrabold">{t('Finaliser la réservation')}</h1>
+          <p className="mt-1 text-brand-50 text-sm">{t('Demande de réservation · paiement sur place à l\'arrivée')}</p>
         </div>
       </section>
 
@@ -84,15 +91,15 @@ export default function BookingPage() {
         ) : !room ? (
           <div className="flex items-center gap-3 rounded-2xl bg-red-50 px-5 py-4 text-red-600">
             <AlertCircle className="h-5 w-5 shrink-0" />
-            {error || 'Chambre introuvable.'}
+            {error || t('Chambre introuvable.')}
           </div>
         ) : (
           <div className="grid gap-6 md:grid-cols-5">
 
             {/* ── Form (3/5) ── */}
-            <form onSubmit={pay} className="md:col-span-3 rounded-3xl bg-white p-7 shadow-card">
-              <h2 className="mb-1 text-lg font-bold text-ink">{room.title}</h2>
-              <p className="mb-6 text-sm text-gray-400">{room.type} · jusqu&apos;à {room.capacity} pers.</p>
+            <form onSubmit={sendRequest} className="md:col-span-3 rounded-3xl bg-white p-7 shadow-card">
+              <h2 className="mb-1 text-lg font-bold text-ink">{t(room.title)}</h2>
+              <p className="mb-6 text-sm text-gray-400">{ROOM_TYPE_LABELS[room.type] || room.type} {t('· jusqu\'à')} {room.capacity} {t('pers.')}</p>
 
               {error && (
                 <div className="mb-4 flex items-center gap-2 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
@@ -101,10 +108,11 @@ export default function BookingPage() {
               )}
 
               {/* Check-in */}
-              <label className="mb-1.5 block text-sm font-medium text-gray-700">Date d&apos;arrivée</label>
+              <label htmlFor="bk-checkin" className="mb-1.5 block text-sm font-medium text-gray-700">{t('Date d\'arrivée')}</label>
               <div className="mb-4 flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-3 focus-within:border-brand-400 focus-within:ring-2 focus-within:ring-brand-100 transition">
                 <Calendar className="h-4 w-4 text-gray-400" />
                 <input
+                  id="bk-checkin"
                   type="date" min={todayStr()} required value={form.checkIn}
                   onChange={(e) => setForm({ ...form, checkIn: e.target.value })}
                   className="w-full bg-transparent py-3 outline-none text-sm"
@@ -112,10 +120,11 @@ export default function BookingPage() {
               </div>
 
               {/* Check-out */}
-              <label className="mb-1.5 block text-sm font-medium text-gray-700">Date de départ</label>
+              <label htmlFor="bk-checkout" className="mb-1.5 block text-sm font-medium text-gray-700">{t('Date de départ')}</label>
               <div className="mb-4 flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-3 focus-within:border-brand-400 focus-within:ring-2 focus-within:ring-brand-100 transition">
                 <Calendar className="h-4 w-4 text-gray-400" />
                 <input
+                  id="bk-checkout"
                   type="date" min={form.checkIn || todayStr()} required value={form.checkOut}
                   onChange={(e) => setForm({ ...form, checkOut: e.target.value })}
                   className="w-full bg-transparent py-3 outline-none text-sm"
@@ -123,17 +132,18 @@ export default function BookingPage() {
               </div>
 
               {/* Guests */}
-              <label className="mb-1.5 block text-sm font-medium text-gray-700">Voyageurs</label>
+              <label htmlFor="bk-guests" className="mb-1.5 block text-sm font-medium text-gray-700">{t('Voyageurs')}</label>
               <div className="mb-6 flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-3 focus-within:border-brand-400 focus-within:ring-2 focus-within:ring-brand-100 transition">
                 <Users className="h-4 w-4 text-gray-400" />
                 <input
+                  id="bk-guests"
                   type="number" min={1} max={room.capacity} required value={form.guests}
                   onChange={(e) => setForm({ ...form, guests: e.target.value })}
                   className="w-full bg-transparent py-3 outline-none text-sm"
                 />
               </div>
 
-              {/* Pay button */}
+              {/* Submit request */}
               <button
                 disabled={submitting || nights < 1}
                 className="relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-brand-500 to-cyan-400 py-3.5 font-bold text-white shadow-md transition hover:shadow-lg disabled:opacity-60"
@@ -141,59 +151,48 @@ export default function BookingPage() {
                 {submitting ? (
                   <span className="flex items-center justify-center gap-2">
                     <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
-                    Redirection vers Chargily…
+                    {t('Envoi de la demande…')}
                   </span>
                 ) : (
                   <span className="flex items-center justify-center gap-2">
-                    <CreditCard className="h-5 w-5" />
-                    Payer {nights > 0 ? formatDZD(totalAmount) : ''} via Chargily
+                    <Send className="h-5 w-5" />
+                    {room?.hotel?.policies?.instantBooking ? t('Réserver maintenant') : t('Envoyer la demande de réservation')}
                   </span>
                 )}
               </button>
 
-              {/* Payment badges */}
-              <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
-                <span className="flex items-center gap-1.5 rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600">
-                  <ShieldCheck className="h-3.5 w-3.5 text-green-500" /> Paiement sécurisé
-                </span>
-                <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700">💳 CIB</span>
-                <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-bold text-green-700">📱 EDAHABIA</span>
-                <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-500">🔒 Chargily Pay</span>
+              {/* How it works */}
+              <div className="mt-4 flex gap-2 rounded-xl bg-brand-50 px-4 py-3 text-xs leading-relaxed text-gray-600">
+                <Info className="mt-0.5 h-4 w-4 shrink-0 text-brand-500" aria-hidden="true" />
+                <p>
+                  {room?.hotel?.policies?.instantBooking
+                    ? t('Réservation instantanée : elle est confirmée immédiatement, sans attendre le propriétaire. Vous réglez')
+                    : t('Aucun paiement en ligne. Le propriétaire accepte ou refuse votre demande (sous 48 h au plus), puis vous réglez')}{' '}
+                  {nights > 0 ? formatDZD(totalAmount, room?.hotel?.currency) : t('le séjour')} {t('directement sur place à l\'arrivée.')}
+                  <span className="mt-1 block font-semibold">{cancellationText(t, room?.hotel?.policies)}</span>
+                </p>
               </div>
             </form>
 
             {/* ── Summary (2/5) ── */}
             <div className="md:col-span-2 h-fit rounded-3xl bg-white p-7 shadow-card">
-              <h2 className="mb-5 font-bold text-ink">Récapitulatif</h2>
+              <h2 className="mb-5 font-bold text-ink">{t('Récapitulatif')}</h2>
 
-              <Row label="Prix / nuit"    value={formatDZD(room.pricePerNight)} />
-              <Row label="Nuits"          value={nights || '—'} />
-              <Row label="Voyageurs"      value={form.guests} />
+              <Row label={t('Prix / nuit')}    value={deal.discountPercent ? `${formatDZD(deal.price, room.hotel?.currency)} (-${deal.discountPercent} %)` : formatDZD(deal.price, room.hotel?.currency)} />
+              <Row label={t('Nuits')}          value={nights || '—'} />
+              <Row label={t('Voyageurs')}      value={form.guests} />
 
               <div className="my-4 border-t border-dashed border-gray-100" />
-
-              <Row label="Sous-total"     value={nights > 0 ? formatDZD(baseAmount) : '—'} />
-              <div className="flex items-center justify-between py-1.5 text-sm">
-                <span className="text-amber-600 font-medium">Frais de service (10%)</span>
-                <span className="font-semibold text-amber-600">
-                  {nights > 0 ? `+ ${formatDZD(platformFee)}` : '—'}
-                </span>
-              </div>
 
               <div className="my-4 border-t border-gray-200" />
 
               <div className="flex items-center justify-between">
-                <span className="font-bold text-ink">Total à payer</span>
+                <span className="font-bold text-ink">{t('Total à régler sur place')}</span>
                 <span className="text-xl font-extrabold text-brand-600">
-                  {nights > 0 ? formatDZD(totalAmount) : '—'}
+                  {nights > 0 ? formatDZD(totalAmount, room.hotel?.currency) : '—'}
                 </span>
               </div>
 
-              {nights > 0 && (
-                <p className="mt-2 text-center text-[11px] text-gray-400">
-                  dont {formatDZD(platformFee)} de frais de service HotelsDZ
-                </p>
-              )}
             </div>
           </div>
         )}

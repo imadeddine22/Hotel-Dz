@@ -1,18 +1,31 @@
 'use client';
 
-import { useRef } from 'react';
-import Link from 'next/link';
+import { useEffect, useRef, useState } from 'react';
+import Link from '@/components/LocaleLink';
 import { Star, ChevronLeft, ChevronRight, MapPin, Plus } from 'lucide-react';
-import { FEATURED, TRANSLATIONS } from '@/lib/data';
-import { useAuthStore, useLangStore } from '@/store/authStore';
+import api, { getImageUrl } from '@/lib/api';
+import { useAuthStore } from '@/store/authStore';
 import FavoriteButton from '@/components/FavoriteButton';
+import { useT } from '@/lib/i18n/useT';
 
 export default function FeaturedHotels() {
   const scroller = useRef(null);
   const user = useAuthStore((s) => s.user);
-  const { lang } = useLangStore();
-  const t = TRANSLATIONS[lang] || TRANSLATIONS.fr;
+  const { t, lang } = useT();
   const isOwner = user?.role === 'owner';
+  const [hotels, setHotels] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Best-rated approved hotels from the API (previously hard-coded demo data with dead links)
+  useEffect(() => {
+    api
+      .get('/hotels', { params: { limit: 8, sort: 'rating' } })
+      .then(({ data }) => setHotels(data.hotels || []))
+      .catch(() => setHotels([]))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (!loading && hotels.length === 0) return null;
 
   const scroll = (dir) => {
     scroller.current?.scrollBy({ left: dir * 380, behavior: 'smooth' });
@@ -21,7 +34,7 @@ export default function FeaturedHotels() {
   return (
     <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
       {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <span className="grid h-12 w-12 place-items-center rounded-full bg-gradient-to-br bg-brand-500 text-white text-white shadow">
             <Star className="h-6 w-6 fill-white" />
@@ -54,7 +67,7 @@ export default function FeaturedHotels() {
         <button
           onClick={() => scroll(-1)}
           className="absolute -left-3 top-1/2 z-10 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-white shadow-lg hover:bg-gray-50"
-          aria-label="Précédent"
+          aria-label={t('Précédent')}
         >
           <ChevronLeft className="h-5 w-5" />
         </button>
@@ -63,15 +76,20 @@ export default function FeaturedHotels() {
           ref={scroller}
           className="no-scrollbar flex snap-x gap-5 overflow-x-auto scroll-smooth pb-2"
         >
-          {FEATURED.map((h) => (
+          {loading &&
+            Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="h-72 w-80 shrink-0 animate-pulse rounded-2xl bg-gray-200" aria-hidden="true" />
+            ))}
+          {hotels.map((h) => (
             <div
-              key={h.id}
+              key={h._id}
               className="group relative h-72 w-80 shrink-0 snap-start overflow-hidden rounded-2xl shadow-card"
             >
-              <Link href={`/hotels/${h.id}`} className="absolute inset-0 block">
+              <Link href={`/hotels/${h._id}`} className="absolute inset-0 block">
                 <img
-                  src={h.img}
+                  src={getImageUrl(h.images?.[0]) || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80'}
                   alt={h.name}
+                  loading="lazy"
                   className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
                 />
                 <span className="absolute left-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-gradient-to-br bg-brand-500 text-white text-white shadow">
@@ -80,12 +98,12 @@ export default function FeaturedHotels() {
                 <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-4">
                   <h3 className="text-lg font-bold text-white">{h.name}</h3>
                   <p className="flex items-center gap-1 text-sm text-gray-200">
-                    <MapPin className="h-4 w-4" /> {h.city}
+                    <MapPin className="h-4 w-4" /> {t(h.city)}
                   </p>
                 </div>
               </Link>
               <div className="absolute right-3 top-3 z-10">
-                <FavoriteButton type="hotel" id={h.id} />
+                <FavoriteButton type="hotel" id={h._id} />
               </div>
             </div>
           ))}
@@ -94,7 +112,7 @@ export default function FeaturedHotels() {
         <button
           onClick={() => scroll(1)}
           className="absolute -right-3 top-1/2 z-10 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-white shadow-lg hover:bg-gray-50"
-          aria-label="Suivant"
+          aria-label={t('Suivant')}
         >
           <ChevronRight className="h-5 w-5" />
         </button>

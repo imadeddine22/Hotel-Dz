@@ -1,335 +1,224 @@
-'use client';
+import Link from '@/components/LocaleLink';
+import { permanentRedirect } from 'next/navigation';
+import WilayaClient from './WilayaClient';
+import { apiGet, breadcrumbLd, faqLd, formatDZD, JsonLd, SITE_URL } from '@/lib/seo';
+import { getWilayaInfo, getNeighbourWilayas, wilayaPath } from '@/lib/wilayaInfo';
 
-import { useEffect, useState, useMemo } from 'react';
-import { useParams } from 'next/navigation';
-import { Search, SlidersHorizontal, Hotel, Home, MapPin, ArrowLeft, Loader2 } from 'lucide-react';
-import Link from 'next/link';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
-import HotelCard from '@/components/HotelCard';
-import HouseCard from '@/components/HouseCard';
-import api from '@/lib/api';
+import T from '@/components/T';
+import { translate } from '@/lib/i18n';
+import { getT, pageMeta } from '@/lib/i18n/server';
+import { localePath } from '@/lib/i18n/locale';
+const median = (nums) => {
+  const s = nums.filter((n) => n > 0).sort((a, b) => a - b);
+  if (!s.length) return 0;
+  const m = Math.floor(s.length / 2);
+  return s.length % 2 ? s[m] : Math.round((s[m - 1] + s[m]) / 2);
+};
 
-const HOTEL_TYPES = ['Luxe', 'Affaires', 'Balnéaire', 'Riad', 'Boutique', 'Montagne', 'Désert', 'Appart-hôtel', 'Économique'];
-const HOUSE_TYPES = ['Villa', 'Appartement', 'Maison', 'Chalet', 'Studio', 'Duplex', 'Riad', 'Ferme'];
+// Live, per-wilaya numbers: these are what make each destination page unique.
+async function getWilayaStats(name) {
+  const q = encodeURIComponent(name);
+  const [hotels, houses, sales] = await Promise.all([
+    apiGet(`/hotels?wilaya=${q}&limit=50`),
+    apiGet(`/houses?wilaya=${q}&limit=50`),
+    apiGet(`/sales?wilaya=${q}&limit=50`),
+  ]);
+  const hotelList = hotels?.hotels || [];
+  const rated = hotelList.filter((h) => h.reviewsCount > 0);
+  return {
+    reachable: Boolean(hotels || houses || sales),
+    hotels: hotels?.total ?? hotelList.length,
+    houses: houses?.total ?? houses?.houses?.length ?? 0,
+    sales: sales?.total ?? sales?.listings?.length ?? 0,
+    medianNight: median((houses?.houses || []).map((h) => h.pricePerNight)),
+    medianSale: median((sales?.listings || []).map((l) => l.price)),
+    topHotel: rated.sort((a, b) => b.avgRating - a.avgRating)[0] || null,
+    cities: [...new Set([...hotelList, ...(houses?.houses || [])].map((x) => x.city).filter(Boolean))].slice(0, 8),
+  };
+}
 
-export default function WilayaPage() {
-  const params = useParams();
-  const wilayaName = decodeURIComponent(params.wilaya);
+// Each FAQ entry is a translation key + values, so it can be shown in the visitor's language
+// (<T k vars />); the French text built from the same key feeds the JSON-LD for search engines.
+function buildFaqs(name, info, s) {
+  const msg = (k, vars) => ({ k, vars });
+  const faqs = [
+    {
+      q: msg("Combien d'hôtels sont disponibles à {name} sur Meskan ?", { name }),
+      a: s.hotels
+        ? msg("Meskan référence actuellement {n} hôtel(s) vérifié(s) dans la wilaya de {name}, réservables en ligne gratuitement, avec paiement sur place à l'arrivée.", { n: s.hotels, name })
+        : msg("Aucun hôtel n'est encore publié à {name}. Les hôteliers de la wilaya peuvent inscrire leur établissement gratuitement sur Meskan.", { name }),
+    },
+    {
+      q: msg("Quel est le prix d'une location de maison à {name} ?", { name }),
+      a: s.medianNight
+        ? msg("Le prix médian d'une maison ou d'un appartement en location à {name} est de {price} par nuit, calculé sur les {n} annonces publiées sur Meskan.", { name, price: formatDZD(s.medianNight), n: s.houses })
+        : msg("Il n'y a pas encore assez d'annonces de location à {name} pour calculer un prix moyen. Consultez la page régulièrement : de nouvelles maisons sont ajoutées chaque semaine.", { name }),
+    },
+    {
+      q: msg('Peut-on acheter un bien immobilier à {name} via Meskan ?', { name }),
+      a: s.sales
+        ? s.medianSale
+          ? msg('Oui, {n} bien(s) à vendre publié(s) à {name}, pour un prix médian de {price}. Chaque annonce est validée par notre équipe et le vendeur est contactable directement.', { n: s.sales, name, price: formatDZD(s.medianSale) })
+          : msg('Oui, {n} bien(s) à vendre publié(s) à {name}. Chaque annonce est validée par notre équipe et le vendeur est contactable directement.', { n: s.sales, name })
+        : msg("Aucun bien n'est actuellement en vente à {name}. Les vendeurs peuvent publier une annonce après inscription sur Meskan.", { name }),
+    },
+  ];
+  if (info) {
+    faqs.push({
+      q: msg('Quand partir à {name} ?', { name }),
+      a: msg('{name} (wilaya n°{code}) fait partie de la région {region}. {blurb}', { name, code: info.code, region: info.region.label, blurb: info.region.blurb }),
+    });
+  }
+  return faqs;
+}
 
-  const [hotels, setHotels] = useState([]);
-  const [houses, setHouses] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState('all'); // all | hotels | houses
-  const [typeFilter, setTypeFilter] = useState('');
-  const [searchQ, setSearchQ] = useState('');
+const fr = (m) => translate('fr', m.k, m.vars);
 
-  // Fetch hotels & houses for this wilaya
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const [hotelsRes, housesRes] = await Promise.all([
-          api.get('/hotels', { params: { wilaya: wilayaName, limit: 50 } }).catch(() => ({ data: { hotels: [] } })),
-          api.get('/houses', { params: { wilaya: wilayaName, limit: 50 } }).catch(() => ({ data: { houses: [] } })),
-        ]);
-        setHotels(hotelsRes.data.hotels || []);
-        setHouses(housesRes.data.houses || []);
-      } catch {
-        setHotels([]);
-        setHouses([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, [wilayaName]);
+export async function generateMetadata({ params }) {
+  const name = decodeURIComponent(params.wilaya);
+  const info = getWilayaInfo(name);
+  const displayName = info?.name || name;
+  const s = await getWilayaStats(displayName);
+  const total = s.hotels + s.houses + s.sales;
 
-  // Normalize hotel for HotelCard
-  const normalizeHotel = (h) => ({
-    id: h._id || h.id,
-    name: h.name,
-    city: h.city,
-    type: h.type,
-    stars: h.starRating ?? h.stars ?? 3,
-    rating: h.avgRating ?? h.rating ?? 0,
-    reviews: h.reviewsCount ?? h.reviews ?? 0,
-    price: h.price ?? 0,
-    img: h.images?.[0]?.url || h.img,
-    amenities: h.amenities || [],
-    coordinates: h.coordinates || null,
+  const { t } = getT();
+  const place = t(displayName);
+  const parts = [];
+  if (s.hotels) parts.push(t(s.hotels > 1 ? '{n} hôtels' : '{n} hôtel', { n: s.hotels }));
+  if (s.houses) parts.push(t(s.houses > 1 ? '{n} maisons à louer' : '{n} maison à louer', { n: s.houses }));
+  if (s.sales) parts.push(t(s.sales > 1 ? '{n} biens à vendre' : '{n} bien à vendre', { n: s.sales }));
+
+  return pageMeta({
+    path: wilayaPath(displayName),
+    title: t('Hôtels, locations et maisons à vendre à {name}', { name: place }),
+    description: parts.length
+      ? t('{parts} à {name}. Comparez les prix, lisez les avis et réservez gratuitement en ligne, paiement sur place, sur Meskan.', { parts: parts.join(', '), name: place })
+      : t('Trouvez un hôtel, une maison à louer ou un bien à acheter à {name}. Réservation en ligne gratuite et paiement sur place sur Meskan.', { name: place }),
+    // Unknown wilaya, or no listings and no editorial content: keep it out of the index.
+    robots: !info || (s.reachable && total === 0 && !info.highlights.length) ? { index: false, follow: true } : undefined,
   });
+}
 
-  // Normalize house for HouseCard
-  const normalizeHouse = (h) => ({
-    _id: h._id || h.id,
-    name: h.name,
-    city: h.city,
-    wilaya: h.wilaya,
-    type: h.type,
-    rooms: h.rooms,
-    bathrooms: h.bathrooms,
-    capacity: h.capacity,
-    pricePerNight: h.pricePerNight ?? h.price ?? 0,
-    images: h.images || (h.img ? [{ url: h.img }] : []),
-  });
-
-  // Current types based on tab
-  const currentTypes = useMemo(() => {
-    if (tab === 'hotels') return HOTEL_TYPES;
-    if (tab === 'houses') return HOUSE_TYPES;
-    return [...new Set([...HOTEL_TYPES, ...HOUSE_TYPES])];
-  }, [tab]);
-
-  // Filtered results
-  const filteredHotels = useMemo(() => {
-    if (tab === 'houses') return [];
-    let list = hotels;
-    if (typeFilter) list = list.filter((h) => h.type === typeFilter);
-    if (searchQ) list = list.filter((h) => h.name.toLowerCase().includes(searchQ.toLowerCase()));
-    return list;
-  }, [hotels, tab, typeFilter, searchQ]);
-
-  const filteredHouses = useMemo(() => {
-    if (tab === 'hotels') return [];
-    let list = houses;
-    if (typeFilter) list = list.filter((h) => h.type === typeFilter);
-    if (searchQ) list = list.filter((h) => h.name.toLowerCase().includes(searchQ.toLowerCase()));
-    return list;
-  }, [houses, tab, typeFilter, searchQ]);
-
-  const totalResults = filteredHotels.length + filteredHouses.length;
+export default async function WilayaPage({ params }) {
+  const name = decodeURIComponent(params.wilaya);
+  const info = getWilayaInfo(name);
+  const displayName = info?.name || name;
+  const s = await getWilayaStats(displayName);
+  // One URL per wilaya: /destinations/Béjaïa, /destinations/BEJAIA… → 301 /destinations/bejaia
+  if (info && `/destinations/${params.wilaya}` !== wilayaPath(info.name)) permanentRedirect(localePath(getT().lang, wilayaPath(info.name)));
+  const faqs = buildFaqs(displayName, info, s);
+  const neighbours = getNeighbourWilayas(displayName);
 
   return (
-    <main style={{ minHeight: '100vh', background: '#f8fafc' }}>
-      <Navbar />
+    <WilayaClient wilayaName={displayName}>
+      <JsonLd
+        data={[
+          breadcrumbLd([
+            { name: 'Accueil', path: '/' },
+            { name: 'Destinations', path: '/destinations' },
+            { name: displayName, path: wilayaPath(displayName) },
+          ]),
+          faqLd(faqs.map((f) => ({ q: fr(f.q), a: fr(f.a) }))),
+        ]}
+      />
 
-      {/* Hero */}
-      <div
-        style={{
-          background: 'linear-gradient(135deg, #0e7490 0%, #06b6d4 40%, #22d3ee 100%)',
-          padding: '40px 24px 36px',
-          position: 'relative',
-          overflow: 'hidden',
-        }}
-      >
-        <div style={{ position: 'absolute', top: -50, right: -30, width: 180, height: 180, borderRadius: '50%', background: 'rgba(255,255,255,0.06)' }} />
-        <div style={{ position: 'absolute', bottom: -30, left: -20, width: 120, height: 120, borderRadius: '50%', background: 'rgba(255,255,255,0.05)' }} />
+      <section className="mx-auto max-w-5xl px-4 pb-16 pt-4 text-slate-700" aria-labelledby="wilaya-guide">
+        <nav aria-label="Fil d'Ariane" className="mb-4 text-xs text-slate-500">
+          <Link href="/" className="hover:text-slate-900"><T>Accueil</T></Link>
+          <span aria-hidden="true"> / </span>
+          <Link href="/destinations" className="hover:text-slate-900"><T>Destinations</T></Link>
+          <span aria-hidden="true"> / </span>
+          <span className="text-slate-900"><T>{displayName}</T></span>
+        </nav>
 
-        <div style={{ maxWidth: 1280, margin: '0 auto', position: 'relative', zIndex: 1 }}>
-          {/* Back link */}
-          <Link
-            href="/destinations"
-            style={{
-              display: 'inline-flex', alignItems: 'center', gap: 6,
-              color: '#cffafe', fontSize: 14, fontWeight: 600,
-              textDecoration: 'none', marginBottom: 16,
-              transition: 'color 0.2s',
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = '#fff')}
-            onMouseLeave={(e) => (e.currentTarget.style.color = '#cffafe')}
-          >
-            <ArrowLeft size={16} /> Toutes les wilayas
-          </Link>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            <span
-              style={{
-                display: 'grid', placeItems: 'center', width: 48, height: 48,
-                borderRadius: '50%', background: 'rgba(255,255,255,0.2)', color: '#fff',
-              }}
-            >
-              <MapPin size={24} />
-            </span>
-            <div>
-              <h1 style={{ fontSize: 30, fontWeight: 800, color: '#fff', margin: 0 }}>
-                {wilayaName}
-              </h1>
-              <p style={{ color: '#cffafe', fontSize: 14, marginTop: 4 }}>
-                {loading ? 'Chargement...' : `${hotels.length} hôtel${hotels.length !== 1 ? 's' : ''} · ${houses.length} maison${houses.length !== 1 ? 's' : ''}`}
-              </p>
-            </div>
-          </div>
-
-          {/* Search */}
-          <div
-            style={{
-              marginTop: 20,
-              display: 'flex', alignItems: 'center', gap: 10,
-              background: '#fff', borderRadius: 14,
-              padding: '6px 6px 6px 16px',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
-              maxWidth: 500,
-            }}
-          >
-            <Search size={18} color="#06b6d4" />
-            <input
-              value={searchQ}
-              onChange={(e) => setSearchQ(e.target.value)}
-              placeholder="Rechercher dans cette wilaya..."
-              style={{
-                flex: 1, border: 'none', outline: 'none', fontSize: 14,
-                background: 'transparent', color: '#1e293b',
-              }}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Content */}
-      <section style={{ maxWidth: 1280, margin: '0 auto', padding: '28px 24px 60px' }}>
-        {/* Tabs: Tous / Hôtels / Maisons */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
-          {[
-            { key: 'all', label: 'Tous', icon: null, count: hotels.length + houses.length },
-            { key: 'hotels', label: 'Hôtels', icon: Hotel, count: hotels.length },
-            { key: 'houses', label: 'Maisons', icon: Home, count: houses.length },
-          ].map(({ key, label, icon: Icon, count }) => (
-            <button
-              key={key}
-              onClick={() => { setTab(key); setTypeFilter(''); }}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 6,
-                borderRadius: 999, padding: '8px 18px', fontSize: 14,
-                fontWeight: 600, cursor: 'pointer', border: 'none',
-                transition: 'all 0.2s',
-                background: tab === key ? '#06b6d4' : '#fff',
-                color: tab === key ? '#fff' : '#64748b',
-                boxShadow: tab === key ? '0 4px 14px rgba(6,182,212,0.3)' : '0 1px 3px rgba(0,0,0,0.08)',
-              }}
-            >
-              {Icon && <Icon size={15} />}
-              {label}
-              <span
-                style={{
-                  fontSize: 12, fontWeight: 700,
-                  background: tab === key ? 'rgba(255,255,255,0.25)' : '#f1f5f9',
-                  padding: '1px 8px', borderRadius: 999,
-                  color: tab === key ? '#fff' : '#94a3b8',
-                }}
-              >
-                {count}
-              </span>
-            </button>
-          ))}
-        </div>
-
-        {/* Type filters */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24, overflowX: 'auto', paddingBottom: 4 }} className="no-scrollbar">
-          <SlidersHorizontal size={16} color="#94a3b8" style={{ flexShrink: 0 }} />
-          <button
-            onClick={() => setTypeFilter('')}
-            style={{
-              borderRadius: 999, padding: '6px 14px', fontSize: 13,
-              cursor: 'pointer', flexShrink: 0, fontWeight: 500, border: 'none',
-              background: !typeFilter ? '#06b6d4' : '#fff',
-              color: !typeFilter ? '#fff' : '#64748b',
-              boxShadow: !typeFilter ? '0 2px 8px rgba(6,182,212,0.25)' : '0 1px 3px rgba(0,0,0,0.06)',
-            }}
-          >
-            Tous les types
-          </button>
-          {currentTypes.map((t) => (
-            <button
-              key={t}
-              onClick={() => setTypeFilter(typeFilter === t ? '' : t)}
-              style={{
-                borderRadius: 999, padding: '6px 14px', fontSize: 13,
-                cursor: 'pointer', flexShrink: 0, fontWeight: 500, border: 'none',
-                background: typeFilter === t ? '#06b6d4' : '#fff',
-                color: typeFilter === t ? '#fff' : '#64748b',
-                boxShadow: typeFilter === t ? '0 2px 8px rgba(6,182,212,0.25)' : '0 1px 3px rgba(0,0,0,0.06)',
-              }}
-            >
-              {t}
-            </button>
-          ))}
-        </div>
-
-        {/* Results count */}
-        <h2 style={{ fontSize: 16, fontWeight: 700, color: '#1e293b', marginBottom: 20 }}>
-          {loading ? 'Chargement...' : (
-            <>
-              {totalResults} résultat{totalResults !== 1 ? 's' : ''}
-              {typeFilter && <span style={{ color: '#94a3b8', fontWeight: 400 }}> · {typeFilter}</span>}
-            </>
-          )}
+        <h2 id="wilaya-guide" className="font-serif text-2xl font-bold text-slate-900 md:text-3xl">
+          <T k="Séjourner, louer ou acheter à {name}" vars={{ name: displayName }} />
         </h2>
 
-        {loading ? (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '60px 0', color: '#94a3b8' }}>
-            <Loader2 size={36} style={{ animation: 'spin 1s linear infinite', marginBottom: 12 }} />
-            <p style={{ fontSize: 14 }}>Chargement des propriétés...</p>
-            <style jsx>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-          </div>
-        ) : totalResults === 0 ? (
-          <div style={{ textAlign: 'center', padding: '60px 0', color: '#94a3b8' }}>
-            <MapPin size={48} style={{ marginBottom: 12, opacity: 0.3 }} />
-            <p style={{ fontSize: 16, fontWeight: 600 }}>Aucune propriété trouvée à {wilayaName}</p>
-            <p style={{ fontSize: 14 }}>Modifiez vos filtres ou revenez plus tard</p>
-          </div>
-        ) : (
-          <>
-            {/* Hotels section */}
-            {filteredHotels.length > 0 && (
-              <div style={{ marginBottom: 40 }}>
-                {tab === 'all' && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-                    <Hotel size={18} color="#06b6d4" />
-                    <h3 style={{ fontSize: 18, fontWeight: 700, color: '#1e293b', margin: 0 }}>
-                      Hôtels
-                      <span style={{ color: '#94a3b8', fontWeight: 400, fontSize: 14, marginLeft: 8 }}>
-                        ({filteredHotels.length})
-                      </span>
-                    </h3>
-                  </div>
-                )}
-                <div
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-                    gap: 20,
-                  }}
-                >
-                  {filteredHotels.map((h) => (
-                    <HotelCard key={h._id || h.id} hotel={normalizeHotel(h)} />
-                  ))}
-                </div>
-              </div>
-            )}
+        <p className="mt-3 max-w-3xl leading-relaxed">
+          {info && <T k="{displayName} est la wilaya n°{code} d'Algérie, dans la région {label}. " vars={{ displayName, code: info.code, label: info.region.label }} />}
+          {s.hotels + s.houses + s.sales > 0 ? (
+            <T k="Sur Meskan, vous y trouvez {hotels} hôtel(s), {houses} maison(s) à louer et {sales} bien(s) à vendre, tous vérifiés par notre équipe." vars={{ hotels: s.hotels, houses: s.houses, sales: s.sales }} />
+          ) : (
+            <T k="Les premières annonces de {displayName} arrivent bientôt sur Meskan. Hôteliers, propriétaires et vendeurs de la wilaya peuvent publier leur annonce dès maintenant." vars={{ displayName }} />
+          )}
+          {s.cities.length > 0 && <> <T k="Annonces disponibles notamment à {cities}." vars={{ cities: s.cities.join(', ') }} /></>}
+        </p>
 
-            {/* Houses section */}
-            {filteredHouses.length > 0 && (
-              <div>
-                {tab === 'all' && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-                    <Home size={18} color="#06b6d4" />
-                    <h3 style={{ fontSize: 18, fontWeight: 700, color: '#1e293b', margin: 0 }}>
-                      Maisons
-                      <span style={{ color: '#94a3b8', fontWeight: 400, fontSize: 14, marginLeft: 8 }}>
-                        ({filteredHouses.length})
-                      </span>
-                    </h3>
-                  </div>
-                )}
-                <div
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-                    gap: 20,
-                  }}
-                >
-                  {filteredHouses.map((h) => (
-                    <HouseCard key={h._id || h.id} house={normalizeHouse(h)} />
-                  ))}
-                </div>
-              </div>
-            )}
+        <dl className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4">
+          {[
+            { label: 'Hôtels', value: s.hotels },
+            { label: 'Locations', value: s.houses },
+            { label: 'Prix médian / nuit', value: s.medianNight ? formatDZD(s.medianNight) : '—' },
+            { label: 'Prix médian à la vente', value: s.medianSale ? formatDZD(s.medianSale) : '—' },
+          ].map((st) => (
+            <div key={st.label} className="rounded-xl border border-slate-200 bg-white p-4">
+              <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500"><T>{st.label}</T></dt>
+              <dd className="mt-1 text-lg font-bold tabular-nums text-slate-900">{st.value}</dd>
+            </div>
+          ))}
+        </dl>
+
+        {s.topHotel && (
+          <p className="mt-6">
+            <T>L'hôtel le mieux noté de la wilaya est</T>{' '}
+            <Link href={`/hotels/${s.topHotel._id}`} className="font-semibold text-cyan-700 underline-offset-2 hover:underline">
+              {s.topHotel.name}
+            </Link>{' '}
+            <T k="({rating}/10 sur {n} avis)." vars={{ rating: Number(s.topHotel.avgRating).toFixed(1), n: s.topHotel.reviewsCount }} />
+          </p>
+        )}
+
+        {info?.highlights.length > 0 && (
+          <>
+            <h3 className="mt-8 text-lg font-bold text-slate-900"><T k="À voir à {name}" vars={{ name: displayName }} /></h3>
+            <ul className="mt-2 list-disc space-y-1 ps-5">
+              {info.highlights.map((h) => <li key={h}><T>{h.charAt(0).toUpperCase() + h.slice(1)}</T></li>)}
+            </ul>
           </>
         )}
-      </section>
 
-      <Footer />
-    </main>
+        <h3 className="mt-8 text-lg font-bold text-slate-900"><T>Questions fréquentes</T></h3>
+        <div className="mt-3 divide-y divide-slate-200 rounded-xl border border-slate-200 bg-white">
+          {faqs.map((f) => (
+            <details key={f.q.k} className="group p-4">
+              <summary className="cursor-pointer list-none font-semibold text-slate-900 marker:hidden">
+                <T k={f.q.k} vars={f.q.vars} />
+              </summary>
+              <p className="mt-2 leading-relaxed"><T k={f.a.k} vars={f.a.vars} /></p>
+            </details>
+          ))}
+        </div>
+
+        {neighbours.length > 0 && (
+          <>
+            <h3 className="mt-8 text-lg font-bold text-slate-900"><T>Autres destinations —</T> <T>{info.region.label}</T></h3>
+            <ul className="mt-3 flex flex-wrap gap-2">
+              {neighbours.map((w) => (
+                <li key={w}>
+                  <Link
+                    href={wilayaPath(w)}
+                    className="inline-flex min-h-[44px] items-center rounded-full border border-slate-200 bg-white px-4 text-sm font-medium hover:border-cyan-500 hover:text-cyan-700"
+                  >
+                    <T>{w}</T>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+
+        <p className="mt-8 text-sm">
+          <T k="Vous financez un achat à {name} ?" vars={{ name: displayName }} />{' '}
+          <Link href="/outils/simulateur-credit-immobilier" className="font-semibold text-cyan-700 hover:underline">
+            <T>Simulez votre crédit immobilier</T>
+          </Link>{' '}
+          <T>ou</T>{' '}
+          <Link href="/outils/rentabilite-locative" className="font-semibold text-cyan-700 hover:underline">
+            <T>calculez la rentabilité d'une location</T>
+          </Link>.
+        </p>
+      </section>
+    </WilayaClient>
   );
 }

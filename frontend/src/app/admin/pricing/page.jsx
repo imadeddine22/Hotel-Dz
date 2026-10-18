@@ -1,16 +1,19 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import AdminLayout from '@/components/AdminLayout';
 import api from '@/lib/api';
 import { Save, RefreshCw, AlertCircle, CheckCircle } from 'lucide-react';
 
+import { useT } from '@/lib/i18n/useT';
+import { MULTI_COUNTRY } from '@/lib/countries';
 export default function AdminPricingPage() {
+  const { t } = useT();
   const [form, setForm] = useState({
     growthMonthlyPrice: '',
     growthYearlyPrice: '',
     proMonthlyPrice: '',
     proYearlyPrice: '',
+    exchangeRates: { TND: '', MAD: '' },
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -28,6 +31,7 @@ export default function AdminPricingPage() {
           growthYearlyPrice: data.settings.growthYearlyPrice || '',
           proMonthlyPrice: data.settings.proMonthlyPrice || '',
           proYearlyPrice: data.settings.proYearlyPrice || '',
+          exchangeRates: { TND: data.settings.exchangeRates?.TND || '', MAD: data.settings.exchangeRates?.MAD || '' },
         });
       }
     } catch (err) {
@@ -53,7 +57,7 @@ export default function AdminPricingPage() {
     try {
       const { data } = await api.put('/pricing/prices', form);
       if (data.success) {
-        setSuccess('Tarification enregistrée avec succès !');
+        setSuccess(t('Tarification enregistrée avec succès !'));
         setTimeout(() => setSuccess(''), 5000);
       }
     } catch (err) {
@@ -64,19 +68,19 @@ export default function AdminPricingPage() {
   };
 
   return (
-    <AdminLayout>
+    <>
       <div className="max-w-4xl mx-auto py-6 px-4">
         {/* Header */}
         <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-100">
           <div>
-            <h1 className="text-2xl font-extrabold text-slate-800">Tarification des Abonnements</h1>
-            <p className="text-sm text-slate-500 mt-1">Configurez les prix des abonnements mensuels et annuels pour les propriétaires.</p>
+            <h1 className="text-2xl font-extrabold text-slate-800">{t('Tarification des Abonnements')}</h1>
+            <p className="text-sm text-slate-500 mt-1">{t('Configurez les prix des abonnements mensuels et annuels pour les propriétaires.')}</p>
           </div>
           <button
             onClick={fetchPrices}
             disabled={loading}
             className="p-2.5 rounded-full hover:bg-slate-100 text-slate-600 transition disabled:opacity-40"
-            title="Rafraîchir"
+            title={t('Rafraîchir')}
           >
             <RefreshCw className={`h-5 w-5 ${loading ? 'animate-spin' : ''}`} />
           </button>
@@ -100,7 +104,7 @@ export default function AdminPricingPage() {
         {loading ? (
           <div className="py-12 flex flex-col items-center justify-center gap-4 bg-white rounded-3xl border border-slate-100 shadow-sm">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-500"></div>
-            <p className="text-sm font-semibold text-slate-400">Chargement des paramètres de prix...</p>
+            <p className="text-sm font-semibold text-slate-400">{t('Chargement des paramètres de prix...')}</p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -109,11 +113,11 @@ export default function AdminPricingPage() {
             <div className="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-sm">
               <h2 className="text-lg font-bold text-slate-800 font-serif mb-4 flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-teal-500"></span>
-                Growth Plan (Plan Croissance)
+                {t('Growth Plan (Plan Croissance)')}
               </h2>
               <div className="grid gap-6 md:grid-cols-2">
                 <div>
-                  <label className="mb-1.5 block text-sm font-bold text-slate-700">Prix Mensuel (DZD) *</label>
+                  <label className="mb-1.5 block text-sm font-bold text-slate-700">{t('Prix Mensuel (DZD) *')}</label>
                   <input
                     type="number"
                     required
@@ -121,11 +125,11 @@ export default function AdminPricingPage() {
                     value={form.growthMonthlyPrice}
                     onChange={(e) => handleChange('growthMonthlyPrice', e.target.value)}
                     className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-teal-500 font-semibold text-slate-800 transition shadow-sm"
-                    placeholder="Ex: 2900"
+                    placeholder={t('Ex: 2900')}
                   />
                 </div>
                 <div>
-                  <label className="mb-1.5 block text-sm font-bold text-slate-700">Prix Annuel (DZD) *</label>
+                  <label className="mb-1.5 block text-sm font-bold text-slate-700">{t('Prix Annuel (DZD) *')}</label>
                   <input
                     type="number"
                     required
@@ -133,7 +137,7 @@ export default function AdminPricingPage() {
                     value={form.growthYearlyPrice}
                     onChange={(e) => handleChange('growthYearlyPrice', e.target.value)}
                     className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-teal-500 font-semibold text-slate-800 transition shadow-sm"
-                    placeholder="Ex: 29000"
+                    placeholder={t('Ex: 29000')}
                   />
                 </div>
               </div>
@@ -143,11 +147,11 @@ export default function AdminPricingPage() {
             <div className="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-sm">
               <h2 className="text-lg font-bold text-slate-800 font-serif mb-4 flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
-                Pro Plan (Plan Professionnel)
+                {t('Pro Plan (Plan Professionnel)')}
               </h2>
               <div className="grid gap-6 md:grid-cols-2">
                 <div>
-                  <label className="mb-1.5 block text-sm font-bold text-slate-700">Prix Mensuel (DZD) *</label>
+                  <label className="mb-1.5 block text-sm font-bold text-slate-700">{t('Prix Mensuel (DZD) *')}</label>
                   <input
                     type="number"
                     required
@@ -155,11 +159,11 @@ export default function AdminPricingPage() {
                     value={form.proMonthlyPrice}
                     onChange={(e) => handleChange('proMonthlyPrice', e.target.value)}
                     className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-purple-500 font-semibold text-slate-800 transition shadow-sm"
-                    placeholder="Ex: 6900"
+                    placeholder={t('Ex: 6900')}
                   />
                 </div>
                 <div>
-                  <label className="mb-1.5 block text-sm font-bold text-slate-700">Prix Annuel (DZD) *</label>
+                  <label className="mb-1.5 block text-sm font-bold text-slate-700">{t('Prix Annuel (DZD) *')}</label>
                   <input
                     type="number"
                     required
@@ -167,11 +171,35 @@ export default function AdminPricingPage() {
                     value={form.proYearlyPrice}
                     onChange={(e) => handleChange('proYearlyPrice', e.target.value)}
                     className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-purple-500 font-semibold text-slate-800 transition shadow-sm"
-                    placeholder="Ex: 69000"
+                    placeholder={t('Ex: 69000')}
                   />
                 </div>
               </div>
             </div>
+
+            {/* Exchange rates: only for the indicative "≈ X DZD" next to Tunisian / Moroccan prices */}
+            {MULTI_COUNTRY && (
+            <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+              <h2 className="text-lg font-bold text-slate-900">{t('Taux de change (affichage indicatif)')}</h2>
+              <p className="mt-1 text-sm text-slate-500">{t('Valeur de 1 unité en dinars algériens. Sert seulement à afficher « ≈ X DZD » à côté des prix en Tunisie et au Maroc ; les réservations restent dans la monnaie de l’annonce.')}</p>
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                {[['TND', t('1 dinar tunisien (TND) = ? DZD')], ['MAD', t('1 dirham marocain (MAD) = ? DZD')]].map(([cur, label]) => (
+                  <div key={cur}>
+                    <label htmlFor={`rate-${cur}`} className="mb-1.5 block text-sm font-bold text-slate-700">{label}</label>
+                    <input
+                      id={`rate-${cur}`}
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={form.exchangeRates[cur]}
+                      onChange={(e) => setForm((prev) => ({ ...prev, exchangeRates: { ...prev.exchangeRates, [cur]: e.target.value } }))}
+                      className="w-full rounded-xl border border-slate-200 px-4 py-3 font-semibold text-slate-800 shadow-sm outline-none transition focus:border-purple-500"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+            )}
 
             {/* Actions */}
             <div className="flex gap-4 pt-2">
@@ -181,12 +209,12 @@ export default function AdminPricingPage() {
                 className="inline-flex items-center gap-2 rounded-full bg-slate-900 text-white px-8 py-3.5 font-bold shadow-md hover:bg-slate-800 transition disabled:opacity-60 hover:scale-102"
               >
                 <Save className="h-4.5 w-4.5" />
-                {saving ? 'Enregistrement...' : 'Enregistrer les prix'}
+                {saving ? t('Enregistrement...') : t('Enregistrer les prix')}
               </button>
             </div>
           </form>
         )}
       </div>
-    </AdminLayout>
+    </>
   );
 }

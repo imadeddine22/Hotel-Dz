@@ -1,490 +1,369 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
-import Link from 'next/link';
-import { MapPin, Search, ChevronDown, Eye, Home, ArrowUp, ArrowDown, Tag, RefreshCw } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import dynamic from 'next/dynamic';
+import Link from '@/components/LocaleLink';
+import { MapPin, Search, Home, RefreshCw, BedDouble, Bath, Maximize2, Phone, MessageCircle, Calculator, LayoutGrid, Map as MapIcon, SlidersHorizontal, X } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import api, { getImageUrl } from '@/lib/api';
 import { formatDZD } from '@/lib/data';
 import { useWilayas } from '@/hooks/useWilayas';
+import { monthlyPayment } from '@/components/tools/MortgageCalculator';
+import { useT } from '@/lib/i18n/useT';
+import { useInitialData } from '@/components/InitialData';
 
-const PROPERTY_TYPES = [
-  'Appartement',
-  'Bureau',
-  'Commerce',
-  'Garage / Parking',
-  'Immeuble',
-  'Locaux d\'activité / Entrepôts',
-  'Maison',
-  'Terrain',
-  'Chalet',
-  'Duplex',
-  'Studio',
-  'Ferme'
-];
+const HotelsMap = dynamic(() => import('@/components/HotelsMap'), { ssr: false });
 
+// Same list as the HouseForSale model
+const PROPERTY_TYPES = ['Appartement', 'Villa', 'Maison', 'Duplex', 'Studio', 'Terrain', 'Local commercial', 'Immeuble', 'Ferme', 'Chalet'];
+
+// Real Algerian property prices (DZD); the last range is open-ended
 const PRICE_RANGES = [
-  { value: '0-10000', label: '0 - 10 000' },
-  { value: '10000-25000', label: '10 000 - 25 000' },
-  { value: '25000-50000', label: '25 000 - 50 000' },
-  { value: '50000-100000', label: '50 000 - 100 000' },
-  { value: '100000-250000', label: '100 000 - 250 000' },
-  { value: '250000-500000', label: '250 000 - 500 000' },
-  { value: '500000-1000000', label: '500 000 - 1 000 000' },
+  { value: '0-5000000', label: 'Moins de 5 millions DA' },
+  { value: '5000000-10000000', label: '5 à 10 millions DA' },
+  { value: '10000000-20000000', label: '10 à 20 millions DA' },
+  { value: '20000000-50000000', label: '20 à 50 millions DA' },
+  { value: '50000000-100000000000', label: 'Plus de 50 millions DA' },
 ];
+
+// Algerian "F" sizes: F3 = 3 rooms
+const ROOMS = [
+  { value: '1', label: 'F1' },
+  { value: '2', label: 'F2' },
+  { value: '3', label: 'F3' },
+  { value: '4', label: 'F4' },
+  { value: '5+', label: 'F5+' },
+];
+
+const SORTS = [
+  { value: 'newest', label: 'Plus récents' },
+  { value: 'price_asc', label: 'Prix croissant' },
+  { value: 'price_desc', label: 'Prix décroissant' },
+];
+
+const EMPTY = { type: '', wilaya: '', rooms: '', price: '', minArea: '', maxArea: '', reference: '' };
+const NEW_DAYS = 7;
+
+/** "0552 22 22 22" → "213552222222" for wa.me links */
+const whatsappNumber = (phone) => {
+  const digits = String(phone || '').replace(/\D/g, '');
+  if (!digits) return '';
+  if (digits.startsWith('213')) return digits;
+  return digits.startsWith('0') ? `213${digits.slice(1)}` : `213${digits}`;
+};
+
+/** Indicative monthly payment: 20 % deposit, 6 % over 20 years (same defaults as the simulator). */
+const estimateMonthly = (price) => monthlyPayment(price * 0.8, 6, 20);
 
 export default function SalesPage() {
-  const [listings, setListings] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
-  const [pages, setPages] = useState(1);
+  const { t } = useT();
+  const initial = useInitialData();
   const { wilayas } = useWilayas();
+  const [listings, setListings] = useState(initial?.listings ?? []);
+  const [loading, setLoading] = useState(!initial?.listings);
+  const [total, setTotal] = useState(initial?.total ?? 0);
+  const [page, setPage] = useState(1);
+  const [pages, setPages] = useState(initial?.pages ?? 1);
+  const [form, setForm] = useState(EMPTY); // what the user is editing
+  const [filters, setFilters] = useState(EMPTY); // what is applied
+  const [sort, setSort] = useState('newest');
+  const [view, setView] = useState('grid'); // 'grid' | 'map'
+  const [showMore, setShowMore] = useState(false);
+  const [activeId, setActiveId] = useState(null);
 
-  // Applied filters
-  const [filters, setFilters] = useState({
-    wilaya: '',
-    type: 'Appartement',
-    reference: '',
-    priceRanges: []
-  });
-
-  // Temp filters (unapplied until search click)
-  const [tempFilters, setTempFilters] = useState({
-    wilaya: '',
-    type: 'Appartement',
-    reference: '',
-    priceRanges: []
-  });
-
-  const [sort, setSort] = useState('updatedAt');
-  const [order, setOrder] = useState('desc');
-  const [openDropdown, setOpenDropdown] = useState(null); // 'vente' | 'type' | 'ville' | 'prix'
-  const [openSortDropdown, setOpenSortDropdown] = useState(false);
-
-  const dropdownRef = useRef(null);
-
+  // /sales?wilaya=… links (destination pages, home search)
   useEffect(() => {
-    function handleClickOutside(event) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setOpenDropdown(null);
-      }
+    const w = new URLSearchParams(window.location.search).get('wilaya');
+    if (w) {
+      setForm((f) => ({ ...f, wilaya: w }));
+      setFilters((f) => ({ ...f, wilaya: w }));
     }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const fetchListings = async () => {
-    setLoading(true);
-    try {
-      const params = { page, limit: 12 };
-      if (filters.wilaya) params.city = filters.wilaya; // Using city query parameter for wilaya matching
-      if (filters.type && filters.type !== 'Tous') params.type = filters.type;
-      if (filters.reference) params.reference = filters.reference;
-      if (filters.priceRanges.length > 0) {
-        params.priceRanges = filters.priceRanges.join(',');
-      }
-      params.sort = sort;
-      params.order = order;
-
-      const { data } = await api.get('/sales', { params });
-      setListings(data.listings || []);
-      setTotal(data.total || 0);
-      setPages(data.pages || 1);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  const silentFirstFetch = useRef(Boolean(initial));
   useEffect(() => {
-    fetchListings();
-  }, [page, filters, sort, order]);
-
-  const handlePriceRangeChange = (value) => {
-    setTempFilters(prev => {
-      const current = [...prev.priceRanges];
-      const idx = current.indexOf(value);
-      if (idx > -1) {
-        current.splice(idx, 1);
-      } else {
-        current.push(value);
+    (async () => {
+      if (!silentFirstFetch.current) setLoading(true);
+      silentFirstFetch.current = false;
+      try {
+        const params = { page, limit: 12, sort };
+        if (filters.type) params.type = filters.type;
+        if (filters.wilaya) params.wilaya = filters.wilaya;
+        if (filters.rooms) params.rooms = filters.rooms;
+        if (filters.price) params.priceRanges = filters.price;
+        if (filters.minArea) params.minArea = filters.minArea;
+        if (filters.maxArea) params.maxArea = filters.maxArea;
+        if (filters.reference) params.reference = filters.reference.trim();
+        const { data } = await api.get('/sales', { params });
+        setListings(data.listings || []);
+        setTotal(data.total || 0);
+        setPages(data.pages || 1);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
       }
-      return { ...prev, priceRanges: current };
-    });
-  };
+    })();
+  }, [page, filters, sort]);
 
-  const handleSearchClick = () => {
-    setFilters({ ...tempFilters });
+  const apply = (e) => {
+    e?.preventDefault();
+    setFilters({ ...form });
     setPage(1);
-    setOpenDropdown(null);
   };
+  const reset = () => {
+    setForm(EMPTY);
+    setFilters(EMPTY);
+    setPage(1);
+  };
+  const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+  const activeCount = Object.values(filters).filter(Boolean).length;
 
-  const getPriceLabel = () => {
-    if (tempFilters.priceRanges.length === 0) return 'Prix';
-    if (tempFilters.priceRanges.length === 1) {
-      const range = PRICE_RANGES.find(r => r.value === tempFilters.priceRanges[0]);
-      return range ? range.label : 'Prix';
-    }
-    return `${tempFilters.priceRanges.length} sélectionnés`;
-  };
+  const mapItems = useMemo(
+    () => listings.map((l) => ({ _id: l._id, name: l.title, type: t(l.type), price: l.price, currency: l.currency, coordinates: l.coordinates })),
+    [listings, t]
+  );
 
-  const getSortLabel = () => {
-    if (sort === 'updatedAt') return 'Date de mise à jour';
-    if (sort === 'price') return 'Prix';
-    if (sort === 'newest') return 'Plus récents';
-    return 'Trier par';
-  };
+  const field = 'w-full rounded-xl border border-gray-200 bg-white px-3.5 py-3 text-sm font-semibold text-slate-800 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20';
 
   return (
     <>
       <Navbar />
       <main className="min-h-screen bg-[#f8f9fc]">
-        
-        {/* Hero Section */}
-        <div 
-          className="relative h-[440px] w-full bg-cover bg-center flex flex-col justify-end pb-12 px-4 shadow-inner animate-fade-in"
-          style={{ backgroundImage: `url('https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=1600&q=80')` }}
+        {/* ── Hero: title + search ── */}
+        <section
+          className="relative bg-cover bg-center px-4 pb-10 pt-16 md:pt-24"
+          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=1600&q=80')" }}
         >
-          <div className="absolute inset-0 bg-black/15"></div>
-          
-          {/* Main floating search bar */}
-          <div className="relative z-10 mx-auto w-full max-w-7xl">
-            <div 
-              ref={dropdownRef}
-              className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3 bg-white/20 backdrop-blur-md p-3 rounded-2xl shadow-2xl border border-white/10"
-            >
-              {/* Vente selector */}
-              <div className="relative flex-1 select-none">
-                <div 
-                  onClick={() => setOpenDropdown(openDropdown === 'vente' ? null : 'vente')}
-                  className="bg-white rounded-xl px-4 py-3.5 shadow-sm border border-gray-100 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition"
-                >
-                  <span className="font-serif font-bold text-slate-800">Vente</span>
-                  <ChevronDown className={`h-4 w-4 text-gray-500 transition-transform ${openDropdown === 'vente' ? 'rotate-180' : ''}`} />
-                </div>
-                {openDropdown === 'vente' && (
-                  <div className="absolute left-0 right-0 top-full mt-2 z-30 rounded-xl bg-white py-1 shadow-xl border border-gray-100">
-                    <button onClick={() => setOpenDropdown(null)} className="w-full text-left px-5 py-2.5 text-sm font-serif font-bold text-teal-600 border-l-2 border-teal-500 bg-teal-50/30">
-                      Vente
-                    </button>
-                  </div>
-                )}
-              </div>
+          <div className="absolute inset-0 bg-gradient-to-b from-slate-950/70 via-slate-950/50 to-slate-950/70" />
+          <div className="relative z-10 mx-auto max-w-6xl">
+            <h1 className="text-3xl font-black leading-tight text-white md:text-5xl">{t('Maisons et appartements à vendre en Algérie')}</h1>
+            <p className="mt-3 max-w-2xl text-sm text-white/80 md:text-base">
+              {t('Annonces vérifiées, prix au m² et contact direct avec le vendeur, sans intermédiaire.')}
+            </p>
 
-              {/* Property type selector */}
-              <div className="relative flex-1 select-none">
-                <div 
-                  onClick={() => setOpenDropdown(openDropdown === 'type' ? null : 'type')}
-                  className="bg-white rounded-xl px-4 py-3.5 shadow-sm border border-gray-100 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition"
-                >
-                  <span className="font-serif font-bold text-slate-800 truncate">{tempFilters.type || 'Type'}</span>
-                  <ChevronDown className={`h-4 w-4 text-gray-500 transition-transform ${openDropdown === 'type' ? 'rotate-180' : ''}`} />
-                </div>
-                {openDropdown === 'type' && (
-                  <div className="absolute left-0 right-0 top-full mt-2 z-30 max-h-64 overflow-y-auto rounded-xl bg-white py-1 shadow-xl border border-gray-100">
-                    {PROPERTY_TYPES.map((t) => (
-                      <button
-                        key={t}
-                        onClick={() => {
-                          setTempFilters({ ...tempFilters, type: t });
-                          setOpenDropdown(null);
-                        }}
-                        className={`w-full text-left px-5 py-2.5 text-sm font-serif font-bold transition-all border-l-2 ${
-                          tempFilters.type === t
-                            ? 'text-teal-600 border-teal-500 bg-teal-50/30'
-                            : 'text-slate-800 border-transparent hover:bg-slate-50/50 hover:text-teal-600'
-                        }`}
-                      >
-                        {t}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+            <form onSubmit={apply} className="mt-8 rounded-2xl bg-white p-3 shadow-2xl md:p-4" role="search" aria-label={t('Rechercher un bien')}>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_1fr_auto]">
+                <label className="sr-only" htmlFor="f-type">{t('Type de bien')}</label>
+                <select id="f-type" value={form.type} onChange={(e) => set('type', e.target.value)} className={field}>
+                  <option value="">{t('Tous les types')}</option>
+                  {PROPERTY_TYPES.map((x) => <option key={x} value={x}>{t(x)}</option>)}
+                </select>
 
-              {/* Ville/Wilaya selector */}
-              <div className="relative flex-1 select-none">
-                <div 
-                  onClick={() => setOpenDropdown(openDropdown === 'ville' ? null : 'ville')}
-                  className="bg-white rounded-xl px-4 py-3.5 shadow-sm border border-gray-100 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition"
-                >
-                  <span className="font-serif font-bold text-slate-800 truncate">{tempFilters.wilaya || 'Ville'}</span>
-                  <ChevronDown className={`h-4 w-4 text-gray-500 transition-transform ${openDropdown === 'ville' ? 'rotate-180' : ''}`} />
-                </div>
-                {openDropdown === 'ville' && (
-                  <div className="absolute left-0 right-0 top-full mt-2 z-30 max-h-64 overflow-y-auto rounded-xl bg-white py-1 shadow-xl border border-gray-100">
-                    <div className="px-4 py-1.5 border-b border-gray-100 mb-1 flex justify-between items-center">
-                      <span className="text-xs font-bold text-gray-400">WILAYA</span>
-                      {tempFilters.wilaya && (
-                        <button onClick={() => setTempFilters({ ...tempFilters, wilaya: '' })} className="text-[10px] text-teal-600 hover:underline font-bold">
-                          Réinitialiser
-                        </button>
-                      )}
-                    </div>
-                    {wilayas?.map((w) => (
-                      <button
-                        key={w}
-                        onClick={() => {
-                          setTempFilters({ ...tempFilters, wilaya: w });
-                          setOpenDropdown(null);
-                        }}
-                        className={`w-full text-left px-5 py-2.5 text-sm font-serif font-bold transition-all border-l-2 ${
-                          tempFilters.wilaya === w
-                            ? 'text-teal-600 border-teal-500 bg-teal-50/30'
-                            : 'text-slate-800 border-transparent hover:bg-slate-50/50 hover:text-teal-600'
-                        }`}
-                      >
-                        {w}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+                <label className="sr-only" htmlFor="f-wilaya">{t('Wilaya')}</label>
+                <select id="f-wilaya" value={form.wilaya} onChange={(e) => set('wilaya', e.target.value)} className={field}>
+                  <option value="">{t('Toutes les wilayas')}</option>
+                  {(wilayas || []).map((w) => <option key={w} value={w}>{t(w)}</option>)}
+                </select>
 
-              {/* Prix Range checklist */}
-              <div className="relative flex-1 select-none">
-                <div 
-                  onClick={() => setOpenDropdown(openDropdown === 'prix' ? null : 'prix')}
-                  className="bg-white rounded-xl px-4 py-3.5 shadow-sm border border-gray-100 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition"
-                >
-                  <span className="font-serif font-bold text-slate-800 truncate">{getPriceLabel()}</span>
-                  <ChevronDown className={`h-4 w-4 text-gray-500 transition-transform ${openDropdown === 'prix' ? 'rotate-180' : ''}`} />
-                </div>
-                {openDropdown === 'prix' && (
-                  <div className="absolute left-0 right-0 top-full mt-2 z-30 w-72 rounded-xl bg-white p-3 shadow-xl border border-gray-100">
-                    <div className="flex justify-between items-center mb-2 pb-2 border-b border-gray-100">
-                      <span className="text-xs font-bold text-gray-400">FOURCHETTE DE PRIX</span>
-                      {tempFilters.priceRanges.length > 0 && (
-                        <button 
-                          onClick={() => setTempFilters({ ...tempFilters, priceRanges: [] })}
-                          className="text-[10px] text-teal-600 hover:underline font-bold"
-                        >
-                          Réinitialiser
-                        </button>
-                      )}
-                    </div>
-                    <div className="space-y-1 max-h-56 overflow-y-auto">
-                      {PRICE_RANGES.map((range) => {
-                        const isChecked = tempFilters.priceRanges.includes(range.value);
-                        return (
-                          <label key={range.value} className="flex items-center gap-3 cursor-pointer hover:bg-slate-50/50 p-2 rounded-lg transition select-none">
-                            <input
-                              type="checkbox"
-                              checked={isChecked}
-                              onChange={() => handlePriceRangeChange(range.value)}
-                              className="accent-teal-600 h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
-                            />
-                            <span className="text-sm font-serif font-bold text-slate-800">{range.label}</span>
-                          </label>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
+                <label className="sr-only" htmlFor="f-price">{t('Prix')}</label>
+                <select id="f-price" value={form.price} onChange={(e) => set('price', e.target.value)} className={field}>
+                  <option value="">{t('Tous les prix')}</option>
+                  {PRICE_RANGES.map((r) => <option key={r.value} value={r.value}>{t(r.label)}</option>)}
+                </select>
 
-              {/* Reference Selector */}
-              <div className="relative flex-1">
-                <div className="bg-white rounded-xl px-4 py-3 border border-gray-100 shadow-sm flex items-center justify-between">
-                  <input 
-                    type="text" 
-                    placeholder="Référence" 
-                    value={tempFilters.reference}
-                    onChange={(e) => setTempFilters({ ...tempFilters, reference: e.target.value })}
-                    className="w-full bg-transparent outline-none text-slate-800 placeholder:text-gray-400 font-serif font-bold"
-                  />
-                </div>
-              </div>
+                <label className="sr-only" htmlFor="f-ref">{t('Référence')}</label>
+                <input id="f-ref" value={form.reference} onChange={(e) => set('reference', e.target.value)} placeholder={t('Référence (ex : DZ-2026-…)')} className={field} />
 
-              {/* Search Button */}
-              <button 
-                onClick={handleSearchClick}
-                className="flex items-center justify-center h-[52px] w-[52px] shrink-0 rounded-full border border-white/20 bg-emerald-600 text-white hover:bg-emerald-700 hover:scale-105 active:scale-95 transition-all shadow-md"
-              >
-                <Search className="h-5 w-5" />
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Content Section */}
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 animate-fade-in-up">
-          
-          {/* Title & Sorting */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8 border-b border-gray-200/60 pb-8">
-            <div>
-              <h2 className="text-3xl font-bold text-gray-900 leading-tight font-serif">
-                Notre catalogue de biens à vendre
-              </h2>
-              <p className="text-sm font-medium text-gray-500 mt-2">
-                Découvrez notre sélection d'annonces immobilières en vente.
-              </p>
-            </div>
-            
-            <div className="flex items-center gap-3">
-              {/* Sort Dropdown */}
-              <div className="relative">
-                <button 
-                  onClick={() => setOpenSortDropdown(!openSortDropdown)}
-                  className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all select-none shadow-sm"
-                >
-                  <span>{getSortLabel()}</span>
-                  <ChevronDown className={`h-4 w-4 text-gray-500 transition-transform ${openSortDropdown ? 'rotate-180' : ''}`} />
+                <button type="submit" className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 text-sm font-bold text-white shadow transition hover:bg-emerald-700">
+                  <Search className="h-4 w-4" aria-hidden="true" /> {t('Rechercher')}
                 </button>
-                
-                {openSortDropdown && (
-                  <div className="absolute right-0 top-full mt-2 z-20 w-52 rounded-xl bg-white py-1.5 shadow-xl border border-gray-100 animate-slide-down">
-                    {[
-                      { value: 'updatedAt', label: 'Date de mise à jour' },
-                      { value: 'price', label: 'Prix' },
-                      { value: 'newest', label: 'Plus récents' },
-                    ].map((opt) => (
-                      <button
-                        key={opt.value}
-                        onClick={() => {
-                          setSort(opt.value);
-                          setOpenSortDropdown(false);
-                        }}
-                        className={`w-full text-left px-4 py-2.5 text-sm font-semibold hover:bg-gray-50 transition-colors ${
-                          sort === opt.value ? 'text-emerald-600 bg-emerald-50/30' : 'text-gray-700'
-                        }`}
-                      >
-                        {opt.label}
-                      </button>
-                    ))}
-                  </div>
-                )}
               </div>
-              
-              {/* Order Direction toggle */}
-              <button
-                onClick={() => setOrder(order === 'asc' ? 'desc' : 'asc')}
-                className="flex items-center justify-center rounded-xl border border-gray-200 bg-white p-3 hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm"
-                title={order === 'asc' ? 'Tri croissant' : 'Tri décroissant'}
-              >
-                {order === 'asc' ? (
-                  <ArrowUp className="h-4.5 w-4.5 text-emerald-600 font-bold" />
-                ) : (
-                  <ArrowDown className="h-4.5 w-4.5 text-emerald-600 font-bold" />
-                )}
-              </button>
-            </div>
-          </div>
 
-          {/* Results Grid */}
-          {loading ? (
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 animate-pulse">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div key={i} className="h-80 rounded-3xl bg-white border border-gray-100 shadow-sm"></div>
-              ))}
-            </div>
-          ) : listings.length === 0 ? (
-            <div className="rounded-3xl bg-white p-16 text-center shadow-sm border border-gray-100">
-              <div className="mx-auto mb-4 grid h-20 w-20 place-items-center rounded-full bg-emerald-50/60 animate-bounce">
-                <Home className="h-10 w-10 text-emerald-500" />
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Aucun bien trouvé</h3>
-              <p className="text-sm text-gray-500 max-w-sm mx-auto">Nous n'avons trouvé aucune annonce correspondant à vos critères de filtrage actuel.</p>
-              <button 
-                onClick={() => {
-                  setTempFilters({ wilaya: '', type: 'Appartement', reference: '', priceRanges: [] });
-                  setFilters({ wilaya: '', type: 'Tous', reference: '', priceRanges: [] });
-                }}
-                className="mt-6 inline-flex items-center gap-2 rounded-full bg-emerald-600 px-6 py-2.5 text-sm font-bold text-white shadow hover:bg-emerald-700 transition"
-              >
-                <RefreshCw className="h-4 w-4" /> Réinitialiser les filtres
-              </button>
-            </div>
-          ) : (
-            <>
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {listings.map((listing) => (
-                  <Link
-                    key={listing._id}
-                    href={`/sales/${listing._id}`}
-                    className="group rounded-3xl bg-white shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col h-full"
+              {/* Rooms + more filters */}
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <span className="text-xs font-bold text-gray-500">{t('Pièces')} :</span>
+                {ROOMS.map((r) => (
+                  <button
+                    key={r.value}
+                    type="button"
+                    aria-pressed={form.rooms === r.value}
+                    onClick={() => set('rooms', form.rooms === r.value ? '' : r.value)}
+                    className={`rounded-full border px-3 py-1.5 text-xs font-bold transition ${
+                      form.rooms === r.value ? 'border-emerald-600 bg-emerald-600 text-white' : 'border-gray-200 bg-white text-gray-600 hover:border-emerald-300'
+                    }`}
                   >
-                    {/* Image */}
-                    <div className="relative h-56 bg-gray-100 overflow-hidden">
-                      {listing.images?.[0] ? (
-                        <img 
-                          src={getImageUrl(listing.images[0].url)} 
-                          alt={listing.title} 
-                          className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" 
-                        />
-                      ) : (
-                        <div className="flex h-full items-center justify-center text-gray-300">
-                          <Home className="h-12 w-12" />
-                        </div>
-                      )}
-                      
-                      {/* Reference Badge */}
-                      {listing.reference && (
-                        <div className="absolute top-3 left-3 rounded-full bg-black/60 backdrop-blur-sm px-3 py-1 text-[10px] font-bold text-white select-none">
-                          {listing.reference}
-                        </div>
-                      )}
-
-                      <div className="absolute top-3 right-3 rounded-full bg-white/95 backdrop-blur-sm px-3 py-1 text-xs font-bold text-emerald-600">
-                        {listing.type}
-                      </div>
-
-                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent h-24" />
-                      <p className="absolute bottom-4 left-4 text-xl font-extrabold text-white drop-shadow-sm">
-                        {formatDZD(listing.price)}
-                      </p>
-                    </div>
-
-                    {/* Content */}
-                    <div className="p-5 flex flex-col flex-1">
-                      <h3 className="font-bold text-gray-900 text-lg mb-1.5 truncate group-hover:text-emerald-600 transition-colors">
-                        {listing.title}
-                      </h3>
-                      <p className="text-sm text-gray-500 flex items-center gap-1.5 mb-4">
-                        <MapPin className="h-4 w-4 text-emerald-500 shrink-0" /> 
-                        <span className="truncate">{listing.city}, {listing.wilaya}</span>
-                      </p>
-                      
-                      <div className="mt-auto pt-4 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500 font-semibold">
-                        <div className="flex items-center gap-3">
-                          {listing.area > 0 && <span>{listing.area} m²</span>}
-                          {listing.rooms > 0 && <span>{listing.rooms} pcs</span>}
-                        </div>
-                        <span className="flex items-center gap-1 font-medium text-gray-400">
-                          <Eye className="h-3.5 w-3.5" /> {listing.views || 0}
-                        </span>
-                      </div>
-                    </div>
-                  </Link>
+                    {r.label}
+                  </button>
                 ))}
+                <button type="button" onClick={() => setShowMore((v) => !v)} className="ms-auto inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 hover:underline">
+                  <SlidersHorizontal className="h-3.5 w-3.5" aria-hidden="true" /> {t('Surface')}
+                </button>
               </div>
-
-              {/* Pagination */}
-              {pages > 1 && (
-                <div className="mt-12 flex justify-center gap-2">
-                  {Array.from({ length: pages }, (_, i) => i + 1).map((p) => (
-                    <button
-                      key={p}
-                      onClick={() => setPage(p)}
-                      className={`h-11 w-11 rounded-full text-sm font-bold transition-all ${
-                        page === p
-                          ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/20'
-                          : 'bg-white text-gray-600 border border-gray-200 hover:border-emerald-300 hover:text-emerald-600'
-                      }`}
-                    >
-                      {p}
-                    </button>
-                  ))}
+              {showMore && (
+                <div className="mt-3 grid max-w-md grid-cols-2 gap-3">
+                  <label className="text-xs font-semibold text-gray-500">
+                    {t('Surface min (m²)')}
+                    <input type="number" min="0" value={form.minArea} onChange={(e) => set('minArea', e.target.value)} className={`${field} mt-1`} />
+                  </label>
+                  <label className="text-xs font-semibold text-gray-500">
+                    {t('Surface max (m²)')}
+                    <input type="number" min="0" value={form.maxArea} onChange={(e) => set('maxArea', e.target.value)} className={`${field} mt-1`} />
+                  </label>
                 </div>
               )}
-            </>
+            </form>
+          </div>
+        </section>
+
+        {/* ── Results ── */}
+        <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8" aria-live="polite">
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center gap-3">
+              <p className="text-lg font-bold text-gray-900">{t('{n} bien(s) à vendre', { n: total })}</p>
+              {activeCount > 0 && (
+                <button onClick={reset} className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-600 hover:bg-gray-200">
+                  <X className="h-3 w-3" aria-hidden="true" /> {t('Effacer les filtres')} ({activeCount})
+                </button>
+              )}
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <label className="sr-only" htmlFor="sort">{t('Trier par')}</label>
+              <select id="sort" value={sort} onChange={(e) => { setSort(e.target.value); setPage(1); }} className="rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-semibold text-gray-700 outline-none focus:border-emerald-500">
+                {SORTS.map((s) => <option key={s.value} value={s.value}>{t(s.label)}</option>)}
+              </select>
+              <div className="flex rounded-xl border border-gray-200 bg-white p-1" role="group" aria-label={t('Affichage')}>
+                {[['grid', LayoutGrid, 'Liste'], ['map', MapIcon, 'Carte']].map(([v, Icon, label]) => (
+                  <button key={v} onClick={() => setView(v)} aria-pressed={view === v}
+                    className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold transition ${view === v ? 'bg-emerald-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}>
+                    <Icon className="h-4 w-4" aria-hidden="true" /> <span className="hidden sm:inline">{t(label)}</span><span className="sr-only sm:hidden">{t(label)}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {loading ? (
+            <div className="grid animate-pulse gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {[1, 2, 3, 4, 5, 6].map((i) => <div key={i} className="h-96 rounded-3xl border border-gray-100 bg-white" />)}
+            </div>
+          ) : listings.length === 0 ? (
+            <div className="rounded-3xl border border-gray-100 bg-white p-12 text-center shadow-sm">
+              <div className="mx-auto mb-4 grid h-20 w-20 place-items-center rounded-full bg-emerald-50">
+                <Home className="h-10 w-10 text-emerald-500" aria-hidden="true" />
+              </div>
+              <h2 className="mb-2 text-xl font-bold text-gray-900">{t('Aucun bien ne correspond à votre recherche')}</h2>
+              <p className="mx-auto max-w-md text-sm text-gray-500">{t('Essayez une autre wilaya, un autre type de bien ou une fourchette de prix plus large.')}</p>
+              <div className="mt-6 flex flex-wrap justify-center gap-3">
+                {activeCount > 0 && (
+                  <button onClick={reset} className="inline-flex items-center gap-2 rounded-full bg-emerald-600 px-6 py-2.5 text-sm font-bold text-white shadow hover:bg-emerald-700">
+                    <RefreshCw className="h-4 w-4" aria-hidden="true" /> {t('Réinitialiser les filtres')}
+                  </button>
+                )}
+                <Link href="/register?role=seller" className="inline-flex items-center gap-2 rounded-full border border-emerald-600 px-6 py-2.5 text-sm font-bold text-emerald-700 hover:bg-emerald-50">
+                  {t('Vendre mon bien')}
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <div className={view === 'map' ? 'grid gap-6 lg:grid-cols-[1fr_1.1fr]' : ''}>
+              <div className={view === 'map' ? 'grid gap-5 sm:grid-cols-2 lg:max-h-[75vh] lg:overflow-y-auto lg:pe-2' : 'grid gap-6 md:grid-cols-2 lg:grid-cols-3'}>
+                {listings.map((l) => (
+                  <SaleCard key={l._id} listing={l} t={t} active={activeId === l._id} onHover={setActiveId} />
+                ))}
+              </div>
+              {view === 'map' && (
+                <div className="h-[60vh] overflow-hidden rounded-3xl border border-gray-100 shadow-sm lg:sticky lg:top-24 lg:h-[75vh]">
+                  <HotelsMap hotels={mapItems} activeHotelId={activeId} onHotelHover={setActiveId} />
+                </div>
+              )}
+            </div>
           )}
-        </div>
+
+          {pages > 1 && (
+            <nav className="mt-12 flex justify-center gap-2" aria-label={t('Pagination')}>
+              {Array.from({ length: pages }, (_, i) => i + 1).map((p) => (
+                <button key={p} onClick={() => { setPage(p); window.scrollTo({ top: 0, behavior: 'smooth' }); }} aria-current={page === p ? 'page' : undefined}
+                  className={`h-11 w-11 rounded-full text-sm font-bold transition ${page === p ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/20' : 'border border-gray-200 bg-white text-gray-600 hover:border-emerald-300 hover:text-emerald-600'}`}>
+                  {p}
+                </button>
+              ))}
+            </nav>
+          )}
+
+          {/* Mortgage simulator teaser */}
+          <aside className="mt-14 flex flex-col items-start gap-4 rounded-3xl bg-emerald-600 p-8 text-white md:flex-row md:items-center md:justify-between">
+            <div>
+              <h2 className="text-xl font-bold md:text-2xl">{t('Combien vais-je payer par mois ?')}</h2>
+              <p className="mt-1 text-sm text-white/85">{t('Simulez votre crédit immobilier en dinars : mensualité, coût total et revenu nécessaire.')}</p>
+            </div>
+            <Link href="/outils/simulateur-credit-immobilier" className="inline-flex shrink-0 items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-bold text-emerald-700 hover:bg-emerald-50">
+              <Calculator className="h-4 w-4" aria-hidden="true" /> {t('Simuler mon crédit')}
+            </Link>
+          </aside>
+        </section>
       </main>
       <Footer />
     </>
+  );
+}
+
+function SaleCard({ listing: l, t, active, onHover }) {
+  const isNew = l.createdAt && Date.now() - new Date(l.createdAt) < NEW_DAYS * 86400000;
+  const perM2 = l.area > 0 ? Math.round(l.price / l.area) : 0;
+  const wa = whatsappNumber(l.contactPhone);
+  const monthly = estimateMonthly(l.price);
+  const waText = encodeURIComponent(`${t('Bonjour, votre annonce m’intéresse')} : ${l.title} (${l.reference || ''})`);
+
+  return (
+    <article
+      onMouseEnter={() => onHover?.(l._id)}
+      onMouseLeave={() => onHover?.(null)}
+      className={`group flex flex-col overflow-hidden rounded-3xl border bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${active ? 'border-emerald-400 ring-2 ring-emerald-400/30' : 'border-gray-100'}`}
+    >
+      <Link href={`/sales/${l._id}`} className="relative block h-52 overflow-hidden bg-gray-100">
+        {l.images?.[0] ? (
+          <img src={getImageUrl(l.images[0].url)} alt={l.title} loading="lazy" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+        ) : (
+          <div className="flex h-full items-center justify-center text-gray-300"><Home className="h-12 w-12" /></div>
+        )}
+        <div className="absolute start-3 top-3 flex gap-1.5">
+          {isNew && <span className="rounded-full bg-amber-400 px-2.5 py-1 text-[11px] font-black text-slate-900">{t('Nouveau')}</span>}
+          <span className="rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-bold text-emerald-700">{t(l.type)}</span>
+        </div>
+        {l.reference && <span className="absolute end-3 top-3 rounded-full bg-black/60 px-2.5 py-1 text-[10px] font-bold text-white" dir="ltr">{l.reference}</span>}
+        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-4 pt-10">
+          <p className="text-2xl font-extrabold text-white">{formatDZD(l.price, l.currency)}</p>
+          {perM2 > 0 && <p className="text-xs font-semibold text-white/85">{formatDZD(perM2, l.currency)} / {t('m²')}</p>}
+        </div>
+      </Link>
+
+      <div className="flex flex-1 flex-col p-5">
+        <Link href={`/sales/${l._id}`} className="mb-1 truncate text-lg font-bold text-gray-900 transition group-hover:text-emerald-700">{l.title}</Link>
+        <p className="mb-4 flex items-center gap-1.5 text-sm text-gray-500">
+          <MapPin className="h-4 w-4 shrink-0 text-emerald-500" aria-hidden="true" />
+          <span className="truncate">{t(l.city)}{l.wilaya && l.wilaya !== l.city ? `, ${t(l.wilaya)}` : ''}</span>
+        </p>
+
+        <ul className="mb-4 flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-600">
+          {l.area > 0 && <li className="flex items-center gap-1.5"><Maximize2 className="h-4 w-4 text-gray-400" aria-hidden="true" />{l.area} {t('m²')}</li>}
+          {l.rooms > 0 && <li className="flex items-center gap-1.5"><BedDouble className="h-4 w-4 text-gray-400" aria-hidden="true" />F{l.rooms}</li>}
+          {l.bathrooms > 0 && <li className="flex items-center gap-1.5"><Bath className="h-4 w-4 text-gray-400" aria-hidden="true" />{l.bathrooms}</li>}
+        </ul>
+
+        {monthly > 0 && (
+          <Link href={`/outils/simulateur-credit-immobilier?price=${l.price}`} className="mb-4 inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 hover:underline">
+            <Calculator className="h-3.5 w-3.5" aria-hidden="true" />
+            {t('≈ {amount} / mois avec un crédit', { amount: formatDZD(Math.round(monthly / 100) * 100, l.currency) })}
+          </Link>
+        )}
+
+        {(l.contactPhone || wa) && (
+          <div className="mt-auto grid grid-cols-2 gap-2 border-t border-gray-100 pt-4">
+            {l.contactPhone && (
+              <a href={`tel:${l.contactPhone}`} className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-gray-200 py-2.5 text-sm font-semibold text-gray-700 transition hover:border-emerald-400 hover:text-emerald-700">
+                <Phone className="h-4 w-4" aria-hidden="true" /> {t('Appeler')}
+              </a>
+            )}
+            {wa && (
+              <a href={`https://wa.me/${wa}?text=${waText}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#25D366] py-2.5 text-sm font-semibold text-white transition hover:bg-[#1fb857]">
+                <MessageCircle className="h-4 w-4" aria-hidden="true" /> WhatsApp
+              </a>
+            )}
+          </div>
+        )}
+      </div>
+    </article>
   );
 }

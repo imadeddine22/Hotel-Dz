@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Crosshair, MapPin } from 'lucide-react';
 import { loadLeaflet, markerIcon, ALGERIA_CENTER } from '@/lib/leaflet';
 
+import { useT } from '@/lib/i18n/useT';
 /**
  * Interactive location picker. Click the map (or drag the pin, or use "Ma
  * position") to set coordinates. Also exposes manual lat/lng number inputs.
@@ -11,6 +12,7 @@ import { loadLeaflet, markerIcon, ALGERIA_CENTER } from '@/lib/leaflet';
  * Props: value = { lat, lng } | null, onChange(lat, lng), height, accent.
  */
 export default function MapPicker({ value, onChange, height = 280, accent = '#3b82f6' }) {
+  const { t } = useT();
   const elRef = useRef(null);
   const mapRef = useRef(null);
   const markerRef = useRef(null);
@@ -104,7 +106,7 @@ export default function MapPicker({ value, onChange, height = 280, accent = '#3b
     <div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, flexWrap: 'wrap', gap: 8 }}>
         <p style={{ margin: 0, fontSize: 12, color: '#94a3b8', display: 'flex', alignItems: 'center', gap: 5 }}>
-          <MapPin size={13} /> Cliquez sur la carte pour placer le repère
+          <MapPin size={13} /> {t('Cliquez sur la carte pour placer le repère')}
         </p>
         <button
           type="button"
@@ -115,7 +117,7 @@ export default function MapPicker({ value, onChange, height = 280, accent = '#3b
             padding: '6px 12px', cursor: 'pointer',
           }}
         >
-          <Crosshair size={14} /> Ma position
+          <Crosshair size={14} /> {t('Ma position')}
         </button>
       </div>
 
@@ -128,12 +130,12 @@ export default function MapPicker({ value, onChange, height = 280, accent = '#3b
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 10 }}>
         <input
-          type="number" step="any" placeholder="Latitude"
+          type="number" step="any" placeholder={t('Latitude')}
           value={value?.lat ?? ''} onChange={setField('lat')}
           style={miniInput}
         />
         <input
-          type="number" step="any" placeholder="Longitude"
+          type="number" step="any" placeholder={t('Longitude')}
           value={value?.lng ?? ''} onChange={setField('lng')}
           style={miniInput}
         />
