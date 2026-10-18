@@ -72,6 +72,8 @@ export default function PromoteListing({ kind, listing, className = '' }) {
   const [open, setOpen] = useState(false);
   const [adLang, setAdLang] = useState(uiLang === 'ar' ? 'ar' : 'fr');
   const published = listing.status === 'approved';
+  const [fbNotice, setFbNotice] = useState('');
+  const local = typeof window !== 'undefined' && /^(localhost|127\.0\.0\.1)$/.test(window.location.hostname);
 
   useEffect(() => {
     if (!open) return;
@@ -133,13 +135,30 @@ export default function PromoteListing({ kind, listing, className = '' }) {
             <section className="mb-5">
               <h3 className="mb-2 text-sm font-bold text-ink">{t('1. Partagez gratuitement')}</h3>
               <div className="grid grid-cols-2 gap-2">
-                <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(data.shareLink)}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#1877F2] py-2.5 text-sm font-bold text-white hover:opacity-90">
+                <a
+                  href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(data.shareLink)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => {
+                    // Facebook never lets a site pre-fill the post text: copy it, the owner pastes it
+                    navigator.clipboard
+                      ?.writeText(data.text.replace(data.adLink, data.shareLink))
+                      .then(() => setFbNotice(t('Texte copié : collez-le dans votre publication Facebook (Ctrl+V ou appui long → Coller).')))
+                      .catch(() => {});
+                  }}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#1877F2] py-2.5 text-sm font-bold text-white hover:opacity-90">
                   <Facebook className="h-4 w-4" aria-hidden="true" /> Facebook
                 </a>
                 <a href={`https://wa.me/?text=${encodeURIComponent(data.text.replace(data.adLink, data.whatsapp))}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-500 py-2.5 text-sm font-bold text-white hover:opacity-90">
                   <MessageCircle className="h-4 w-4" aria-hidden="true" /> WhatsApp
                 </a>
               </div>
+              {fbNotice && <p role="status" className="mt-2 rounded-lg bg-blue-50 px-3 py-2 text-xs font-medium text-blue-800">{fbNotice}</p>}
+              {local && (
+                <p className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                  {t('En local, Facebook ne peut pas afficher l’aperçu du lien : il apparaîtra une fois le site en ligne.')}
+                </p>
+              )}
             </section>
 
             {/* 2. Paid ad */}

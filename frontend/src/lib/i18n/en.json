@@ -1291,5 +1291,7 @@
   "Le lien doit être celui du site en ligne (pas localhost) pour que Meta puisse le lire. Les propriétaires peuvent aussi promouvoir chaque annonce depuis leur espace (bouton « Promouvoir »).": "The link must be the live site (not localhost) so Meta can read it. Owners can also promote each listing from their space (\"Promote\" button).",
   "Aperçu du catalogue": "Catalog preview",
   "{n} annonce(s)": "{n} listing(s)",
-  "Aucune annonce publiée avec photo et prix.": "No published listing with a photo and price."
+  "Aucune annonce publiée avec photo et prix.": "No published listing with a photo and price.",
+  "Texte copié : collez-le dans votre publication Facebook (Ctrl+V ou appui long → Coller).": "Text copied: paste it into your Facebook post (Ctrl+V or long-press → Paste).",
+  "En local, Facebook ne peut pas afficher l’aperçu du lien : il apparaîtra une fois le site en ligne.": "On localhost Facebook cannot show the link preview: it will appear once the site is online."
 }

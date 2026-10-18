@@ -1296,5 +1296,7 @@
   "Le lien doit être celui du site en ligne (pas localhost) pour que Meta puisse le lire. Les propriétaires peuvent aussi promouvoir chaque annonce depuis leur espace (bouton « Promouvoir »).": "يجب أن يكون الرابط رابط الموقع المنشور (وليس localhost) حتى تستطيع Meta قراءته. يمكن للمالكين أيضًا ترويج كل إعلان من مساحتهم (زر «ترويج»).",
   "Aperçu du catalogue": "معاينة الكتالوج",
   "{n} annonce(s)": "{n} إعلان",
-  "Aucune annonce publiée avec photo et prix.": "لا توجد إعلانات منشورة بصورة وسعر."
+  "Aucune annonce publiée avec photo et prix.": "لا توجد إعلانات منشورة بصورة وسعر.",
+  "Texte copié : collez-le dans votre publication Facebook (Ctrl+V ou appui long → Coller).": "تم نسخ النص: الصقه في منشورك على فيسبوك (Ctrl+V أو ضغطة مطوّلة ← لصق).",
+  "En local, Facebook ne peut pas afficher l’aperçu du lien : il apparaîtra une fois le site en ligne.": "على localhost لا يستطيع فيسبوك عرض صورة الرابط وعنوانه: ستظهر بعد نشر الموقع على الإنترنت."
 }

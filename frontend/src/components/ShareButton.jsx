@@ -24,6 +24,7 @@ export default function ShareButton({ title, text = '', className = '' }) {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [alignRight, setAlignRight] = useState(true); // menu opens toward the side with room
+  const [notice, setNotice] = useState('');
   const box = useRef(null);
 
   useEffect(() => {
@@ -65,6 +66,18 @@ export default function ShareButton({ title, text = '', className = '' }) {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  // Facebook never lets a site pre-fill the post text: copy it so the user only has to paste it
+  const facebookCopy = async () => {
+    const local = /^(localhost|127\.0\.0\.1)$/.test(window.location.hostname);
+    try {
+      await navigator.clipboard.writeText(`${text || title}\n${shareUrl('facebook')}`);
+      setNotice(t('Texte copié : collez-le dans votre publication Facebook (Ctrl+V ou appui long → Coller).') + (local ? ` ${t('En local, Facebook ne peut pas afficher l’aperçu du lien : il apparaîtra une fois le site en ligne.')}` : ''));
+    } catch {
+      if (local) setNotice(t('En local, Facebook ne peut pas afficher l’aperçu du lien : il apparaîtra une fois le site en ligne.'));
+    }
+    setTimeout(() => setNotice(''), 9000);
+  };
+
   const enc = encodeURIComponent;
   const message = text || title;
   const targets = [
@@ -99,7 +112,10 @@ export default function ShareButton({ title, text = '', className = '' }) {
               href={href()}
               target={key === 'email' ? undefined : '_blank'}
               rel="noopener noreferrer"
-              onClick={() => setOpen(false)}
+              onClick={() => {
+                if (key === 'facebook') facebookCopy();
+                setOpen(false);
+              }}
               className="flex items-center gap-3 px-4 py-2.5 font-semibold text-gray-700 hover:bg-gray-50"
             >
               <Icon className={`h-4 w-4 ${color}`} aria-hidden="true" /> {label}
@@ -110,6 +126,12 @@ export default function ShareButton({ title, text = '', className = '' }) {
             {copied ? t('Lien copié !') : t('Copier le lien')}
           </button>
         </div>
+      )}
+
+      {notice && (
+        <p role="status" className="fixed inset-x-4 bottom-4 z-[120] mx-auto max-w-md rounded-2xl bg-ink px-4 py-3 text-sm font-medium text-white shadow-2xl">
+          {notice}
+        </p>
       )}
     </div>
   );
