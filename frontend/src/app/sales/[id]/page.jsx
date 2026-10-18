@@ -13,6 +13,7 @@ import { monthlyPayment } from '@/components/tools/MortgageCalculator';
 import { useT } from '@/lib/i18n/useT';
 import { useInitialData } from '@/components/InitialData';
 import Avatar from '@/components/Avatar';
+import ShareButton from '@/components/ShareButton';
 /** "0552 22 22 22" → "213552222222" for wa.me links */
 const waNumber = (phone) => {
   const d = String(phone || '').replace(/\D/g, '');
@@ -146,7 +147,12 @@ export default function SaleDetailPage() {
                       {listing.address && `${listing.address}, `}{t(listing.city)}, {t(listing.wilaya)}
                     </p>
                   </div>
-                  <div className="text-right">
+                  <div className="flex flex-col items-end gap-2 text-right">
+                    <ShareButton
+                      className="[&>button]:bg-gray-50 [&>button]:shadow-none"
+                      title={`${t(listing.title)} — ${formatDZD(listing.price, listing.currency)}`}
+                      text={t('Regarde ce bien à vendre sur Meskan : {title} à {city}', { title: t(listing.title), city: t(listing.city) })}
+                    />
                     <p className="text-2xl font-extrabold text-emerald-600">{formatDZD(listing.price, listing.currency)}</p>
                     {listing.area > 0 && (
                       <p className="text-xs font-semibold text-gray-500">{formatDZD(Math.round(listing.price / listing.area), listing.currency)} / {t('m²')}</p>

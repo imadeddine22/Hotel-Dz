@@ -19,6 +19,7 @@ import { currencyOf } from '@/lib/countries';
 import PoliciesFields, { DEFAULT_POLICIES, policiesOf } from '@/components/PoliciesFields';
 import { MULTI_COUNTRY } from '@/lib/countries';
 import DiscountFields from '@/components/DiscountFields';
+import PromoteListing from '@/components/PromoteListing';
 const SERVER = getServerURL();
 function resolveImg(url) {
   if (!url) return null;
@@ -221,6 +222,7 @@ function MyHousesContent() {
                   </p>
                 )}
                 <div className="mt-3 flex gap-2">
+                  <PromoteListing kind="house" listing={h} className="flex-1" />
                   <button onClick={() => openEdit(h)} className="grid w-10 place-items-center rounded-lg bg-gray-50 py-2 text-gray-500 hover:bg-gray-100 transition">
                     <Pencil className="h-4 w-4" />
                   </button>

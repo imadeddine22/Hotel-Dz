@@ -27,6 +27,7 @@ import wilayaRoutes from './routes/wilaya.routes.js';
 import pricingRoutes from './routes/pricing.routes.js';
 import testimonialRoutes from './routes/testimonial.routes.js';
 import conversationRoutes from './routes/conversation.routes.js';
+import feedRoutes from './routes/feed.routes.js';
 
 const app = express();
 
@@ -105,6 +106,7 @@ app.use('/api/v1/wilayas', wilayaRoutes);
 app.use('/api/v1/pricing', pricingRoutes);
 app.use('/api/v1/testimonials', testimonialRoutes);
 app.use('/api/v1/conversations', conversationRoutes);
+app.use('/api/v1/feeds', feedRoutes);
 
 // --- Error handling (must be last) ---
 app.use(notFound);

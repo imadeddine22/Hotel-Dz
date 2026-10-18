@@ -8,6 +8,7 @@ import DashboardShell from '@/components/DashboardShell';
 import api, { getImageUrl } from '@/lib/api';
 
 import { useT } from '@/lib/i18n/useT';
+import PromoteListing from '@/components/PromoteListing';
 const STATUS = {
   pending: 'bg-amber-50 text-amber-700',
   approved: 'bg-green-50 text-green-700',
@@ -98,6 +99,7 @@ export default function MyHotelsPage() {
                   <Link href={`/owner/hotels/${h._id}/rooms`} className="flex-1 rounded-lg bg-brand-50 py-2 text-center text-sm font-semibold text-brand-700 hover:bg-brand-100 transition">
                     {t('Chambres')}
                   </Link>
+                  <PromoteListing kind="hotel" listing={h} />
                   <Link href={`/owner/hotels/${h._id}/edit`} className="grid w-10 place-items-center rounded-lg bg-gray-50 text-gray-600 hover:bg-gray-100 transition">
                     <Pencil className="h-4 w-4" />
                   </Link>

@@ -8,6 +8,7 @@ const ROOM_PLACEHOLDER = 'https://images.unsplash.com/photo-1631049307264-da0ec9
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import FavoriteButton from '@/components/FavoriteButton';
+import ShareButton from '@/components/ShareButton';
 import LocationMap from '@/components/LocationMap';
 import api, { getImageUrl, resolveImg } from '@/lib/api';
 import { ROOM_TYPE_LABELS } from '@/lib/statusLabels';
@@ -88,7 +89,8 @@ export default function HotelDetailPage() {
         {cover && <img src={cover} alt={hotel.name} className="h-full w-full object-cover" />}
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
         {(hotel._id || hotel.id) && (
-          <div className="absolute right-4 top-4">
+          <div className="absolute right-4 top-4 flex items-center gap-2">
+            <ShareButton title={`${hotel.name} — ${t(hotel.city)}, ${t(hotel.wilaya)}`} text={t('Regarde cet hôtel sur Meskan : {name} à {city}', { name: hotel.name, city: t(hotel.city) })} />
             <FavoriteButton type="hotel" id={hotel._id || hotel.id} size={20} />
           </div>
         )}

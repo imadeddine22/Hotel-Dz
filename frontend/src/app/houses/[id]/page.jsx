@@ -6,6 +6,7 @@ import { MapPin, BedDouble, Bath, Users, Wifi, Home, Star, Phone, Mail } from 'l
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import FavoriteButton from '@/components/FavoriteButton';
+import ShareButton from '@/components/ShareButton';
 import LocationMap from '@/components/LocationMap';
 import api, { getImageUrl, resolveImg } from '@/lib/api';
 
@@ -82,7 +83,8 @@ export default function HouseDetailPage() {
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 50%)' }} />
 
         {/* Favorite */}
-        <div style={{ position: 'absolute', top: 20, right: 24 }}>
+        <div style={{ position: 'absolute', top: 20, right: 24, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <ShareButton title={`${house.name} — ${t(house.city)}, ${t(house.wilaya)}`} text={t('Regarde cette location sur Meskan : {name} à {city}', { name: house.name, city: t(house.city) })} />
           <FavoriteButton type="house" id={house._id || id} size={20} />
         </div>
 

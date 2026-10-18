@@ -886,6 +886,24 @@ describe('Profile photo (every role)');
   check('photo removed (back to the initial)', del.status === 200 && !del.data.user?.avatar?.url);
 }
 
+describe('Meta catalog feed (Facebook / Instagram catalog ads)');
+{
+  const r = await fetch(`${API}/feeds/meta-catalog.csv`);
+  const csv = (await r.text()).replace(/^﻿/, '');
+  const [head, ...lines] = csv.trim().split('\n');
+  check('feed is a public CSV', r.ok && (r.headers.get('content-type') || '').startsWith('text/csv'));
+  check('feed has the Meta product columns', ['id', 'title', 'description', 'availability', 'condition', 'price', 'link', 'image_link', 'brand'].every((c) => head.split(',').includes(c)), head);
+  check('hotels, houses and properties for sale are all in it', ['hotel-', 'house-', 'sale-'].every((p) => lines.some((l) => l.startsWith(p))));
+  check('every item has a price in DZD, a photo URL and a tracked link', lines.every((l) => / DZD,/.test(l) && /,https?:\/\/[^,]+utm_source=facebook[^,]*,https?:\/\//.test(l)));
+
+  const admin = await login('admin@hotelsdz.dz', 'admin123');
+  const pending = (await req('GET', '/admin/houses/all?status=pending', { token: admin })).data.houses || [];
+  check('unpublished listings are left out', pending.length > 0 && pending.every((h) => !csv.includes(`house-${h._id}`)));
+
+  const ar = await (await fetch(`${API}/feeds/meta-catalog.csv?lang=ar`)).text();
+  check('Arabic catalog: Arabic place names and /ar links', /[؀-ۿ]/.test(ar) && /\/ar\/(hotels|houses|sales)\//.test(ar));
+}
+
 describe('No online payment');
 {
   const r = await fetch(`${API}/payments/webhook`, { method: 'POST', body: '{}' });
