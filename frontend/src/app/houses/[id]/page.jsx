@@ -7,6 +7,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import FavoriteButton from '@/components/FavoriteButton';
 import ShareButton from '@/components/ShareButton';
+import ListingReel from '@/components/ListingReel';
 import LocationMap from '@/components/LocationMap';
 import api, { getImageUrl, resolveImg } from '@/lib/api';
 
@@ -184,6 +185,11 @@ export default function HouseDetailPage() {
               </div>
             </div>
           )}
+
+          {/* Reel */}
+          <div style={{ marginBottom: 24 }} className="empty:hidden">
+            <ListingReel kind="house" listing={house} />
+          </div>
 
           {/* Location map */}
           <div style={{ background: '#fff', borderRadius: 16, padding: 24, marginBottom: 24, boxShadow: '0 1px 8px rgba(0,0,0,0.05)' }}>

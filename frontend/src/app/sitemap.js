@@ -33,6 +33,7 @@ export default async function sitemap() {
     { path: '/houses', priority: 0.9, changeFrequency: 'daily' },
     { path: '/sales', priority: 0.9, changeFrequency: 'daily' },
     { path: '/destinations', priority: 0.8, changeFrequency: 'weekly' },
+    { path: '/reels', priority: 0.7, changeFrequency: 'daily' },
     { path: '/outils', priority: 0.7, changeFrequency: 'monthly' },
     { path: '/comparatif', priority: 0.6, changeFrequency: 'monthly' },
     ...TOOLS.map((t) => ({ path: `/outils/${t.slug}`, priority: 0.7, changeFrequency: 'monthly' })),

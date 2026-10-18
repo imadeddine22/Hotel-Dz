@@ -904,6 +904,57 @@ describe('Meta catalog feed (Facebook / Instagram catalog ads)');
   check('Arabic catalog: Arabic place names and /ar links', /[؀-ۿ]/.test(ar) && /\/ar\/(hotels|houses|sales)\//.test(ar));
 }
 
+describe('Listing reels (videos)');
+{
+  const putReel = async (token, kind, id, blob, duration = '12', name = 'tour.mp4') => {
+    const fd = new FormData();
+    if (blob) fd.append('video', blob, name);
+    if (duration !== null) fd.append('duration', duration);
+    const r = await fetch(`${API}/reels/${kind}/${id}`, { method: 'PUT', headers: token ? { Authorization: `Bearer ${token}` } : {}, body: fd });
+    return { status: r.status, data: await r.json().catch(() => ({})) };
+  };
+  const MP4 = new Blob([new Uint8Array(2048)], { type: 'video/mp4' }); // content isn't decoded server-side
+
+  const feed = await req('GET', '/reels?limit=20');
+  check('public feed: published reels of published listings', feed.status === 200 && feed.data.reels.length >= 3 && feed.data.reels.every((r) => r.reel.url && ['hotel', 'house', 'sale'].includes(r.kind)));
+  check('feed is newest first', feed.data.reels.every((r, i, a) => i === 0 || new Date(a[i - 1].reel.uploadedAt) >= new Date(r.reel.uploadedAt)));
+  check('reels waiting for the admin are not public', !feed.data.reels.some((r) => r.title === 'Riad Tlemcen'));
+  const sales = await req('GET', '/reels?type=sales');
+  check('category filter (sales only)', sales.data.reels.length > 0 && sales.data.reels.every((r) => r.kind === 'sale'));
+  check('feed cards carry price and listing photo', feed.data.reels.every((r) => 'price' in r && typeof r.image === 'string'));
+
+  const ownerToken = await login('owner@hotelsdz.dz', 'owner123');
+  const myHouse = (await req('GET', '/houses/my/list', { token: ownerToken })).data.houses.find((h) => h.status === 'approved' && h.reel?.status !== 'pending');
+  const up = await putReel(ownerToken, 'house', myHouse._id, MP4);
+  check('owner uploads a reel for their house → waits for approval', up.status === 200 && up.data.reel?.status === 'pending' && up.data.reel.duration === 12, `${up.status} ${up.data.message || ''}`);
+  check('…not public yet', !(await req('GET', '/reels?type=houses&limit=20')).data.reels.some((r) => r._id === myHouse._id));
+  check('…listing itself stays published', (await req('GET', `/houses/${myHouse._id}`)).data.house?.status === 'approved');
+
+  const stranger = await register('owner');
+  expectStatus('another owner cannot touch it', await putReel(stranger.token, 'house', myHouse._id, MP4), 403);
+  expectStatus('a customer cannot upload reels', await putReel(customer.token, 'house', myHouse._id, MP4), 403);
+  expectStatus('visitor cannot upload reels', await putReel('', 'house', myHouse._id, MP4), 401);
+  expectStatus('not a video → 400', await putReel(ownerToken, 'house', myHouse._id, new Blob(['x'], { type: 'text/plain' }), '5', 'x.txt'), 400);
+  expectStatus('longer than 90 s → 400', await putReel(ownerToken, 'house', myHouse._id, MP4, '120'), 400);
+  expectStatus('no file → 400', await putReel(ownerToken, 'house', myHouse._id, null), 400);
+  expectStatus('unknown kind → 404', await putReel(ownerToken, 'boat', myHouse._id, MP4), 404);
+
+  const admin = await login('admin@hotelsdz.dz', 'admin123');
+  expectStatus('customer cannot see the moderation queue', await req('GET', '/admin/reels', { token: customer.token }), 403);
+  const queue = await req('GET', '/admin/reels?status=pending', { token: admin });
+  check('admin sees the reel waiting', queue.data.reels.some((r) => r._id === myHouse._id && r.owner?.email === 'owner@hotelsdz.dz'));
+  expectStatus('admin publishes it', await req('PUT', `/admin/reels/house/${myHouse._id}/approve`, { token: admin }), 200);
+  check('…now in the public feed', (await req('GET', '/reels?type=houses&limit=20')).data.reels.some((r) => r._id === myHouse._id));
+  check('…and on the listing', (await req('GET', `/houses/${myHouse._id}`)).data.house?.reel?.status === 'approved');
+  expectStatus('approving again → 404 (nothing pending)', await req('PUT', `/admin/reels/house/${myHouse._id}/approve`, { token: admin }), 404);
+
+  expectStatus('owner deletes the reel', await req('DELETE', `/reels/house/${myHouse._id}`, { token: ownerToken }), 200);
+  check('…gone from the feed', !(await req('GET', '/reels?type=houses&limit=20')).data.reels.some((r) => r._id === myHouse._id));
+  const adminUp = await putReel(admin, 'house', myHouse._id, MP4);
+  check('admin uploads are published at once', adminUp.data.reel?.status === 'approved');
+  await req('DELETE', `/reels/house/${myHouse._id}`, { token: admin });
+}
+
 describe('No online payment');
 {
   const r = await fetch(`${API}/payments/webhook`, { method: 'POST', body: '{}' });

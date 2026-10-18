@@ -9,6 +9,7 @@ import api, { getImageUrl } from '@/lib/api';
 
 import { useT } from '@/lib/i18n/useT';
 import PromoteListing from '@/components/PromoteListing';
+import ReelManager from '@/components/ReelManager';
 const STATUS = {
   pending: 'bg-amber-50 text-amber-700',
   approved: 'bg-green-50 text-green-700',
@@ -100,6 +101,7 @@ export default function MyHotelsPage() {
                     {t('Chambres')}
                   </Link>
                   <PromoteListing kind="hotel" listing={h} />
+                  <ReelManager kind="hotel" listing={h} />
                   <Link href={`/owner/hotels/${h._id}/edit`} className="grid w-10 place-items-center rounded-lg bg-gray-50 text-gray-600 hover:bg-gray-100 transition">
                     <Pencil className="h-4 w-4" />
                   </Link>

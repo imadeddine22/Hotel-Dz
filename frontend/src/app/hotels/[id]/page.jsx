@@ -9,6 +9,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import FavoriteButton from '@/components/FavoriteButton';
 import ShareButton from '@/components/ShareButton';
+import ListingReel from '@/components/ListingReel';
 import LocationMap from '@/components/LocationMap';
 import api, { getImageUrl, resolveImg } from '@/lib/api';
 import { ROOM_TYPE_LABELS } from '@/lib/statusLabels';
@@ -125,6 +126,11 @@ export default function HotelDetailPage() {
               </div>
             </div>
           )}
+
+          {/* Reel */}
+          <div className="mb-8 empty:hidden">
+            <ListingReel kind="hotel" listing={hotel} />
+          </div>
 
           {/* Location map */}
           <div className="mb-8">

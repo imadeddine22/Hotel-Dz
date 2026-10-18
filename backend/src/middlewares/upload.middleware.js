@@ -27,3 +27,19 @@ export const avatarUpload = (req, res, next) =>
   });
 
 export default upload;
+
+/**
+ * One listing reel (field "video": MP4, WebM or MOV, 50 MB). Errors become readable 400s.
+ */
+const REEL_TYPES = ['video/mp4', 'video/webm', 'video/quicktime'];
+const reelMulter = multer({
+  storage,
+  limits: { fileSize: 50 * 1024 * 1024, files: 1 },
+  fileFilter: (req, file, cb) => (REEL_TYPES.includes(file.mimetype) ? cb(null, true) : cb(new Error('Only MP4, WebM or MOV videos are allowed'), false)),
+}).single('video');
+export const reelUpload = (req, res, next) =>
+  reelMulter(req, res, (err) => {
+    if (!err) return next();
+    const message = err.code === 'LIMIT_FILE_SIZE' ? 'Video too large (50 MB max)' : err.message === 'Only MP4, WebM or MOV videos are allowed' ? err.message : 'Invalid video';
+    res.status(400).json({ success: false, message });
+  });

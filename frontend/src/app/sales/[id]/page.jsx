@@ -14,6 +14,7 @@ import { useT } from '@/lib/i18n/useT';
 import { useInitialData } from '@/components/InitialData';
 import Avatar from '@/components/Avatar';
 import ShareButton from '@/components/ShareButton';
+import ListingReel from '@/components/ListingReel';
 /** "0552 22 22 22" → "213552222222" for wa.me links */
 const waNumber = (phone) => {
   const d = String(phone || '').replace(/\D/g, '');
@@ -214,6 +215,7 @@ export default function SaleDetailPage() {
 
             {/* Right: Contact Card */}
             <div className="space-y-6">
+              <ListingReel kind="sale" listing={listing} />
               <div className="rounded-2xl bg-white p-6 shadow-sm border border-gray-100 sticky top-24">
                 <h3 className="font-bold text-gray-900 mb-4">{t('Contacter le vendeur')}</h3>
                 

@@ -193,6 +193,20 @@ export const seedDatabase = async () => {
   await Message.create(MESSAGES);
   console.log(`✉️  Messages: ${MESSAGES.length}`);
 
+  // --- Demo reels: a free (CC0) sample clip from MDN; real reels are uploaded by owners.
+  // No poster: the site shows the listing photo until the video plays.
+  const SAMPLE = 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower';
+  const demoReel = (file, status, minutesAgo) => ({
+    reel: { url: `${SAMPLE}.${file}`, publicId: '', poster: '', duration: 5, status, uploadedAt: new Date(Date.now() - minutesAgo * 60000) },
+  });
+  await Hotel.updateOne({ name: 'Sofitel Algiers Hamma' }, demoReel('mp4', 'approved', 5));
+  await Hotel.updateOne({ name: 'Le Méridien Oran' }, demoReel('mp4', 'approved', 40));
+  await House.updateOne({ name: 'Villa Yasmine' }, demoReel('webm', 'approved', 15));
+  await House.updateOne({ name: 'Riad Tlemcen' }, demoReel('mp4', 'pending', 2)); // waits for the admin
+  await HouseForSale.updateOne({ title: 'Villa avec jardin et vue mer' }, demoReel('mp4', 'approved', 25));
+  await HouseForSale.updateOne({ title: 'Grande villa avec piscine' }, demoReel('mp4', 'approved', 60));
+  console.log('🎬 Reels: 5 published, 1 waiting for the admin');
+
   // --- Home page testimonials (3 published, 1 waiting for the admin) ---
   await Testimonial.create([
     { user: customers[0]._id, name: customers[0].fullName, title: 'Cliente, Alger', rating: 5, status: 'approved',

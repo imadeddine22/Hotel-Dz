@@ -1,6 +1,13 @@
 // Translations of the API's error/success messages (sent in English, sometimes French).
 // Exact messages are dictionary entries; messages with numbers or statuses go through PATTERNS.
 export const MESSAGES = {
+  'Choose a video': { fr: "Choisissez une vidéo.", ar: "اختر فيديو." },
+  'Video too large (50 MB max)': { fr: "Vidéo trop lourde (50 Mo maximum).", ar: "الفيديو كبير جدًا (50 ميغابايت كحد أقصى)." },
+  'Only MP4, WebM or MOV videos are allowed': { fr: "Seules les vidéos MP4, WebM ou MOV sont acceptées.", ar: "فقط فيديوهات MP4 أو WebM أو MOV مقبولة." },
+  'Invalid video': { fr: "Vidéo invalide.", ar: "فيديو غير صالح." },
+  'No reel waiting for approval': { fr: "Aucune vidéo en attente pour cette annonce.", ar: "لا يوجد فيديو في الانتظار لهذا الإعلان." },
+  'Reel deleted': { fr: "Vidéo supprimée.", ar: "تم حذف الفيديو." },
+  'Reel approved': { fr: "Vidéo publiée.", ar: "تم نشر الفيديو." },
   'Invalid phone number': { fr: "Numéro de téléphone invalide.", ar: "رقم هاتف غير صالح." },
   'Phone number is required': { fr: "Le numéro de téléphone est obligatoire.", ar: "رقم الهاتف إجباري." },
   'Choose an image': { fr: "Choisissez une image.", ar: "اختر صورة." },
@@ -98,6 +105,7 @@ export const MESSAGES = {
 
 // Messages that embed values: regex on the English text → template per language
 export const PATTERNS = [
+  [/^Video too long \((\d+) seconds max\)$/, { fr: 'Vidéo trop longue ({0} secondes maximum).', ar: 'الفيديو طويل جدًا ({0} ثانية كحد أقصى).' }],
   [/^At most (\d+) featured hotels$/, { fr: '{0} hôtels en vedette au maximum.', ar: '{0} فنادق مميزة كحد أقصى.' }],
   [/^Room (\d+): price per night is required$/, { fr: 'Chambre {0} : le prix par nuit est obligatoire.', ar: 'الغرفة {0}: السعر لليلة إجباري.' }],
   [/^Room (\d+): unknown room type$/, { fr: 'Chambre {0} : type de chambre inconnu.', ar: 'الغرفة {0}: نوع غرفة غير معروف.' }],

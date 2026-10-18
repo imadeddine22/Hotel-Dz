@@ -5,8 +5,8 @@ import { Share2, Facebook, MessageCircle, Send, Mail, Link2, Check, Twitter } fr
 import { useT } from '@/lib/i18n/useT';
 
 /** Page URL to share: this page, without the query, tagged so shared visits show up in analytics. */
-const shareUrl = (source) => {
-  const u = new URL(window.location.href);
+const shareUrl = (source, path) => {
+  const u = new URL(path || window.location.href, window.location.origin);
   u.search = '';
   u.hash = '';
   u.searchParams.set('utm_source', source);
@@ -19,7 +19,7 @@ const shareUrl = (source) => {
  * (WhatsApp, Messenger, Instagram… all at once), otherwise a menu of the usual networks + copy link.
  * The shared link shows the listing photo and title thanks to the page's Open Graph tags.
  */
-export default function ShareButton({ title, text = '', className = '' }) {
+export default function ShareButton({ title, text = '', className = '', url, compact = false }) {
   const { t } = useT();
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -45,7 +45,7 @@ export default function ShareButton({ title, text = '', className = '' }) {
     // phones: native share sheet
     if (navigator.share && window.matchMedia('(pointer: coarse)').matches) {
       try {
-        await navigator.share({ title, text: text || title, url: shareUrl('native') });
+        await navigator.share({ title, text: text || title, url: shareUrl('native', url) });
         return;
       } catch (err) {
         if (err?.name === 'AbortError') return; // closed by the user
@@ -58,9 +58,9 @@ export default function ShareButton({ title, text = '', className = '' }) {
 
   const copy = async () => {
     try {
-      await navigator.clipboard.writeText(shareUrl('copy'));
+      await navigator.clipboard.writeText(shareUrl('copy', url));
     } catch {
-      window.prompt(t('Copiez ce lien :'), shareUrl('copy'));
+      window.prompt(t('Copiez ce lien :'), shareUrl('copy', url));
     }
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -70,7 +70,7 @@ export default function ShareButton({ title, text = '', className = '' }) {
   const facebookCopy = async () => {
     const local = /^(localhost|127\.0\.0\.1)$/.test(window.location.hostname);
     try {
-      await navigator.clipboard.writeText(`${text || title}\n${shareUrl('facebook')}`);
+      await navigator.clipboard.writeText(`${text || title}\n${shareUrl('facebook', url)}`);
       setNotice(t('Texte copié : collez-le dans votre publication Facebook (Ctrl+V ou appui long → Coller).') + (local ? ` ${t('En local, Facebook ne peut pas afficher l’aperçu du lien : il apparaîtra une fois le site en ligne.')}` : ''));
     } catch {
       if (local) setNotice(t('En local, Facebook ne peut pas afficher l’aperçu du lien : il apparaîtra une fois le site en ligne.'));
@@ -81,11 +81,11 @@ export default function ShareButton({ title, text = '', className = '' }) {
   const enc = encodeURIComponent;
   const message = text || title;
   const targets = [
-    { key: 'whatsapp', label: 'WhatsApp', icon: MessageCircle, color: 'text-emerald-500', href: () => `https://wa.me/?text=${enc(`${message}\n${shareUrl('whatsapp')}`)}` },
-    { key: 'facebook', label: 'Facebook', icon: Facebook, color: 'text-blue-600', href: () => `https://www.facebook.com/sharer/sharer.php?u=${enc(shareUrl('facebook'))}` },
-    { key: 'telegram', label: 'Telegram', icon: Send, color: 'text-sky-500', href: () => `https://t.me/share/url?url=${enc(shareUrl('telegram'))}&text=${enc(message)}` },
-    { key: 'x', label: 'X (Twitter)', icon: Twitter, color: 'text-gray-900', href: () => `https://twitter.com/intent/tweet?url=${enc(shareUrl('x'))}&text=${enc(message)}` },
-    { key: 'email', label: t('Email'), icon: Mail, color: 'text-gray-500', href: () => `mailto:?subject=${enc(title)}&body=${enc(`${message}\n\n${shareUrl('email')}`)}` },
+    { key: 'whatsapp', label: 'WhatsApp', icon: MessageCircle, color: 'text-emerald-500', href: () => `https://wa.me/?text=${enc(`${message}\n${shareUrl('whatsapp', url)}`)}` },
+    { key: 'facebook', label: 'Facebook', icon: Facebook, color: 'text-blue-600', href: () => `https://www.facebook.com/sharer/sharer.php?u=${enc(shareUrl('facebook', url))}` },
+    { key: 'telegram', label: 'Telegram', icon: Send, color: 'text-sky-500', href: () => `https://t.me/share/url?url=${enc(shareUrl('telegram', url))}&text=${enc(message)}` },
+    { key: 'x', label: 'X (Twitter)', icon: Twitter, color: 'text-gray-900', href: () => `https://twitter.com/intent/tweet?url=${enc(shareUrl('x', url))}&text=${enc(message)}` },
+    { key: 'email', label: t('Email'), icon: Mail, color: 'text-gray-500', href: () => `mailto:?subject=${enc(title)}&body=${enc(`${message}\n\n${shareUrl('email', url)}`)}` },
   ];
 
   return (
@@ -96,11 +96,16 @@ export default function ShareButton({ title, text = '', className = '' }) {
         aria-haspopup="menu"
         aria-expanded={open}
         title={t('Partager')}
-        // coloured and labelled so it stands out on any photo
-        className="inline-flex h-10 items-center gap-2 rounded-full bg-gradient-to-r from-orange-500 to-pink-500 px-4 text-sm font-bold text-white shadow-lg ring-2 ring-white/70 transition hover:scale-105 hover:shadow-xl"
+        aria-label={compact ? t('Partager') : undefined}
+        // coloured and labelled so it stands out on any photo; compact = round icon (Reels page)
+        className={
+          compact
+            ? 'grid h-12 w-12 place-items-center rounded-full bg-gradient-to-r from-orange-500 to-pink-500 text-white shadow-lg transition hover:scale-105'
+            : 'inline-flex h-10 items-center gap-2 rounded-full bg-gradient-to-r from-orange-500 to-pink-500 px-4 text-sm font-bold text-white shadow-lg ring-2 ring-white/70 transition hover:scale-105 hover:shadow-xl'
+        }
       >
-        <Share2 className="h-4 w-4" aria-hidden="true" />
-        {t('Partager')}
+        <Share2 className={compact ? 'h-5 w-5' : 'h-4 w-4'} aria-hidden="true" />
+        {!compact && t('Partager')}
       </button>
 
       {open && (

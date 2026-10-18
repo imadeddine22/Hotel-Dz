@@ -23,6 +23,7 @@ import {
   MessageSquareQuote,
   Star,
   Megaphone,
+  Clapperboard,
 } from 'lucide-react';
 import api from '@/lib/api';
 import Avatar from '@/components/Avatar';
@@ -35,6 +36,7 @@ const ADMIN_MENU = [
   { href: '/admin/all-hotels', label: 'Tous les hôtels', icon: Building2 },
   { href: '/admin/featured', label: 'Hôtels en vedette', icon: Star },
   { href: '/admin/meta', label: 'Publicité Meta', icon: Megaphone },
+  { href: '/admin/reels', label: 'Reels', icon: Clapperboard },
   { href: '/admin/all-houses', label: 'Toutes les maisons', icon: Home },
   { href: '/admin/all-sales', label: 'Ventes immobilières', icon: Tag },
   { href: '/admin/users', label: 'Utilisateurs', icon: Users },
@@ -53,6 +55,7 @@ export default function AdminLayout({ children }) {
   const [profileOpen, setProfileOpen] = useState(false);
   const [unread, setUnread] = useState(0);
   const [pendingReviews, setPendingReviews] = useState(0);
+  const [pendingReels, setPendingReels] = useState(0);
 
   useEffect(() => {
     if (loading) return;
@@ -68,6 +71,9 @@ export default function AdminLayout({ children }) {
       .catch(() => {});
     api.get('/testimonials/admin?status=pending', { localize: false })
       .then(({ data }) => setPendingReviews(data.pending || 0))
+      .catch(() => {});
+    api.get('/admin/reels?status=pending', { localize: false })
+      .then(({ data }) => setPendingReels(data.pending || 0))
       .catch(() => {});
   }, [user, pathname]);
 
@@ -102,7 +108,7 @@ export default function AdminLayout({ children }) {
           {ADMIN_MENU.map((item) => {
             const Icon = item.icon;
             const active = pathname === item.href;
-            const badge = item.href === '/admin/messages' ? unread : item.href === '/admin/testimonials' ? pendingReviews : 0;
+            const badge = item.href === '/admin/messages' ? unread : item.href === '/admin/testimonials' ? pendingReviews : item.href === '/admin/reels' ? pendingReels : 0;
             return (
               <Link
                 key={item.href}

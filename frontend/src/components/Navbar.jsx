@@ -93,6 +93,7 @@ export default function Navbar() {
     { label: t.navHotels, href: '/hotels' },
     { label: t.navHouses, href: '/houses' },
     { label: t.navSales || 'Ventes', href: '/sales' },
+    { label: 'Reels', href: '/reels' },
     { label: t.navDestinations, href: '/destinations' },
     { label: t.navPricing, href: '/pricing' },
     // the contact form goes straight to the site owner (Admin → Messages)
@@ -101,7 +102,7 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-xs">
-      <div className="mx-auto flex h-20 max-w-[1440px] items-center justify-between gap-6 px-4 sm:px-6 2xl:gap-10">
+      <div className="mx-auto flex h-20 max-w-[1440px] items-center justify-between gap-4 px-4 sm:px-6 2xl:gap-10">
         
         {/* Left: Brand Logo */}
         <Link href="/" className="-ms-1 flex items-center shrink-0 group xl:me-2 2xl:me-6" aria-label={`${brandName(lang)} — ${t.tagline}`}>
@@ -116,7 +117,7 @@ export default function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`whitespace-nowrap px-3 2xl:px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
+                className={`whitespace-nowrap px-2.5 2xl:px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
                   isActive
                     ? 'bg-white text-brand-600 shadow-xs font-bold'
                     : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
@@ -164,13 +165,15 @@ export default function Navbar() {
             </Link>
           )}
 
-          {/* Add Hotel Button */}
-          <Link
-            href="/register?role=owner"
-            className="inline-flex items-center gap-2 rounded-full bg-brand-500 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-brand-600 hover:shadow-md"
-          >
-            {t.suggestHotel}
-          </Link>
+          {/* Add Hotel Button: it leads to the owner sign-up, so visitors only (also leaves room for the menu) */}
+          {!user && (
+            <Link
+              href="/register?role=owner"
+              className="inline-flex items-center gap-2 whitespace-nowrap rounded-full bg-brand-500 px-4 2xl:px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-brand-600 hover:shadow-md"
+            >
+              {t.suggestHotel}
+            </Link>
+          )}
 
           {/* User Account / Espace */}
           <Link
