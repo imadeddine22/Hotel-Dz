@@ -101,10 +101,10 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-xs">
-      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex h-20 max-w-[1440px] items-center justify-between gap-6 px-4 sm:px-6 2xl:gap-10">
         
         {/* Left: Brand Logo */}
-        <Link href="/" className="flex items-center shrink-0 group" aria-label={`${brandName(lang)} — ${t.tagline}`}>
+        <Link href="/" className="-ms-1 flex items-center shrink-0 group xl:me-2 2xl:me-6" aria-label={`${brandName(lang)} — ${t.tagline}`}>
           <span className="inline-block transition-transform duration-300 group-hover:scale-[1.03]"><BrandLogo className="h-10 sm:h-11" textClassName="text-2xl sm:text-[1.7rem]" alt="" priority /></span>
         </Link>
 
