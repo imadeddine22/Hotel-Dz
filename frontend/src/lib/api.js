@@ -63,6 +63,23 @@ const currentLang = () => {
 // or saving the form would overwrite the original with it.
 const EDITING_PATHS = /\/(my\/list|seller\/|admin\/|owner\/)/;
 
+// The saved session no longer works (account deleted, token expired/invalid, password changed elsewhere):
+// forget it, and on a private page go to the login page — instead of a page full of failed requests.
+const SESSION_GONE = /^(User no longer exists|Invalid token|Token expired|Password changed, please log in again)$/;
+const AUTH_PAGES = /^\/(login|register|forgot-password|reset-password)(\/|$)/;
+let ending = false;
+function endSession() {
+  if (ending || !localStorage.getItem('token')) return;
+  ending = true;
+  localStorage.removeItem('token');
+  const path = window.location.pathname;
+  if (!isLocalizable(path) && !AUTH_PAGES.test(path)) {
+    window.location.assign(`/login?redirect=${encodeURIComponent(path + window.location.search)}`);
+  } else {
+    window.location.reload(); // public page: show it logged out
+  }
+}
+
 api.interceptors.response.use(
   (res) => {
     if (typeof window !== 'undefined' && res.config.localize !== false && !EDITING_PATHS.test(res.config.url || '')) {
@@ -74,6 +91,7 @@ api.interceptors.response.use(
   (error) => {
     const message =
       error.response?.data?.message || error.message || 'Une erreur est survenue';
+    if (typeof window !== 'undefined' && error.response?.status === 401 && SESSION_GONE.test(message)) endSession();
     const err = new Error(typeof window === 'undefined' ? message : translateMessage(currentLang(), message));
     err.status = error.response?.status; // HTTP status, for callers that react to a specific error
     return Promise.reject(err);
