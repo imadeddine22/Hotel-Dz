@@ -18,18 +18,8 @@ export default function HomeDetailsSection() {
           {t('With a proven track record and in-depth market knowledge, we\'re here to make your real estate journey smooth and stress-free. Whether buying, selling, or renting, you can count on our team to deliver results with integrity.')}
         </p>
 
-        {/* Corporate Team Image & Stats Panel */}
-        <div className="relative mt-12 rounded-3xl overflow-hidden shadow-lg aspect-[16/9] max-h-[460px] w-full">
-          <img
-            src="https://images.unsplash.com/photo-1556761175-b413da4baf72?w=1200&q=80"
-            alt={t('Meskan Team')}
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-slate-900/10"></div>
-        </div>
-
-        {/* Stat Cards Grid (Overlapping in desktop / stacked below on mobile) */}
-        <div className="grid gap-6 md:grid-cols-3 -mt-16 md:-mt-24 relative z-10 px-4 md:px-12">
+        {/* Stat Cards Grid */}
+        <div className="grid gap-6 md:grid-cols-3 pt-6 relative z-10 px-4 md:px-12">
           
           {/* Card 1 */}
           <div className="bg-white rounded-3xl p-6 shadow-card border border-slate-100 flex flex-col items-start text-left">
