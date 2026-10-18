@@ -5,6 +5,7 @@ import { X } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Hero from '@/components/Hero';
 import FeaturedHotels from '@/components/FeaturedHotels';
+import ReelsTeaser from '@/components/ReelsTeaser';
 import FeaturedHouses from '@/components/FeaturedHouses';
 import FeaturedSales from '@/components/FeaturedSales';
 import CitiesSection from '@/components/CitiesSection';
@@ -51,6 +52,7 @@ export default function HomePage() {
       ) : (
         <>
           <FeaturedHotels />
+          <ReelsTeaser />
           <CitiesSection selectedCity={place} onSelectCity={setPlace} />
           <FeaturedHouses selectedCity={place} />
           <FeaturedSales selectedCity={place} />

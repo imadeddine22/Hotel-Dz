@@ -2,7 +2,7 @@
 
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Volume2, VolumeX, MapPin, Play, Clapperboard, ExternalLink } from 'lucide-react';
+import { Volume2, VolumeX, MapPin, Play, Clapperboard, ExternalLink, X } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Link from '@/components/LocaleLink';
 import ShareButton from '@/components/ShareButton';
@@ -65,6 +65,13 @@ function Reels() {
     load(1);
   }, [load]);
 
+  // ✕: back where the visitor came from on this site, else the home page
+  const exit = () => {
+    const fromHere = document.referrer && new URL(document.referrer).origin === window.location.origin;
+    if (fromHere && window.history.length > 1) router.back();
+    else router.push(localePath(lang, '/'));
+  };
+
   const pick = (next) => router.replace(localePath(lang, next ? `/reels?type=${next}` : '/reels'), { scroll: false });
 
   return (
@@ -72,19 +79,32 @@ function Reels() {
       <Navbar />
       <div className="relative min-h-0 flex-1">
         {/* Categories */}
-        <nav className="absolute inset-x-0 top-0 z-20 flex justify-center gap-1.5 bg-gradient-to-b from-black/70 to-transparent px-3 pb-6 pt-3" aria-label={t('Catégories de reels')}>
+        <div className="absolute inset-x-0 top-0 z-20 flex items-center gap-2 bg-gradient-to-b from-black/70 to-transparent px-3 pb-6 pt-3">
+          <button
+            type="button"
+            onClick={exit}
+            aria-label={t('Quitter les reels')}
+            title={t('Quitter les reels')}
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/15 text-white backdrop-blur transition hover:bg-white/30"
+          >
+            <X className="h-5 w-5" aria-hidden="true" />
+          </button>
+        <nav className="flex min-w-0 flex-1 justify-start gap-1.5 overflow-x-auto [scrollbar-width:none] sm:justify-center" aria-label={t('Catégories de reels')}>
           {TABS.map((tab) => (
             <button
               key={tab.type || 'all'}
               type="button"
               aria-pressed={type === tab.type}
               onClick={() => pick(tab.type)}
-              className={`rounded-full px-4 py-1.5 text-sm font-bold transition ${type === tab.type ? 'bg-white text-ink' : 'bg-white/15 text-white backdrop-blur hover:bg-white/25'}`}
+              className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-bold transition ${type === tab.type ? 'bg-white text-ink' : 'bg-white/15 text-white backdrop-blur hover:bg-white/25'}`}
             >
               {t(tab.label)}
             </button>
           ))}
         </nav>
+          {/* keeps the tabs centred against the ✕ on wide screens */}
+          <span className="hidden h-9 w-9 shrink-0 sm:block" aria-hidden="true" />
+        </div>
 
         <div ref={feed} className="h-full snap-y snap-mandatory overflow-y-auto overscroll-contain [scrollbar-width:none]">
           {items.map((r, i) => (
