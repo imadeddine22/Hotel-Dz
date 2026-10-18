@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { CheckCircle, Trash2, ExternalLink, Clapperboard } from 'lucide-react';
+import { CheckCircle, Trash2, ExternalLink, Clapperboard, XCircle } from 'lucide-react';
 import Link from '@/components/LocaleLink';
 import api, { getImageUrl } from '@/lib/api';
 import { useT } from '@/lib/i18n/useT';
@@ -10,6 +10,15 @@ import { dateLocale } from '@/lib/i18n/format';
 const FILTERS = [
   { key: 'pending', label: 'En attente' },
   { key: 'approved', label: 'Publiés' },
+  { key: 'rejected', label: 'Refusés' },
+];
+// one click for the usual reasons; the admin can also write their own
+const REASONS = [
+  'La vidéo n’est pas au format vertical (9:16)',
+  'Qualité insuffisante (floue, sombre ou qui tremble)',
+  'La vidéo ne montre pas ce bien',
+  'Contenu inapproprié',
+  'Contient un numéro de téléphone, un lien ou une publicité',
 ];
 const PATH = { hotel: '/hotels', house: '/houses', sale: '/sales' };
 const KIND = { hotel: 'Hôtel', house: 'Location', sale: 'À vendre' };
@@ -23,6 +32,8 @@ export default function AdminReelsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState('');
+  const [rejecting, setRejecting] = useState(null); // id of the reel whose reject form is open
+  const [reason, setReason] = useState('');
 
   const load = async () => {
     setLoading(true);
@@ -46,7 +57,10 @@ export default function AdminReelsPage() {
     setBusy(`${r.kind}-${r._id}`);
     try {
       if (action === 'approve') await api.put(`/admin/reels/${r.kind}/${r._id}/approve`);
+      else if (action === 'reject') await api.put(`/admin/reels/${r.kind}/${r._id}/reject`, { reason: reason.trim() });
       else await api.delete(`/reels/${r.kind}/${r._id}`);
+      setRejecting(null);
+      setReason('');
       await load();
     } catch (e) {
       alert(e.message);
@@ -103,12 +117,50 @@ export default function AdminReelsPage() {
                   <p className="mt-1 text-xs text-gray-400">
                     {new Date(r.reel.uploadedAt).toLocaleString(dateLocale())}
                     {r.reel.duration ? ` · ${r.reel.duration} s` : ''}
+                    {r.reel.width ? ` · ${r.reel.width}×${r.reel.height}` : ''}
                     {r.listingStatus !== 'approved' && ` · ${t('annonce pas encore publiée')}`}
                   </p>
+                  {r.reel.status === 'rejected' && r.reel.rejectionReason && (
+                    <p className="mt-2 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700">
+                      <strong>{t('Motif du refus :')}</strong> {t(r.reel.rejectionReason)}
+                    </p>
+                  )}
+                  {rejecting === id && (
+                    <form
+                      className="mt-3 space-y-2 rounded-xl border border-red-100 bg-red-50/40 p-3"
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        if (reason.trim().length >= 3) act(r, 'reject');
+                      }}
+                    >
+                      <p className="text-xs font-bold text-red-800">{t('Motif du refus (envoyé au propriétaire)')}</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {REASONS.map((x) => (
+                          <button key={x} type="button" onClick={() => setReason(t(x))} className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${reason === t(x) ? 'border-red-400 bg-red-100 text-red-800' : 'border-red-100 bg-white text-red-700 hover:bg-red-50'}`}>
+                            {t(x)}
+                          </button>
+                        ))}
+                      </div>
+                      <textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={2} maxLength={300} placeholder={t('Ou écrivez le motif…')} className="w-full resize-none rounded-lg border border-red-100 bg-white px-3 py-2 text-sm outline-none focus:border-red-300" />
+                      <div className="flex gap-2">
+                        <button type="submit" disabled={busy === id || reason.trim().length < 3} className="inline-flex min-h-[34px] items-center gap-1 rounded-lg bg-red-600 px-3 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-40">
+                          <XCircle className="h-4 w-4" aria-hidden="true" /> {t('Confirmer le refus')}
+                        </button>
+                        <button type="button" onClick={() => { setRejecting(null); setReason(''); }} className="min-h-[34px] rounded-lg px-3 text-xs font-semibold text-gray-500 hover:bg-gray-100">
+                          {t('Annuler')}
+                        </button>
+                      </div>
+                    </form>
+                  )}
                   <div className="mt-4 flex flex-wrap gap-2 border-t border-gray-50 pt-3">
-                    {r.reel.status === 'pending' && (
+                    {r.reel.status !== 'approved' && (
                       <button disabled={busy === id} onClick={() => act(r, 'approve')} className="inline-flex min-h-[36px] items-center gap-1 rounded-lg bg-green-600 px-3 text-xs font-semibold text-white hover:bg-green-700 disabled:opacity-50">
                         <CheckCircle className="h-4 w-4" aria-hidden="true" /> {t('Publier')}
+                      </button>
+                    )}
+                    {r.reel.status !== 'rejected' && rejecting !== id && (
+                      <button disabled={busy === id} onClick={() => { setRejecting(id); setReason(''); }} className="inline-flex min-h-[36px] items-center gap-1 rounded-lg bg-red-600 px-3 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-50">
+                        <XCircle className="h-4 w-4" aria-hidden="true" /> {t('Refuser')}
                       </button>
                     )}
                     <button disabled={busy === id} onClick={() => act(r, 'delete')} className="inline-flex min-h-[36px] items-center gap-1 rounded-lg border border-red-200 px-3 text-xs font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50">

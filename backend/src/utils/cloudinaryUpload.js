@@ -115,14 +115,14 @@ export const VIDEO_TYPES = Object.keys(VIDEO_EXT);
 
 /**
  * Upload a video buffer (Cloudinary, or local disk as fallback).
- * Returns { url, publicId, poster, duration } — poster/duration only known with Cloudinary.
+ * Returns { url, publicId, poster, duration, width, height } — the last four only known with Cloudinary.
  */
 export const uploadVideo = (buffer, folder, mimetype) => {
   if (!isCloudinaryEnabled()) {
     const dir = ensureDir(folder);
     const fileName = `${uniqueName()}${VIDEO_EXT[mimetype] || '.mp4'}`;
     fs.writeFileSync(path.join(dir, fileName), buffer);
-    return Promise.resolve({ url: `/uploads/${folder}/${fileName}`, publicId: `${folder}/${fileName}`, poster: '', duration: 0 });
+    return Promise.resolve({ url: `/uploads/${folder}/${fileName}`, publicId: `${folder}/${fileName}`, poster: '', duration: 0, width: 0, height: 0 });
   }
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
@@ -135,6 +135,8 @@ export const uploadVideo = (buffer, folder, mimetype) => {
           // Cloudinary serves a frame of the video as an image when the extension is .jpg
           poster: result.secure_url.replace(/\.[a-z0-9]+$/i, '.jpg'),
           duration: Math.round(result.duration || 0),
+          width: result.width || 0,
+          height: result.height || 0,
         });
       }
     );

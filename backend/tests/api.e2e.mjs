@@ -906,10 +906,14 @@ describe('Meta catalog feed (Facebook / Instagram catalog ads)');
 
 describe('Listing reels (videos)');
 {
-  const putReel = async (token, kind, id, blob, duration = '12', name = 'tour.mp4') => {
+  const putReel = async (token, kind, id, blob, duration = '12', name = 'tour.mp4', size = { width: 1080, height: 1920 }) => {
     const fd = new FormData();
     if (blob) fd.append('video', blob, name);
     if (duration !== null) fd.append('duration', duration);
+    if (size) {
+      fd.append('width', String(size.width));
+      fd.append('height', String(size.height));
+    }
     const r = await fetch(`${API}/reels/${kind}/${id}`, { method: 'PUT', headers: token ? { Authorization: `Bearer ${token}` } : {}, body: fd });
     return { status: r.status, data: await r.json().catch(() => ({})) };
   };
@@ -938,6 +942,15 @@ describe('Listing reels (videos)');
   expectStatus('longer than 90 s → 400', await putReel(ownerToken, 'house', myHouse._id, MP4, '120'), 400);
   expectStatus('no file → 400', await putReel(ownerToken, 'house', myHouse._id, null), 400);
   expectStatus('unknown kind → 404', await putReel(ownerToken, 'boat', myHouse._id, MP4), 404);
+  // Reels format only
+  expectStatus('landscape video (16:9) refused', await putReel(ownerToken, 'house', myHouse._id, MP4, '12', 'tour.mp4', { width: 1920, height: 1080 }), 400);
+  expectStatus('square video refused', await putReel(ownerToken, 'house', myHouse._id, MP4, '12', 'tour.mp4', { width: 1080, height: 1080 }), 400);
+  expectStatus('3:4 video refused', await putReel(ownerToken, 'house', myHouse._id, MP4, '12', 'tour.mp4', { width: 1080, height: 1440 }), 400);
+  expectStatus('too small (360×640) refused', await putReel(ownerToken, 'house', myHouse._id, MP4, '12', 'tour.mp4', { width: 360, height: 640 }), 400);
+  expectStatus('missing dimensions refused', await putReel(ownerToken, 'house', myHouse._id, MP4, '12', 'tour.mp4', null), 400);
+  expectStatus('shorter than 3 s refused', await putReel(ownerToken, 'house', myHouse._id, MP4, '1'), 400);
+  const tall = await putReel(ownerToken, 'house', myHouse._id, MP4, '12', 'tour.mp4', { width: 1170, height: 2532 });
+  check('phone-screen 9:19.5 video accepted', tall.status === 200 && tall.data.reel?.width === 1170, `${tall.status} ${tall.data.message || ''}`);
 
   const admin = await login('admin@hotelsdz.dz', 'admin123');
   expectStatus('customer cannot see the moderation queue', await req('GET', '/admin/reels', { token: customer.token }), 403);
@@ -947,6 +960,19 @@ describe('Listing reels (videos)');
   check('…now in the public feed', (await req('GET', '/reels?type=houses&limit=20')).data.reels.some((r) => r._id === myHouse._id));
   check('…and on the listing', (await req('GET', `/houses/${myHouse._id}`)).data.house?.reel?.status === 'approved');
   expectStatus('approving again → 404 (nothing pending)', await req('PUT', `/admin/reels/house/${myHouse._id}/approve`, { token: admin }), 404);
+
+  // Rejection with a reason
+  expectStatus('reject needs a reason', await req('PUT', `/admin/reels/house/${myHouse._id}/reject`, { token: admin, body: { reason: ' ' } }), 400);
+  expectStatus('owner cannot reject', await req('PUT', `/admin/reels/house/${myHouse._id}/reject`, { token: ownerToken, body: { reason: 'Floue' } }), 403);
+  expectStatus('admin rejects with a reason', await req('PUT', `/admin/reels/house/${myHouse._id}/reject`, { token: admin, body: { reason: 'Qualité insuffisante (floue)' } }), 200);
+  const mine = (await req('GET', '/houses/my/list', { token: ownerToken })).data.houses.find((h) => h._id === myHouse._id);
+  check('owner sees "rejected" and the reason', mine?.reel?.status === 'rejected' && mine.reel.rejectionReason === 'Qualité insuffisante (floue)');
+  check('rejected reel is no longer public', !(await req('GET', '/reels?type=houses&limit=20')).data.reels.some((r) => r._id === myHouse._id));
+  check('admin "rejected" tab lists it', (await req('GET', '/admin/reels?status=rejected', { token: admin })).data.reels.some((r) => r._id === myHouse._id));
+  expectStatus('admin can still publish a rejected reel', await req('PUT', `/admin/reels/house/${myHouse._id}/approve`, { token: admin }), 200);
+  check('…published again, reason cleared', (await req('GET', `/houses/${myHouse._id}`)).data.house?.reel?.rejectionReason === '');
+  const again = await putReel(ownerToken, 'house', myHouse._id, MP4);
+  check('a new upload goes back to review', again.data.reel?.status === 'pending' && again.data.reel.rejectionReason === '');
 
   expectStatus('owner deletes the reel', await req('DELETE', `/reels/house/${myHouse._id}`, { token: ownerToken }), 200);
   check('…gone from the feed', !(await req('GET', '/reels?type=houses&limit=20')).data.reels.some((r) => r._id === myHouse._id));

@@ -1343,5 +1343,22 @@
   "Supprimer cette vidéo définitivement ?": "حذف هذا الفيديو نهائيًا؟",
   "Quitter les reels": "اخرج من الريلز",
   "Visitez en vidéo avant de réserver ou d’acheter": "شاهد بالفيديو قبل الحجز أو الشراء",
-  "Regarder les reels": "شاهد الريلز"
+  "Regarder les reels": "شاهد الريلز",
+  "Refusés": "المرفوضة",
+  "Motif du refus (envoyé au propriétaire)": "سبب الرفض (يُرسل إلى المالك)",
+  "Ou écrivez le motif…": "أو اكتب السبب…",
+  "La vidéo n’est pas au format vertical (9:16)": "الفيديو ليس بالصيغة العمودية (9:16)",
+  "Qualité insuffisante (floue, sombre ou qui tremble)": "جودة غير كافية (غير واضح، مظلم أو يهتز)",
+  "La vidéo ne montre pas ce bien": "الفيديو لا يُظهر هذا العقار",
+  "Contenu inapproprié": "محتوى غير لائق",
+  "Contient un numéro de téléphone, un lien ou une publicité": "يحتوي على رقم هاتف أو رابط أو إشهار",
+  "Impossible de lire cette vidéo. Essayez un fichier MP4.": "تعذّرت قراءة هذا الفيديو. جرّب ملف MP4.",
+  "Seules les vidéos verticales au format reel (9:16) sont acceptées. Cette vidéo fait {w}×{h}.": "تُقبل فقط الفيديوهات العمودية بصيغة الريلز (9:16). أبعاد هذا الفيديو {w}×{h}.",
+  "Qualité trop faible : {w}×{h} (minimum 480×854, idéal 1080×1920).": "الجودة ضعيفة: {w}×{h} (الحد الأدنى 480×854، والأفضل 1080×1920).",
+  "Vidéo trop courte ({n} secondes minimum).": "الفيديو قصير جدًا ({n} ثوانٍ كحد أدنى).",
+  "Vidéo refusée par l’administration": "رفضت الإدارة هذا الفيديو",
+  "Motif :": "السبب:",
+  "Envoyez une autre vidéo : elle sera de nouveau vérifiée.": "أرسل فيديو آخر: ستتم مراجعته من جديد.",
+  "Format reel uniquement : vidéo verticale 9:16 (filmée au téléphone, idéal 1080×1920)": "صيغة الريلز فقط: فيديو عمودي 9:16 (مصوّر بالهاتف، والأفضل 1080×1920)",
+  "MP4, WebM ou MOV · de {min} à {s} secondes · 50 Mo maximum": "MP4 أو WebM أو MOV · من {min} إلى {s} ثانية · 50 ميغابايت كحد أقصى"
 }

@@ -1338,5 +1338,22 @@
   "Supprimer cette vidéo définitivement ?": "Delete this video for good?",
   "Quitter les reels": "Leave reels",
   "Visitez en vidéo avant de réserver ou d’acheter": "Visit on video before you book or buy",
-  "Regarder les reels": "Watch the reels"
+  "Regarder les reels": "Watch the reels",
+  "Refusés": "Rejected",
+  "Motif du refus (envoyé au propriétaire)": "Reason for rejection (sent to the owner)",
+  "Ou écrivez le motif…": "Or write the reason…",
+  "La vidéo n’est pas au format vertical (9:16)": "The video is not vertical (9:16)",
+  "Qualité insuffisante (floue, sombre ou qui tremble)": "Poor quality (blurry, dark or shaky)",
+  "La vidéo ne montre pas ce bien": "The video does not show this property",
+  "Contenu inapproprié": "Inappropriate content",
+  "Contient un numéro de téléphone, un lien ou une publicité": "Contains a phone number, a link or an ad",
+  "Impossible de lire cette vidéo. Essayez un fichier MP4.": "This video cannot be read. Try an MP4 file.",
+  "Seules les vidéos verticales au format reel (9:16) sont acceptées. Cette vidéo fait {w}×{h}.": "Only vertical reel videos (9:16) are accepted. This video is {w}×{h}.",
+  "Qualité trop faible : {w}×{h} (minimum 480×854, idéal 1080×1920).": "Resolution too low: {w}×{h} (480×854 minimum, 1080×1920 ideal).",
+  "Vidéo trop courte ({n} secondes minimum).": "Video too short ({n} seconds min).",
+  "Vidéo refusée par l’administration": "Video rejected by the admin",
+  "Motif :": "Reason:",
+  "Envoyez une autre vidéo : elle sera de nouveau vérifiée.": "Send another video: it will be checked again.",
+  "Format reel uniquement : vidéo verticale 9:16 (filmée au téléphone, idéal 1080×1920)": "Reel format only: vertical 9:16 video (filmed with a phone, ideally 1080×1920)",
+  "MP4, WebM ou MOV · de {min} à {s} secondes · 50 Mo maximum": "MP4, WebM or MOV · {min} to {s} seconds · 50 MB max"
 }

@@ -1,6 +1,12 @@
 // Translations of the API's error/success messages (sent in English, sometimes French).
 // Exact messages are dictionary entries; messages with numbers or statuses go through PATTERNS.
 export const MESSAGES = {
+  'Video dimensions are required': { fr: "Dimensions de la vidéo manquantes.", ar: "أبعاد الفيديو مطلوبة." },
+  'Reels must be vertical videos (9:16 format)': { fr: "Les reels doivent être des vidéos verticales (format 9:16).", ar: "يجب أن تكون الريلز فيديوهات عمودية (صيغة 9:16)." },
+  'Video resolution too low (480×854 minimum)': { fr: "Qualité de la vidéo trop faible (480×854 minimum).", ar: "جودة الفيديو ضعيفة (480×854 كحد أدنى)." },
+  'Give the reason for the rejection': { fr: "Indiquez le motif du refus.", ar: "اكتب سبب الرفض." },
+  'No reel to reject': { fr: "Aucune vidéo à refuser.", ar: "لا يوجد فيديو لرفضه." },
+  'Reel rejected': { fr: "Vidéo refusée.", ar: "تم رفض الفيديو." },
   'Choose a video': { fr: "Choisissez une vidéo.", ar: "اختر فيديو." },
   'Video too large (50 MB max)': { fr: "Vidéo trop lourde (50 Mo maximum).", ar: "الفيديو كبير جدًا (50 ميغابايت كحد أقصى)." },
   'Only MP4, WebM or MOV videos are allowed': { fr: "Seules les vidéos MP4, WebM ou MOV sont acceptées.", ar: "فقط فيديوهات MP4 أو WebM أو MOV مقبولة." },
@@ -105,6 +111,7 @@ export const MESSAGES = {
 
 // Messages that embed values: regex on the English text → template per language
 export const PATTERNS = [
+  [/^Video too short \((\d+) seconds min\)$/, { fr: 'Vidéo trop courte ({0} secondes minimum).', ar: 'الفيديو قصير جدًا ({0} ثوانٍ كحد أدنى).' }],
   [/^Video too long \((\d+) seconds max\)$/, { fr: 'Vidéo trop longue ({0} secondes maximum).', ar: 'الفيديو طويل جدًا ({0} ثانية كحد أقصى).' }],
   [/^At most (\d+) featured hotels$/, { fr: '{0} hôtels en vedette au maximum.', ar: '{0} فنادق مميزة كحد أقصى.' }],
   [/^Room (\d+): price per night is required$/, { fr: 'Chambre {0} : le prix par nuit est obligatoire.', ar: 'الغرفة {0}: السعر لليلة إجباري.' }],

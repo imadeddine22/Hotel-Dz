@@ -3,7 +3,12 @@ import Hotel from '../models/Hotel.js';
 import House from '../models/House.js';
 import HouseForSale from '../models/HouseForSale.js';
 import { uploadVideo, destroyVideo } from '../utils/cloudinaryUpload.js';
-import { MAX_REEL_SECONDS } from '../utils/reelPlugin.js';
+import { MAX_REEL_SECONDS, MIN_REEL_SECONDS, reelFormatError } from '../utils/reelPlugin.js';
+import { sendEmail } from '../utils/sendEmail.js';
+import { escapeHtml } from '../utils/escapeHtml.js';
+
+const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000';
+const OWNER_PAGE = { hotel: '/owner/my-hotels', house: '/owner/my-houses', sale: '/seller/my-listings' };
 import { attachPrices } from './hotel.controller.js';
 import { effectivePrice } from '../utils/pricing.js';
 
@@ -42,11 +47,17 @@ export const uploadReel = async (req, res, next) => {
     const { def, listing } = loaded;
     if (!req.file) return res.status(400).json({ success: false, message: 'Choose a video' });
 
-    // the browser's measure is checked first (local storage can't read durations); Cloudinary's wins after upload
+    // Reels format only: the browser measures the video (duration and displayed size, rotation included)
+    // and sends it along; Cloudinary's duration wins after upload. Admins still watch every reel.
     const claimed = Number(req.body.duration);
     if (Number.isFinite(claimed) && claimed > MAX_REEL_SECONDS + 1) {
       return res.status(400).json({ success: false, message: `Video too long (${MAX_REEL_SECONDS} seconds max)` });
     }
+    if (Number.isFinite(claimed) && claimed > 0 && claimed < MIN_REEL_SECONDS) {
+      return res.status(400).json({ success: false, message: `Video too short (${MIN_REEL_SECONDS} seconds min)` });
+    }
+    const formatError = reelFormatError(req.body.width, req.body.height);
+    if (formatError) return res.status(400).json({ success: false, message: formatError });
     const video = await uploadVideo(req.file.buffer, `dzhotels/reels/${def.type}`, req.file.mimetype);
     const duration = video.duration || (Number.isFinite(claimed) && claimed > 0 ? Math.round(claimed) : 0);
     if (duration > MAX_REEL_SECONDS + 1) {
@@ -60,8 +71,11 @@ export const uploadReel = async (req, res, next) => {
       publicId: video.publicId,
       poster: video.poster,
       duration,
+      width: Math.round(Number(req.body.width)),
+      height: Math.round(Number(req.body.height)),
       // admins publish directly; owners' reels wait for moderation
       status: req.user.role === 'admin' ? 'approved' : 'pending',
+      rejectionReason: '',
       uploadedAt: new Date(),
     };
     // updateOne: changing the video must not send the whole listing back to review
@@ -80,7 +94,7 @@ export const deleteReel = async (req, res, next) => {
     if (!loaded) return;
     const { def, listing } = loaded;
     if (listing.reel?.publicId) destroyVideo(listing.reel.publicId);
-    await def.Model.updateOne({ _id: listing._id }, { $set: { reel: { url: '', publicId: '', poster: '', duration: 0, status: 'none' } } });
+    await def.Model.updateOne({ _id: listing._id }, { $set: { reel: { url: '', publicId: '', poster: '', duration: 0, width: 0, height: 0, status: 'none', rejectionReason: '' } } });
     res.json({ success: true, message: 'Reel deleted' });
   } catch (err) {
     next(err);
@@ -137,7 +151,7 @@ export const getReels = async (req, res, next) => {
 // GET /admin/reels?status=pending|approved — moderation queue
 export const getReelQueue = async (req, res, next) => {
   try {
-    const status = req.query.status === 'approved' ? 'approved' : 'pending';
+    const status = ['approved', 'rejected'].includes(req.query.status) ? req.query.status : 'pending';
     const lists = await Promise.all(
       Object.entries(KINDS).map(async ([kind, def]) => {
         const docs = await def.Model.find({ 'reel.status': status })
@@ -161,10 +175,54 @@ export const approveReel = async (req, res, next) => {
   try {
     const def = KINDS[req.params.kind];
     if (!def || !mongoose.isValidObjectId(req.params.id)) return res.status(404).json({ success: false, message: 'Listing not found' });
-    const r = await def.Model.updateOne({ _id: req.params.id, 'reel.status': 'pending' }, { $set: { 'reel.status': 'approved' } });
+    const r = await def.Model.updateOne(
+      { _id: req.params.id, 'reel.status': { $in: ['pending', 'rejected'] } },
+      { $set: { 'reel.status': 'approved', 'reel.rejectionReason': '' } }
+    );
     if (!r.matchedCount) return res.status(404).json({ success: false, message: 'No reel waiting for approval' });
+    notifyOwner(req.params.kind, req.params.id, true);
     res.json({ success: true, message: 'Reel approved' });
   } catch (err) {
     next(err);
   }
 };
+
+// PUT /admin/reels/:kind/:id/reject { reason } — the owner sees the reason and can upload another video
+export const rejectReel = async (req, res, next) => {
+  try {
+    const def = KINDS[req.params.kind];
+    if (!def || !mongoose.isValidObjectId(req.params.id)) return res.status(404).json({ success: false, message: 'Listing not found' });
+    const reason = String(req.body?.reason || '').replace(/\s+/g, ' ').trim().slice(0, 300);
+    if (reason.length < 3) return res.status(400).json({ success: false, message: 'Give the reason for the rejection' });
+    const r = await def.Model.updateOne(
+      { _id: req.params.id, 'reel.status': { $in: ['pending', 'approved'] } },
+      { $set: { 'reel.status': 'rejected', 'reel.rejectionReason': reason } }
+    );
+    if (!r.matchedCount) return res.status(404).json({ success: false, message: 'No reel to reject' });
+    notifyOwner(req.params.kind, req.params.id, false, reason);
+    res.json({ success: true, message: 'Reel rejected' });
+  } catch (err) {
+    next(err);
+  }
+};
+
+/** Email the listing's owner about the admin's decision (best effort, never blocks the answer). */
+async function notifyOwner(kind, id, approved, reason = '') {
+  try {
+    const def = KINDS[kind];
+    const doc = await def.Model.findById(id).select(`name title ${def.owner}`).populate(def.owner, 'email fullName');
+    const owner = doc?.[def.owner];
+    if (!owner?.email) return;
+    const name = escapeHtml(doc.name || doc.title);
+    const link = `${CLIENT_URL}${OWNER_PAGE[kind]}`;
+    await sendEmail({
+      to: owner.email,
+      subject: approved ? `🎬 Votre vidéo est publiée — ${doc.name || doc.title}` : `Votre vidéo n'a pas été acceptée — ${doc.name || doc.title}`,
+      html: approved
+        ? `<p>Bonjour ${escapeHtml(owner.fullName)},</p><p>La vidéo de <strong>${name}</strong> est publiée : elle apparaît sur l'annonce et dans les Reels de Meskan.</p>`
+        : `<p>Bonjour ${escapeHtml(owner.fullName)},</p><p>La vidéo de <strong>${name}</strong> n'a pas été acceptée.</p><p>Motif : <em>${escapeHtml(reason)}</em></p><p><a href="${link}">Envoyer une autre vidéo</a> (format vertical 9:16, 3 à 90 secondes).</p>`,
+    });
+  } catch (e) {
+    console.error('Reel email failed:', e.message);
+  }
+}
