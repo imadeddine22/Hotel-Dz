@@ -239,7 +239,7 @@ export const getAllHotels = async (req, res, next) => {
     const { limit, skip } = paging(req.query, { def: 20, max: 100 });
     const [hotelsData, total] = await Promise.all([
       Hotel.find(filter)
-        .populate('owner', 'fullName email')
+        .populate('owner', 'fullName email phone')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit),

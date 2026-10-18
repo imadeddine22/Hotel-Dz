@@ -8,6 +8,7 @@ import api, { getImageUrl, getServerURL, resolveImg } from '@/lib/api';
 import { formatDZD } from '@/lib/data';
 
 import { useT } from '@/lib/i18n/useT';
+import AdminHotelDetails from '@/components/AdminHotelDetails';
 import CountrySelect from '@/components/CountrySelect';
 import { currencyOf } from '@/lib/countries';
 import PoliciesFields, { DEFAULT_POLICIES, policiesOf } from '@/components/PoliciesFields';
@@ -572,28 +573,7 @@ export default function AdminAllHotelsPage() {
               </div>
             )}
 
-            {/* Owner & Location */}
-            <div className="grid md:grid-cols-2 gap-4 p-4 rounded-2xl bg-gray-50 mb-6 text-sm">
-              <div>
-                <p className="text-xs text-gray-400 font-bold uppercase">{t('Propriétaire')}</p>
-                <p className="font-extrabold text-gray-900">{viewingHotel.owner?.fullName || t('Hôtelier')}</p>
-                <p className="text-xs text-gray-500">{viewingHotel.owner?.email || '—'}</p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-400 font-bold uppercase">{t('Emplacement')}</p>
-                <p className="font-bold text-gray-900">{viewingHotel.address || viewingHotel.city}, {t(viewingHotel.wilaya)}</p>
-              </div>
-            </div>
-
-            {/* Description */}
-            {viewingHotel.description && (
-              <div className="mb-6">
-                <h4 className="font-bold text-gray-900 mb-1 text-sm">{t('Description')}</h4>
-                <p className="text-sm text-gray-600 leading-relaxed bg-gray-50/50 p-4 rounded-2xl border border-gray-100">
-                  {viewingHotel.description}
-                </p>
-              </div>
-            )}
+            <AdminHotelDetails hotel={viewingHotel} />
 
             {/* Rejection reason notice if rejected */}
             {viewingHotel.status === 'rejected' && viewingHotel.rejectionReason && (

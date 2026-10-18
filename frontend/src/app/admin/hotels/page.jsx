@@ -5,6 +5,7 @@ import { Check, X, MapPin, Star, Clock, Eye } from 'lucide-react';
 import api, { getImageUrl } from '@/lib/api';
 
 import { useT } from '@/lib/i18n/useT';
+import AdminHotelDetails from '@/components/AdminHotelDetails';
 export default function AdminApprovalsPage() {
   const { t } = useT();
   const [hotels, setHotels] = useState([]);
@@ -170,42 +171,7 @@ export default function AdminApprovalsPage() {
               </div>
             )}
 
-            {/* Owner & Location */}
-            <div className="grid md:grid-cols-2 gap-4 p-4 rounded-2xl bg-gray-50 mb-6 text-sm">
-              <div>
-                <p className="text-xs text-gray-400 font-bold uppercase">{t('Propriétaire')}</p>
-                <p className="font-extrabold text-gray-900">{viewingHotel.owner?.fullName || t('Hôtelier')}</p>
-                <p className="text-xs text-gray-500">{viewingHotel.owner?.email || '—'}</p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-400 font-bold uppercase">{t('Emplacement')}</p>
-                <p className="font-bold text-gray-900">{viewingHotel.address || viewingHotel.city}, {t(viewingHotel.wilaya)}</p>
-              </div>
-            </div>
-
-            {/* Description */}
-            {viewingHotel.description && (
-              <div className="mb-6">
-                <h4 className="font-bold text-gray-900 mb-1 text-sm">{t('Description')}</h4>
-                <p className="text-sm text-gray-600 leading-relaxed bg-gray-50/50 p-4 rounded-2xl border border-gray-100">
-                  {viewingHotel.description}
-                </p>
-              </div>
-            )}
-
-            {/* Amenities */}
-            {viewingHotel.amenities?.length > 0 && (
-              <div className="mb-6">
-                <h4 className="font-bold text-gray-900 mb-2 text-sm">{t('Équipements')}</h4>
-                <div className="flex flex-wrap gap-2">
-                  {viewingHotel.amenities.map((am, i) => (
-                    <span key={i} className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">
-                      {am}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
+            <AdminHotelDetails hotel={viewingHotel} />
 
             {/* Action Bar */}
             <div className="flex items-center justify-end gap-3 pt-4 border-t">
