@@ -33,7 +33,7 @@ const userSchema = new mongoose.Schema(
     // Google sign-in ("sub" of the Google ID token)
     googleId: { type: String, index: true, sparse: true, select: false },
     // Password reset: SHA-256 of the emailed token, valid until resetPasswordExpire
-    resetPasswordToken: { type: String, select: false },
+    resetPasswordToken: { type: String, select: false, index: { sparse: true } },
     resetPasswordExpire: { type: Date, select: false },
     // Tokens (JWT) issued before this date are rejected
     passwordChangedAt: { type: Date, select: false },

@@ -1,4 +1,5 @@
 import { parseDiscount } from '../utils/pricing.js';
+import { paging, num } from '../utils/query.js';
 import { parsePolicies } from '../utils/policies.js';
 import { isCountry } from '../utils/countries.js';
 import House from '../models/House.js';
@@ -14,7 +15,7 @@ const pick = (body, keys) => Object.fromEntries(keys.filter((k) => body[k] !== u
 // GET /houses — public list of APPROVED houses with filters
 export const getHouses = async (req, res, next) => {
   try {
-    const { wilaya, city, place, type, minPrice, maxPrice, q, sort, page = 1, limit = 12 } = req.query;
+    const { wilaya, city, place, type, minPrice, maxPrice, q, sort } = req.query;
 
     const filter = { status: 'approved' };
     if (isCountry(req.query.country)) filter.country = req.query.country;
@@ -24,10 +25,12 @@ export const getHouses = async (req, res, next) => {
     if (city) filter.city = searchRegex(city);
     if (type) filter.type = type;
     if (q) filter.name = searchRegex(q);
-    if (minPrice || maxPrice) {
+    const lo = num(minPrice);
+    const hi = num(maxPrice);
+    if (lo !== undefined || hi !== undefined) {
       filter.pricePerNight = {};
-      if (minPrice) filter.pricePerNight.$gte = Number(minPrice);
-      if (maxPrice) filter.pricePerNight.$lte = Number(maxPrice);
+      if (lo !== undefined) filter.pricePerNight.$gte = lo;
+      if (hi !== undefined) filter.pricePerNight.$lte = hi;
     }
 
     let query = House.find(filter);
@@ -37,8 +40,7 @@ export const getHouses = async (req, res, next) => {
     else if (sort === 'newest') query = query.sort({ createdAt: -1 });
     else query = query.sort({ avgRating: -1, createdAt: -1 });
 
-    const pageNum = Math.max(1, Number(page));
-    const lim = Math.min(50, Number(limit));
+    const { page: pageNum, limit: lim } = paging(req.query);
     const total = await House.countDocuments(filter);
 
     const houses = await query

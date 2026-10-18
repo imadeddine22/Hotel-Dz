@@ -4,10 +4,12 @@ import { DEFAULT_POLICIES, freeCancellationDeadline } from '../utils/policies.js
 import Room from '../models/Room.js';
 import Hotel from '../models/Hotel.js';
 import House from '../models/House.js';
-import { countOverlapping, countOverlappingHouse, isBookingStillAvailable } from '../utils/checkAvailability.js';
+import { countOverlapping, countOverlappingHouse, isBookingStillAvailable, lostRace } from '../utils/checkAvailability.js';
+import { escapeHtml } from '../utils/escapeHtml.js';
 import { sendEmail } from '../utils/sendEmail.js';
 
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
+const MAX_NIGHTS = 365;
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000';
 
 const fmtDate = (d) => new Date(d).toLocaleDateString('fr-DZ');
@@ -44,8 +46,8 @@ const notifyOwnerOfRequest = async (booking) => {
   notify(
     property?.owner?.email,
     `Nouvelle demande de réservation — ${property?.name}`,
-    `<p>Bonjour ${property?.owner?.fullName || ''},</p>
-     <p>Vous avez reçu une demande de réservation pour <strong>${property?.name}</strong>
+    `<p>Bonjour ${escapeHtml(property?.owner?.fullName || '')},</p>
+     <p>Vous avez reçu une demande de réservation pour <strong>${escapeHtml(property?.name)}</strong>
      du ${fmtDate(booking.checkIn)} au ${fmtDate(booking.checkOut)} (${booking.nights} nuit(s), ${fmtDZD(booking.totalPrice, booking.currency)}).</p>
      <p><a href="${CLIENT_URL}/owner/bookings">Accepter ou refuser la demande</a> — sans réponse sous 48 h, les dates sont libérées.</p>`
   );
@@ -73,15 +75,15 @@ const announceBooking = async (booking) => {
   notify(
     property?.owner?.email,
     `Nouvelle réservation confirmée — ${property?.name}`,
-    `<p>Bonjour ${property?.owner?.fullName || ''},</p>
-     <p>Réservation instantanée pour <strong>${property?.name}</strong> ${when}. Elle est déjà confirmée ; le paiement se fait sur place à l'arrivée.</p>
+    `<p>Bonjour ${escapeHtml(property?.owner?.fullName || '')},</p>
+     <p>Réservation instantanée pour <strong>${escapeHtml(property?.name)}</strong> ${when}. Elle est déjà confirmée ; le paiement se fait sur place à l'arrivée.</p>
      <p><a href="${CLIENT_URL}/owner/bookings">Voir la réservation</a></p>`
   );
   notify(
     full?.customer?.email,
     `✅ Réservation confirmée — ${property?.name}`,
-    `<p>Bonjour ${full?.customer?.fullName || ''},</p>
-     <p>Votre réservation à <strong>${property?.name}</strong> ${when} est confirmée. Montant à régler sur place à l'arrivée.</p>
+    `<p>Bonjour ${escapeHtml(full?.customer?.fullName || '')},</p>
+     <p>Votre réservation à <strong>${escapeHtml(property?.name)}</strong> ${when} est confirmée. Montant à régler sur place à l'arrivée.</p>
      <p><a href="${CLIENT_URL}/my-bookings">Voir mes réservations</a></p>`
   );
 };
@@ -109,6 +111,9 @@ export const createBooking = async (req, res, next) => {
     }
     if (start < new Date().setHours(0, 0, 0, 0)) {
       return res.status(400).json({ success: false, message: 'checkIn cannot be in the past' });
+    }
+    if (end - start > MAX_NIGHTS * MS_PER_DAY) {
+      return res.status(400).json({ success: false, message: 'A stay cannot exceed 365 nights' });
     }
     if (guests > room.capacity) {
       return res.status(400).json({ success: false, message: `Room capacity is ${room.capacity} guests` });
@@ -139,6 +144,11 @@ export const createBooking = async (req, res, next) => {
       ...bookingTerms(room.hotel, start),
       paymentStatus: 'unpaid',
     });
+    // simultaneous requests for the last unit(s): only the earliest ones are kept
+    if (await lostRace(booking, room.quantity)) {
+      await booking.deleteOne();
+      return res.status(409).json({ success: false, message: 'No rooms available for these dates' });
+    }
 
     announceBooking(booking).catch(() => {});
     res.status(201).json({ success: true, booking });
@@ -171,6 +181,9 @@ export const createHouseBooking = async (req, res, next) => {
     if (start < new Date().setHours(0, 0, 0, 0)) {
       return res.status(400).json({ success: false, message: 'checkIn cannot be in the past' });
     }
+    if (end - start > MAX_NIGHTS * MS_PER_DAY) {
+      return res.status(400).json({ success: false, message: 'A stay cannot exceed 365 nights' });
+    }
     if (guests > house.capacity) {
       return res.status(400).json({ success: false, message: `House capacity is ${house.capacity} guests` });
     }
@@ -199,6 +212,11 @@ export const createHouseBooking = async (req, res, next) => {
       ...bookingTerms(house, start),
       paymentStatus: 'unpaid',
     });
+    // simultaneous requests for the same dates: only the earliest one is kept
+    if (await lostRace(booking, 1)) {
+      await booking.deleteOne();
+      return res.status(409).json({ success: false, message: 'House is not available for these dates' });
+    }
 
     announceBooking(booking).catch(() => {});
     res.status(201).json({ success: true, booking });
@@ -308,8 +326,8 @@ export const confirmBooking = async (req, res, next) => {
     notify(
       booking.customer?.email,
       `✅ Réservation confirmée — ${property?.name}`,
-      `<p>Bonjour ${booking.customer?.fullName || ''},</p>
-       <p>Votre réservation à <strong>${property?.name}</strong> du ${fmtDate(booking.checkIn)} au ${fmtDate(booking.checkOut)}
+      `<p>Bonjour ${escapeHtml(booking.customer?.fullName || '')},</p>
+       <p>Votre réservation à <strong>${escapeHtml(property?.name)}</strong> du ${fmtDate(booking.checkIn)} au ${fmtDate(booking.checkOut)}
        est confirmée. Montant à régler sur place à l'arrivée : <strong>${fmtDZD(booking.totalPrice, booking.currency)}</strong>.</p>
        <p><a href="${CLIENT_URL}/my-bookings">Voir mes réservations</a></p>`
     );
@@ -336,9 +354,9 @@ export const rejectBooking = async (req, res, next) => {
     notify(
       booking.customer?.email,
       `Demande de réservation refusée — ${property?.name}`,
-      `<p>Bonjour ${booking.customer?.fullName || ''},</p>
-       <p>Votre demande pour <strong>${property?.name}</strong> du ${fmtDate(booking.checkIn)} au ${fmtDate(booking.checkOut)}
-       n'a pas pu être acceptée.${booking.rejectionReason ? ` Motif : ${booking.rejectionReason.replace(/</g, '&lt;')}` : ''}</p>
+      `<p>Bonjour ${escapeHtml(booking.customer?.fullName || '')},</p>
+       <p>Votre demande pour <strong>${escapeHtml(property?.name)}</strong> du ${fmtDate(booking.checkIn)} au ${fmtDate(booking.checkOut)}
+       n'a pas pu être acceptée.${booking.rejectionReason ? ` Motif : ${escapeHtml(booking.rejectionReason)}` : ''}</p>
        <p><a href="${CLIENT_URL}/hotels">Trouver un autre hébergement</a></p>`
     );
     res.json({ success: true, booking });

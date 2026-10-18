@@ -2,7 +2,7 @@
  * End-to-end API tests for every role: visitor, customer, hotel/house owner, seller, admin.
  *
  * Run against the in-memory demo server (never against production — it creates and deletes data):
- *   SMTP_HOST= npm run dev:local        # terminal 1
+ *   SMTP_HOST= RATE_LIMIT_MAX=5000 npm run dev:local   # terminal 1 (the suite sends several hundred requests)
  *   node tests/api.e2e.mjs              # terminal 2   (API_URL defaults to http://localhost:5000/api/v1)
  *
  */
@@ -749,6 +749,68 @@ describe('Forgot password and Google sign-in');
   expectStatus('Google sign-in needs a credential', await req('POST', '/auth/google', { body: {} }), 400);
   const g = await req('POST', '/auth/google', { body: { credential: 'not-a-real-token' } });
   check('Google sign-in: 503 when not configured, 401 for a bad token', g.status === 503 || g.status === 401, String(g.status));
+}
+
+describe('Audit regressions: double booking, bad input, abuse limits');
+{
+  // Concurrent requests for the same dates must not overbook (they used to all be accepted)
+  const guests = await Promise.all(Array.from({ length: 8 }, () => register('customer')));
+  const house = (await req('GET', '/houses?limit=50')).data.houses.find((h) => !h.policies?.instantBooking) || (await req('GET', '/houses')).data.houses[0];
+  const burst = await Promise.all(guests.map((g) => req('POST', '/bookings/house', { token: g.token, body: { houseId: house._id, checkIn: day(300), checkOut: day(302) } })));
+  check('8 simultaneous bookings of one house → exactly 1 accepted', burst.filter((r) => r.status === 201).length === 1, burst.map((r) => r.status).join(','));
+  check('…the others get 409', burst.filter((r) => r.status === 409).length === 7);
+
+  const hotelsList = (await req('GET', '/hotels?limit=50')).data.hotels;
+  let room;
+  for (const h of hotelsList) {
+    room = ((await req('GET', `/hotels/${h._id}/rooms`)).data.rooms || []).sort((a, b) => a.quantity - b.quantity)[0];
+    if (room) break;
+  }
+  const burst2 = await Promise.all(guests.map((g) => req('POST', '/bookings', { token: g.token, body: { roomId: room._id, checkIn: day(310), checkOut: day(311) } })));
+  const okRooms = burst2.filter((r) => r.status === 201).length;
+  check(`8 simultaneous bookings of a room type with ${room.quantity} unit(s) → no overbooking`, okRooms === Math.min(8, room.quantity), `${okRooms} accepted`);
+
+  expectStatus('stay longer than 365 nights rejected', await req('POST', '/bookings/house', { token: guests[0].token, body: { houseId: house._id, checkIn: day(400), checkOut: day(800) } }), 400);
+
+  // Pagination and filters can't be abused
+  const all = await req('GET', '/hotels?limit=0');
+  check('?limit=0 no longer means "everything"', all.status === 200 && all.data.count <= 12 && Number.isFinite(all.data.pages));
+  const neg = await req('GET', '/houses?limit=-5&page=abc');
+  check('negative limit / bad page fall back to defaults', neg.status === 200 && neg.data.page === 1 && Number.isFinite(neg.data.pages));
+  check('?limit=999 capped at 50', (await req('GET', '/sales?limit=999')).data.count <= 50);
+  expectStatus('non-numeric minStars ignored (was 500)', await req('GET', '/hotels?minStars=abc'), 200);
+  expectStatus('non-numeric minPrice ignored (was 500)', await req('GET', '/sales?minPrice=abc'), 200);
+  expectStatus('malformed priceRanges ignored (was 500)', await req('GET', '/sales?priceRanges%5B0%5D%5Bx%5D=1'), 200);
+  const op = await req('GET', '/hotels?type%5B%24ne%5D=x');
+  check('query operator ?type[$ne]= is not executed', op.status === 400 || (op.status === 200 && op.data.count === 0), String(op.status));
+
+  // NoSQL injection on login: operators are stripped, the request is rejected
+  const inj = await req('POST', '/auth/login', { body: { email: { $gt: '' }, password: { $gt: '' } } });
+  check('login with {"$gt": ""} rejected', inj.status === 400 && !inj.data.token);
+
+  // Cross-site requests are refused (also blocks form posts riding on the cookie)
+  const foreign = await fetch(`${API}/health`, { headers: { Origin: 'https://evil.example' } });
+  expectStatus('request from a foreign origin refused with 403 (was 500)', { status: foreign.status, data: {} }, 403);
+
+  // Contact form: validated
+  expectStatus('contact form: missing fields rejected', await req('POST', '/messages', { body: { name: 'A' } }), 400);
+  expectStatus('contact form: 10 000-character message rejected', await req('POST', '/messages', { body: { name: 'Amel', email: 'amel@test.dz', subject: 'Question', content: 'x'.repeat(10000) } }), 400);
+  expectStatus('contact form: valid message accepted', await req('POST', '/messages', { body: { name: 'Amel', email: 'amel@test.dz', subject: 'Question', content: 'Bonjour, une question.' } }), 201);
+
+  // Password guessing: 20 failed logins per account and IP, then 429 — other accounts unaffected
+  const victim = `victim.${uid}@test.dz`;
+  let last;
+  for (let i = 0; i < 21; i++) last = await req('POST', '/auth/login', { body: { email: victim, password: `guess${i}` } });
+  expectStatus('21st failed login on one account → 429', last, 429);
+  expectStatus('another account can still log in', await req('POST', '/auth/login', { body: { email: 'sara@example.com', password: 'pass123' } }), 200);
+
+  // Public hotel page: the owner's name only, never their email/phone
+  const pubHotel = (await req('GET', `/hotels/${hotelsList[0]._id}`)).data.hotel;
+  check('public hotel hides the owner email and phone', pubHotel?.owner?.fullName && !pubHotel.owner.email && !pubHotel.owner.phone, JSON.stringify(pubHotel?.owner));
+
+  // Footer destinations: counted server-side, small answer
+  const pop = await req('GET', '/wilayas/popular?limit=5');
+  check('popular wilayas: ≤ 5 rows of { wilaya, count }, most listings first', pop.status === 200 && pop.data.wilayas.length <= 5 && pop.data.wilayas.every((w, i, a) => typeof w.wilaya === 'string' && w.count > 0 && (i === 0 || a[i - 1].count >= w.count)), JSON.stringify(pop.data.wilayas));
 }
 
 describe('No online payment');

@@ -1,10 +1,32 @@
 import Wilaya from '../models/Wilaya.js';
+import Hotel from '../models/Hotel.js';
+import House from '../models/House.js';
 import { getCommunes } from '../utils/communes.js';
 import { exactRegex } from '../utils/searchRegex.js';
 
 export const getWilayas = async (req, res, next) => {
   try {
     const wilayas = await Wilaya.find({}).sort({ code: 1, name: 1 });
+    res.json({ success: true, wilayas });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// GET /wilayas/popular?limit=12 — wilayas with the most approved hotels + houses: [{ wilaya, count }]
+// (the footer used to download 100 full listings on every page just to compute this)
+export const getPopularWilayas = async (req, res, next) => {
+  try {
+    const limit = Math.min(69, Math.max(1, parseInt(req.query.limit, 10) || 12));
+    const group = [{ $match: { status: 'approved', wilaya: { $type: 'string', $ne: '' } } }, { $group: { _id: '$wilaya', count: { $sum: 1 } } }];
+    const [hotels, houses] = await Promise.all([Hotel.aggregate(group), House.aggregate(group)]);
+    const count = new Map();
+    for (const { _id, count: n } of [...hotels, ...houses]) count.set(_id, (count.get(_id) || 0) + n);
+    const wilayas = [...count]
+      .map(([wilaya, n]) => ({ wilaya, count: n }))
+      .sort((a, b) => b.count - a.count || a.wilaya.localeCompare(b.wilaya))
+      .slice(0, limit);
+    res.set('Cache-Control', 'public, max-age=600');
     res.json({ success: true, wilayas });
   } catch (error) {
     next(error);

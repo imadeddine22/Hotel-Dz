@@ -10,6 +10,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 import { notFound, errorHandler } from './middlewares/error.middleware.js';
+import { sanitizeInput } from './middlewares/sanitize.middleware.js';
 import authRoutes from './routes/auth.routes.js';
 import hotelRoutes from './routes/hotel.routes.js';
 import houseRoutes from './routes/house.routes.js';
@@ -29,6 +30,12 @@ import conversationRoutes from './routes/conversation.routes.js';
 
 const app = express();
 
+// Behind Render's proxy (and Cloudflare) the client IP is in X-Forwarded-For. Without this, every
+// visitor shares the proxy's IP and therefore one rate-limit bucket. TRUST_PROXY = number of proxy
+// hops to trust (default 1 in production, 0 locally).
+const trustProxy = process.env.TRUST_PROXY ?? (process.env.NODE_ENV === 'production' ? '1' : '0');
+app.set('trust proxy', /^\d+$/.test(trustProxy) ? Number(trustProxy) : trustProxy);
+
 // --- Security & core middleware ---
 // Disable CSP so local /uploads images are not blocked by browser
 app.use(helmet({ contentSecurityPolicy: false, crossOriginResourcePolicy: false }));
@@ -42,8 +49,11 @@ app.use(
         'http://localhost:3001',
         'http://localhost:3002',
       ];
-      if (!origin || allowed.includes(origin)) cb(null, true);
-      else cb(new Error('Not allowed by CORS'));
+      if (!origin || allowed.includes(origin)) return cb(null, true);
+      // Refusing (not just omitting CORS headers) also stops cross-site form posts riding on the cookie
+      const err = new Error('Origin not allowed');
+      err.statusCode = 403;
+      cb(err);
     },
     credentials: true,
   })
@@ -52,16 +62,19 @@ app.use(
 // Rate limiting (applied to the API)
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 300,
+  // per client IP; many users can share one mobile-carrier IP, so not too low (RATE_LIMIT_MAX to tune)
+  max: Number(process.env.RATE_LIMIT_MAX) || 1000,
   standardHeaders: true,
   legacyHeaders: false,
 });
 app.use('/api', limiter);
 
 // Body parsing
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '100kb' }));
+app.use(express.urlencoded({ extended: true, limit: '100kb' }));
 app.use(cookieParser());
+// No MongoDB operators from user input (NoSQL injection)
+app.use(sanitizeInput);
 
 // Serve uploaded images as static files (with CORS headers so Next.js can load them)
 app.use('/uploads', (req, res, next) => {

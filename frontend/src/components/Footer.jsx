@@ -49,19 +49,14 @@ const COLUMNS = [
 
 const SUPPORT_EMAIL = 'support@hotelsdz.dz';
 
-// Wilayas that really have listings (hotels + houses), most listings first; fetched once per page load
+// Wilayas that really have listings (hotels + houses), most listings first; fetched once per page load.
+// The API counts them server-side: a few hundred bytes instead of 100 full listings.
 let destinationsPromise = null;
 const loadDestinations = () =>
-  (destinationsPromise ||= Promise.all([
-    api.get('/hotels', { params: { limit: 50 } }).catch(() => ({ data: { hotels: [] } })),
-    api.get('/houses', { params: { limit: 50 } }).catch(() => ({ data: { houses: [] } })),
-  ]).then(([h, m]) => {
-    const count = new Map();
-    for (const x of [...(h.data.hotels || []), ...(m.data.houses || [])]) {
-      if (x.wilaya) count.set(x.wilaya, (count.get(x.wilaya) || 0) + 1);
-    }
-    return [...count.entries()].sort((a, b) => b[1] - a[1]).slice(0, 12);
-  }));
+  (destinationsPromise ||= api
+    .get('/wilayas/popular', { params: { limit: 12 } })
+    .then(({ data }) => (data.wilayas || []).map((w) => [w.wilaya, w.count]))
+    .catch(() => []));
 
 export default function Footer() {
   const { t } = useT();

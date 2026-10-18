@@ -2,12 +2,12 @@ import crypto from 'crypto';
 import User from '../models/User.js';
 import generateToken from '../utils/generateToken.js';
 import sendEmail from '../utils/sendEmail.js';
+import { escapeHtml } from '../utils/escapeHtml.js';
 import { googleEnabled, verifyGoogleCredential } from '../utils/google.js';
 
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000';
 const RESET_MINUTES = 30;
 const hashToken = (token) => crypto.createHash('sha256').update(token).digest('hex');
-const escapeHtml = (v) => String(v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 
 const sanitize = (user) => ({
   _id: user._id,

@@ -49,6 +49,24 @@ export const countOverlappingHouse = async (houseId, checkIn, checkOut, excludeB
 };
 
 /**
+ * Concurrent requests can all pass the availability check before any of them is saved.
+ * Run after inserting a booking: true when `capacity` (or more) bookings holding overlapping
+ * dates were created before it (_id order) — the new one must then be dropped.
+ * The earliest bookings always win, so at most `capacity` survive a burst of requests.
+ */
+export const lostRace = async (booking, capacity) => {
+  const filter = {
+    _id: { $lt: booking._id },
+    checkIn: { $lt: booking.checkOut },
+    checkOut: { $gt: booking.checkIn },
+    ...holdingInventory(),
+  };
+  if (booking.propertyType === 'house') Object.assign(filter, { house: booking.house, propertyType: 'house' });
+  else filter.room = booking.room;
+  return (await Booking.countDocuments(filter)) >= capacity;
+};
+
+/**
  * Returns true if at least one unit of the room is free for the date range.
  */
 export const isRoomAvailable = async (room, checkIn, checkOut, excludeBookingId = null) => {

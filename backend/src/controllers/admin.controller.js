@@ -1,4 +1,5 @@
 import { parseDiscount } from '../utils/pricing.js';
+import { paging } from '../utils/query.js';
 import { parsePolicies } from '../utils/policies.js';
 import User from '../models/User.js';
 import Hotel from '../models/Hotel.js';
@@ -198,11 +199,11 @@ export const getStats = async (req, res, next) => {
 // GET /admin/bookings — all bookings with filtering
 export const getBookings = async (req, res, next) => {
   try {
-    const { status, page = 1, limit = 20 } = req.query;
+    const { status } = req.query;
     const filter = {};
     if (status) filter.status = status;
 
-    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const { limit, skip } = paging(req.query, { def: 20, max: 100 });
     const [bookingsData, total] = await Promise.all([
       Booking.find(filter)
         .populate('customer', 'fullName email')
@@ -210,7 +211,7 @@ export const getBookings = async (req, res, next) => {
         .populate('room', 'title type')
         .sort({ createdAt: -1 })
         .skip(skip)
-        .limit(parseInt(limit)),
+        .limit(limit),
       Booking.countDocuments(filter),
     ]);
 
@@ -218,7 +219,7 @@ export const getBookings = async (req, res, next) => {
       success: true,
       count: bookingsData.length,
       total,
-      pages: Math.ceil(total / parseInt(limit)),
+      pages: Math.ceil(total / limit),
       bookings: bookingsData,
     });
   } catch (err) {
@@ -229,19 +230,19 @@ export const getBookings = async (req, res, next) => {
 // GET /admin/hotels/all — all hotels with filtering
 export const getAllHotels = async (req, res, next) => {
   try {
-    const { status, q, type, page = 1, limit = 20 } = req.query;
+    const { status, q, type } = req.query;
     const filter = {};
     if (status) filter.status = status;
     if (type) filter.type = type;
     if (q) filter.name = new RegExp(q, 'i');
 
-    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const { limit, skip } = paging(req.query, { def: 20, max: 100 });
     const [hotelsData, total] = await Promise.all([
       Hotel.find(filter)
         .populate('owner', 'fullName email')
         .sort({ createdAt: -1 })
         .skip(skip)
-        .limit(parseInt(limit)),
+        .limit(limit),
       Hotel.countDocuments(filter),
     ]);
 
@@ -249,7 +250,7 @@ export const getAllHotels = async (req, res, next) => {
       success: true,
       count: hotelsData.length,
       total,
-      pages: Math.ceil(total / parseInt(limit)),
+      pages: Math.ceil(total / limit),
       hotels: hotelsData,
     });
   } catch (err) {
@@ -360,19 +361,19 @@ export const updateHotelByAdmin = async (req, res, next) => {
 // GET /admin/houses/all — all houses with filtering
 export const getAllHouses = async (req, res, next) => {
   try {
-    const { status, q, type, page = 1, limit = 20 } = req.query;
+    const { status, q, type } = req.query;
     const filter = {};
     if (status) filter.status = status;
     if (type) filter.type = type;
     if (q) filter.name = new RegExp(q, 'i');
 
-    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const { limit, skip } = paging(req.query, { def: 20, max: 100 });
     const [housesData, total] = await Promise.all([
       House.find(filter)
         .populate('owner', 'fullName email')
         .sort({ createdAt: -1 })
         .skip(skip)
-        .limit(parseInt(limit)),
+        .limit(limit),
       House.countDocuments(filter),
     ]);
 
@@ -380,7 +381,7 @@ export const getAllHouses = async (req, res, next) => {
       success: true,
       count: housesData.length,
       total,
-      pages: Math.ceil(total / parseInt(limit)),
+      pages: Math.ceil(total / limit),
       houses: housesData,
     });
   } catch (err) {
@@ -487,19 +488,19 @@ export const deleteHouse = async (req, res, next) => {
 // GET /admin/sales/all — all sale listings with filtering
 export const getAllSales = async (req, res, next) => {
   try {
-    const { status, q, type, page = 1, limit = 20 } = req.query;
+    const { status, q, type } = req.query;
     const filter = {};
     if (status) filter.status = status;
     if (type) filter.type = type;
     if (q) filter.title = new RegExp(q, 'i');
 
-    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const { limit, skip } = paging(req.query, { def: 20, max: 100 });
     const [salesData, total] = await Promise.all([
       HouseForSale.find(filter)
         .populate('seller', 'fullName email')
         .sort({ createdAt: -1 })
         .skip(skip)
-        .limit(parseInt(limit)),
+        .limit(limit),
       HouseForSale.countDocuments(filter),
     ]);
 
@@ -507,7 +508,7 @@ export const getAllSales = async (req, res, next) => {
       success: true,
       count: salesData.length,
       total,
-      pages: Math.ceil(total / parseInt(limit)),
+      pages: Math.ceil(total / limit),
       sales: salesData,
     });
   } catch (err) {

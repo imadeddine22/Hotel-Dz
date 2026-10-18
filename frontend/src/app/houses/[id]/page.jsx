@@ -272,17 +272,20 @@ export default function HouseDetailPage() {
                 {t('Réserver maintenant')}
               </button>
 
-              <button
-                onClick={() => alert(house.owner?.phone || '+213 XXX XXX XXX')}
-                style={{
-                  width: '100%', padding: '12px', borderRadius: 14,
-                  border: '1px solid #ede9fe', background: '#faf5ff',
-                  color: '#7c3aed', fontSize: 14, fontWeight: 600, cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8
-                }}
-              >
-                <Phone size={16} /> {t('Contacter le propriétaire')}
-              </button>
+              {/* Calls the owner; hidden when no number was given (it used to show a fake "+213 XXX XXX XXX") */}
+              {house.owner?.phone && (
+                <a
+                  href={`tel:${String(house.owner.phone).replace(/[^\d+]/g, '')}`}
+                  style={{
+                    width: '100%', padding: '12px', borderRadius: 14,
+                    border: '1px solid #ede9fe', background: '#faf5ff',
+                    color: '#7c3aed', fontSize: 14, fontWeight: 600, cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, textDecoration: 'none'
+                  }}
+                >
+                  <Phone size={16} aria-hidden="true" /> {t('Contacter le propriétaire')} · <span dir="ltr">{house.owner.phone}</span>
+                </a>
+              )}
 
               {/* Owner info */}
               {house.owner && (

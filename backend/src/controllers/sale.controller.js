@@ -1,4 +1,5 @@
 import { isCountry } from '../utils/countries.js';
+import { paging, num } from '../utils/query.js';
 import HouseForSale from '../models/HouseForSale.js';
 import { searchRegex, wilayaRegex, placeFilter } from '../utils/searchRegex.js';
 import { canView } from '../middlewares/auth.middleware.js';
@@ -6,7 +7,7 @@ import { canView } from '../middlewares/auth.middleware.js';
 // GET /sales — public list of APPROVED sale listings with filters
 export const getListings = async (req, res, next) => {
   try {
-    const { wilaya, city, place, type, minPrice, maxPrice, priceRanges, reference, q, sort, order = 'desc', page = 1, limit = 12 } = req.query;
+    const { wilaya, city, place, type, minPrice, maxPrice, priceRanges, reference, q, sort, order = 'desc' } = req.query;
 
     const filter = { status: 'approved' };
     if (isCountry(req.query.country)) filter.country = req.query.country;
@@ -36,15 +37,18 @@ export const getListings = async (req, res, next) => {
 
     // Handle price range filters
     const priceConditions = [];
-    if (minPrice || maxPrice) {
+    const lo = num(minPrice);
+    const hi = num(maxPrice);
+    if (lo !== undefined || hi !== undefined) {
       const cond = {};
-      if (minPrice) cond.$gte = Number(minPrice);
-      if (maxPrice) cond.$lte = Number(maxPrice);
+      if (lo !== undefined) cond.$gte = lo;
+      if (hi !== undefined) cond.$lte = hi;
       priceConditions.push({ price: cond });
     }
 
     if (priceRanges) {
-      const ranges = Array.isArray(priceRanges) ? priceRanges : priceRanges.split(',');
+      // "min-max" strings, comma-separated or repeated (anything else, e.g. ?priceRanges[x]=…, is ignored)
+      const ranges = [].concat(priceRanges).filter((r) => typeof r === 'string').flatMap((r) => r.split(','));
       ranges.forEach(r => {
         const parts = r.split('-');
         if (parts.length === 2) {
@@ -85,8 +89,7 @@ export const getListings = async (req, res, next) => {
 
     let query = HouseForSale.find(filter).sort(sortObj);
 
-    const pageNum = Math.max(1, Number(page));
-    const lim = Math.min(50, Number(limit));
+    const { page: pageNum, limit: lim } = paging(req.query);
     const total = await HouseForSale.countDocuments(filter);
 
     const listings = await query

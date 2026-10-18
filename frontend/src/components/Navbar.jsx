@@ -211,10 +211,13 @@ export default function Navbar() {
 
         {/* Mobile Toggle */}
         <button
+          type="button"
           onClick={() => setOpen(!open)}
+          aria-label={open ? t('Fermer le menu') : t('Ouvrir le menu')}
+          aria-expanded={open}
           className="grid h-11 w-11 place-items-center rounded-xl text-gray-700 hover:bg-gray-100 lg:hidden"
         >
-          {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          {open ? <X className="h-6 w-6" aria-hidden="true" /> : <Menu className="h-6 w-6" aria-hidden="true" />}
         </button>
       </div>
 

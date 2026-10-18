@@ -1,4 +1,5 @@
 import { effectivePrice } from '../utils/pricing.js';
+import { paging, num } from '../utils/query.js';
 import { parsePolicies } from '../utils/policies.js';
 import { isCountry } from '../utils/countries.js';
 import Hotel from '../models/Hotel.js';
@@ -16,7 +17,7 @@ const pick = (body, keys) => Object.fromEntries(keys.filter((k) => body[k] !== u
 // GET /hotels  — public list of APPROVED hotels with filters
 export const getHotels = async (req, res, next) => {
   try {
-    const { wilaya, city, place, type, minStars, minPrice, maxPrice, q, sort, page = 1, limit = 12 } = req.query;
+    const { wilaya, city, place, type, minStars, q, sort } = req.query;
 
     const filter = { status: 'approved' };
     if (isCountry(req.query.country)) filter.country = req.query.country;
@@ -25,7 +26,7 @@ export const getHotels = async (req, res, next) => {
     if (where) (filter.$and = filter.$and || []).push(where);
     if (city) filter.city = searchRegex(city);
     if (type) filter.type = type;
-    if (minStars) filter.starRating = { $gte: Number(minStars) };
+    if (num(minStars)) filter.starRating = { $gte: num(minStars) };
     if (q) filter.name = searchRegex(q);
 
     let query = Hotel.find(filter);
@@ -35,8 +36,7 @@ export const getHotels = async (req, res, next) => {
     else if (sort === 'newest') query = query.sort({ createdAt: -1 });
     else query = query.sort({ avgRating: -1, createdAt: -1 });
 
-    const pageNum = Math.max(1, Number(page));
-    const lim = Math.min(50, Number(limit));
+    const { page: pageNum, limit: lim } = paging(req.query);
     const total = await Hotel.countDocuments(filter);
 
     const hotels = await query
@@ -77,7 +77,8 @@ export const getHotels = async (req, res, next) => {
 // GET /hotels/:id — public details (approved) or owner/admin can see own
 export const getHotel = async (req, res, next) => {
   try {
-    const hotel = await Hotel.findById(req.params.id).populate('owner', 'fullName email phone');
+    // public page: the owner's name only (their email/phone are not shown there and stay private)
+    const hotel = await Hotel.findById(req.params.id).populate('owner', 'fullName');
     // Pending/rejected hotels are only visible to their owner and admins
     if (!hotel || !canView(req, hotel)) return res.status(404).json({ success: false, message: 'Hotel not found' });
 
