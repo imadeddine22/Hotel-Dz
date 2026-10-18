@@ -51,9 +51,9 @@ const HOUSES = [
 ];
 
 const MESSAGES = [
-  { name: 'Mohamed Salah', email: 'mohamed@example.com', subject: 'Inscrire mon hôtel', content: 'Bonjour, je possède un hôtel à Annaba et je souhaite le référencer sur votre plateforme. Quelles sont les étapes ?' },
-  { name: 'Amel Khelifi', email: 'amel@example.com', subject: 'Question sur une réservation', content: 'Bonjour, est-il possible de modifier les dates de ma réservation après confirmation ? Merci.' },
-  { name: 'Reda Bouzid', email: 'reda@example.com', subject: 'Partenariat', content: 'Nous sommes une agence de voyage et aimerions discuter d\'un partenariat. Pouvez-vous me recontacter ?' },
+  { name: 'Mohamed Salah', email: 'mohamed@example.com', phone: '0555 12 34 56', subject: 'Inscrire mon hôtel', content: 'Bonjour, je possède un hôtel à Annaba et je souhaite le référencer sur votre plateforme. Quelles sont les étapes ?' },
+  { name: 'Amel Khelifi', email: 'amel@example.com', phone: '0661 98 76 54', subject: 'Question sur une réservation', content: 'Bonjour, est-il possible de modifier les dates de ma réservation après confirmation ? Merci.' },
+  { name: 'Reda Bouzid', email: 'reda@example.com', phone: '+213 21 45 67 89', subject: 'Partenariat', content: 'Nous sommes une agence de voyage et aimerions discuter d\'un partenariat. Pouvez-vous me recontacter ?' },
 ];
 
 const rand = (arr) => arr[Math.floor(Math.random() * arr.length)];

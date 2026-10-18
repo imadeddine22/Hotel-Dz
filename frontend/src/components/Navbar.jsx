@@ -95,6 +95,8 @@ export default function Navbar() {
     { label: t.navSales || 'Ventes', href: '/sales' },
     { label: t.navDestinations, href: '/destinations' },
     { label: t.navPricing, href: '/pricing' },
+    // the contact form goes straight to the site owner (Admin → Messages)
+    { label: 'Contact', href: '/contact' },
   ];
 
   return (
@@ -107,14 +109,14 @@ export default function Navbar() {
         </Link>
 
         {/* Center: Navigation Links */}
-        <nav className="hidden lg:flex items-center gap-1 bg-gray-50/80 p-1.5 rounded-full border border-gray-200/60">
+        <nav className="hidden xl:flex items-center gap-1 bg-gray-50/80 p-1.5 rounded-full border border-gray-200/60">
           {navLinks.map((link) => {
             const isActive = link.href === '/' ? pathname === '/' : pathname.startsWith(link.href);
             return (
               <Link
                 key={link.href}
                 href={link.href}
-                className={`px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
+                className={`whitespace-nowrap px-3 2xl:px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
                   isActive
                     ? 'bg-white text-brand-600 shadow-xs font-bold'
                     : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
@@ -127,7 +129,7 @@ export default function Navbar() {
         </nav>
 
         {/* Right: Actions */}
-        <div className="hidden lg:flex items-center gap-3">
+        <div className="hidden xl:flex items-center gap-3">
           {/* Favorites */}
           <Link
             href="/favorites"
@@ -234,7 +236,7 @@ export default function Navbar() {
           onClick={() => setOpen(!open)}
           aria-label={open ? t('Fermer le menu') : t('Ouvrir le menu')}
           aria-expanded={open}
-          className="grid h-11 w-11 place-items-center rounded-xl text-gray-700 hover:bg-gray-100 lg:hidden"
+          className="grid h-11 w-11 place-items-center rounded-xl text-gray-700 hover:bg-gray-100 xl:hidden"
         >
           {open ? <X className="h-6 w-6" aria-hidden="true" /> : <Menu className="h-6 w-6" aria-hidden="true" />}
         </button>
@@ -242,7 +244,7 @@ export default function Navbar() {
 
       {/* Mobile Navigation Drawer */}
       {open && (
-        <div className="border-t border-gray-100 bg-white px-4 py-6 lg:hidden space-y-3">
+        <div className="border-t border-gray-100 bg-white px-4 py-6 xl:hidden space-y-3">
           {/* Mobile Language Switcher */}
           <div className="flex items-center gap-2 mb-4 p-2 bg-gray-50 rounded-xl justify-center">
             <Globe className="h-4 w-4 text-brand-500" />

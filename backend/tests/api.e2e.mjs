@@ -121,7 +121,11 @@ describe('Visitor (public pages)');
   expectStatus('invalid hotel id → 404/400, not 500', { status: [400, 404].includes((await req('GET', '/hotels/not-an-id')).status) ? 404 : 500, data: {} }, 404);
   expectStatus('regex metacharacters in search do not crash', await req('GET', `/hotels?q=${encodeURIComponent('(*[')}`), 200);
 
-  expectStatus('contact form', await req('POST', '/messages', { body: { name: 'Test', email: 'v@test.dz', subject: 'Question', content: 'Bonjour' } }), 201);
+  expectStatus('contact form', await req('POST', '/messages', { body: { name: 'Test', email: 'v@test.dz', phone: '0555 12 34 56', subject: 'Question', content: 'Bonjour' } }), 201);
+  expectStatus('contact form: phone number required', await req('POST', '/messages', { body: { name: 'Test', email: 'v@test.dz', subject: 'Question', content: 'Bonjour' } }), 400);
+  for (const bad of ['123', 'abc12345678', '+213-------'])
+    expectStatus(`contact form: phone "${bad}" rejected`, await req('POST', '/messages', { body: { name: 'Test', email: 'v@test.dz', phone: bad, subject: 'Question', content: 'Bonjour' } }), 400);
+  expectStatus('contact form: international phone accepted', await req('POST', '/messages', { body: { name: 'Test', email: 'v@test.dz', phone: '+213 (21) 45-67-89', subject: 'Question', content: 'Bonjour' } }), 201);
   expectStatus('contact form validates fields', await req('POST', '/messages', { body: { name: 'Test' } }), 400);
 }
 
@@ -431,6 +435,7 @@ describe('Admin');
   const msgs = await req('GET', '/messages', { token: adminToken });
   const msg = msgs.data.messages?.[0];
   check('admin sees contact messages', Boolean(msg));
+  check('admin sees the sender phone', msgs.data.messages.some((m) => m.phone === '+213 (21) 45-67-89'));
   check('mark message read', (await req('PUT', `/messages/${msg._id}/read`, { token: adminToken })).data.message?.isRead === true);
   expectStatus('delete message', await req('DELETE', `/messages/${msg._id}`, { token: adminToken }), 200);
   expectStatus('owner cannot read messages', await req('GET', '/messages', { token: ownerToken }), 403);
@@ -794,8 +799,8 @@ describe('Audit regressions: double booking, bad input, abuse limits');
 
   // Contact form: validated
   expectStatus('contact form: missing fields rejected', await req('POST', '/messages', { body: { name: 'A' } }), 400);
-  expectStatus('contact form: 10 000-character message rejected', await req('POST', '/messages', { body: { name: 'Amel', email: 'amel@test.dz', subject: 'Question', content: 'x'.repeat(10000) } }), 400);
-  expectStatus('contact form: valid message accepted', await req('POST', '/messages', { body: { name: 'Amel', email: 'amel@test.dz', subject: 'Question', content: 'Bonjour, une question.' } }), 201);
+  expectStatus('contact form: 10 000-character message rejected', await req('POST', '/messages', { body: { name: 'Amel', email: 'amel@test.dz', phone: '0661 98 76 54', subject: 'Question', content: 'x'.repeat(10000) } }), 400);
+  expectStatus('contact form: valid message accepted', await req('POST', '/messages', { body: { name: 'Amel', email: 'amel@test.dz', phone: '0661 98 76 54', subject: 'Question', content: 'Bonjour, une question.' } }), 201);
 
   // Password guessing: 20 failed logins per account and IP, then 429 — other accounts unaffected
   const victim = `victim.${uid}@test.dz`;

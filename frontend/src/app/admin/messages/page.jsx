@@ -1,11 +1,20 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Mail, Trash2, CheckCircle, Search, User, Clock } from 'lucide-react';
+import { Mail, Trash2, CheckCircle, Search, User, Clock, Phone, MessageCircle } from 'lucide-react';
 import api from '@/lib/api';
 
 import { useT } from '@/lib/i18n/useT';
 import { dateLocale } from '@/lib/i18n/format';
+/** "0555 12 34 56" → "+213555123456" for tel: and WhatsApp links (other countries: kept as typed). */
+const intlPhone = (raw = '') => {
+  const d = String(raw).replace(/[^\d+]/g, '');
+  if (d.startsWith('+')) return d;
+  if (d.startsWith('00')) return `+${d.slice(2)}`;
+  if (d.startsWith('0')) return `+213${d.slice(1)}`;
+  return d;
+};
+
 export default function AdminMessagesPage() {
   const { t } = useT();
   const [messages, setMessages] = useState([]);
@@ -123,13 +132,18 @@ export default function AdminMessagesPage() {
                 <div className="flex items-start justify-between">
                   <div>
                     <h2 className="mb-2 text-xl font-bold text-ink">{t(selectedMessage.subject)}</h2>
-                    <div className="flex items-center gap-4 text-sm text-gray-500">
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500">
                       <span className="flex items-center gap-1">
                         <User className="h-4 w-4 text-gray-400" /> {selectedMessage.name} ({selectedMessage.email})
                       </span>
+                      {selectedMessage.phone && (
+                        <a href={`tel:${intlPhone(selectedMessage.phone)}`} dir="ltr" className="flex items-center gap-1 font-semibold text-brand-600 hover:underline">
+                          <Phone className="h-4 w-4" aria-hidden="true" /> {selectedMessage.phone}
+                        </a>
+                      )}
                       <span className="flex items-center gap-1">
                         <Clock className="h-4 w-4 text-gray-400" />{' '}
-                        {new Date(selectedMessage.createdAt).toLocaleString('fr-FR')}
+                        {new Date(selectedMessage.createdAt).toLocaleString(dateLocale())}
                       </span>
                     </div>
                   </div>
@@ -162,13 +176,31 @@ export default function AdminMessagesPage() {
               </div>
               
               {/* Reply box placeholder (mailto) */}
-              <div className="border-t border-gray-100 p-4">
+              <div className="grid gap-2 border-t border-gray-100 p-4 sm:grid-cols-3">
                 <a
-                  href={`mailto:${selectedMessage.email}?subject=Re: ${selectedMessage.subject}`}
-                  className="block w-full rounded-lg bg-brand-500 py-3 text-center text-sm font-semibold text-white transition hover:bg-brand-600"
+                  href={`mailto:${selectedMessage.email}?subject=Re: ${encodeURIComponent(selectedMessage.subject)}`}
+                  className={`flex items-center justify-center gap-2 rounded-lg bg-brand-500 py-3 text-center text-sm font-semibold text-white transition hover:bg-brand-600 ${selectedMessage.phone ? '' : 'sm:col-span-3'}`}
                 >
-                  {t('Répondre par Email')}
+                  <Mail className="h-4 w-4" aria-hidden="true" /> {t('Répondre par Email')}
                 </a>
+                {selectedMessage.phone && (
+                  <>
+                    <a
+                      href={`tel:${intlPhone(selectedMessage.phone)}`}
+                      className="flex items-center justify-center gap-2 rounded-lg border border-gray-200 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+                    >
+                      <Phone className="h-4 w-4" aria-hidden="true" /> {t('Appeler')}
+                    </a>
+                    <a
+                      href={`https://wa.me/${intlPhone(selectedMessage.phone).replace('+', '')}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 rounded-lg bg-emerald-500 py-3 text-sm font-semibold text-white transition hover:bg-emerald-600"
+                    >
+                      <MessageCircle className="h-4 w-4" aria-hidden="true" /> WhatsApp
+                    </a>
+                  </>
+                )}
               </div>
             </>
           ) : (

@@ -1,6 +1,8 @@
 // Translations of the API's error/success messages (sent in English, sometimes French).
 // Exact messages are dictionary entries; messages with numbers or statuses go through PATTERNS.
 export const MESSAGES = {
+  'Invalid phone number': { fr: "Numéro de téléphone invalide.", ar: "رقم هاتف غير صالح." },
+  'Phone number is required': { fr: "Le numéro de téléphone est obligatoire.", ar: "رقم الهاتف إجباري." },
   'Choose an image': { fr: "Choisissez une image.", ar: "اختر صورة." },
   'Image too large (2 MB max)': { fr: "Image trop lourde (2 Mo maximum).", ar: "الصورة كبيرة جدًا (2 ميغابايت كحد أقصى)." },
   'Only image files are allowed': { fr: "Seules les images sont acceptées.", ar: "الصور فقط مقبولة." },

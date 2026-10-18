@@ -1247,5 +1247,10 @@
   "Changer la photo de profil": "تغيير صورة الحساب",
   "Ajouter une photo de profil": "إضافة صورة للحساب",
   "Retirer la photo": "حذف الصورة",
-  "Mon profil et ma photo": "ملفي وصورتي"
+  "Mon profil et ma photo": "ملفي وصورتي",
+  "Contact": "اتصل بنا",
+  "Numéro de téléphone invalide (ex. 0555 12 34 56).": "رقم هاتف غير صالح (مثال: 0555 12 34 56).",
+  "Veuillez entrer votre nom complet.": "يرجى إدخال اسمك الكامل.",
+  "Adresse email invalide.": "بريد إلكتروني غير صالح.",
+  "Votre message doit contenir au moins 10 caractères.": "يجب أن تحتوي رسالتك على 10 أحرف على الأقل."
 }

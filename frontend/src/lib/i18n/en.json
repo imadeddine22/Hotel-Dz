@@ -1242,5 +1242,10 @@
   "Changer la photo de profil": "Change profile photo",
   "Ajouter une photo de profil": "Add a profile photo",
   "Retirer la photo": "Remove photo",
-  "Mon profil et ma photo": "My profile and photo"
+  "Mon profil et ma photo": "My profile and photo",
+  "Contact": "Contact us",
+  "Numéro de téléphone invalide (ex. 0555 12 34 56).": "Invalid phone number (e.g. 0555 12 34 56).",
+  "Veuillez entrer votre nom complet.": "Please enter your full name.",
+  "Adresse email invalide.": "Invalid email address.",
+  "Votre message doit contenir au moins 10 caractères.": "Your message must be at least 10 characters."
 }
