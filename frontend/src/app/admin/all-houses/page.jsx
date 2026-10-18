@@ -523,7 +523,7 @@ export default function AdminAllHousesPage() {
                             if (e.target.checked) setForm({ ...form, suitableFor: [...form.suitableFor, opt] });
                             else setForm({ ...form, suitableFor: form.suitableFor.filter(x => x !== opt) });
                           }}
-                        /> {opt}
+                        /> {t(opt)}
                       </label>
                     ))}
                   </div>

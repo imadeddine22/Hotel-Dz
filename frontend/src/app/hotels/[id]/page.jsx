@@ -161,7 +161,7 @@ export default function HotelDetailPage() {
                 })}
               </div>
               <span className="text-sm text-gray-400">
-                {filteredRooms.length} {t('sur')} {rooms.length} {t('chambre')}{rooms.length > 1 ? 's' : ''}
+                {filteredRooms.length} {t('sur')} {rooms.length} {t(rooms.length > 1 ? 'chambres' : 'chambre')}
               </span>
             </div>
           )}
@@ -189,7 +189,7 @@ export default function HotelDetailPage() {
                     <h3 className="font-bold text-ink">{t(room.title)}</h3>
                     <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-gray-500">
                       <span className="flex items-center gap-1 rounded-md bg-brand-50 px-2 py-0.5 font-medium text-brand-700">
-                        <BedDouble className="h-3.5 w-3.5" /> {room.bedsCount} {t('lit')}{room.bedsCount > 1 ? 's' : ''}
+                        <BedDouble className="h-3.5 w-3.5" /> {room.bedsCount} {t(room.bedsCount > 1 ? 'lits' : 'lit')}
                       </span>
                       <span className="flex items-center gap-1"><Users className="h-4 w-4" /> {room.capacity} {t('pers.')}</span>
                       <span>{ROOM_TYPE_LABELS[room.type] || room.type}</span>

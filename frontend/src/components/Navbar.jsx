@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from '@/components/LocaleLink';
-import { usePathname } from 'next/navigation';
-import { ChevronDown, Menu, X, Heart, User, Globe, MessageCircle } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { ChevronDown, Menu, X, Heart, User, Globe, MessageCircle, LogOut } from 'lucide-react';
 import { useAuthStore, useLangStore } from '@/store/authStore';
 import { useFavoritesStore } from '@/store/favoritesStore';
 import BrandLogo, { brandName } from '@/components/BrandLogo';
@@ -18,9 +18,16 @@ export default function Navbar() {
   const langRef = useRef(null);
   const pathname = splitLocale(usePathname() || '/').path; // without the /ar, /en prefix
   const user = useAuthStore((s) => s.user);
+  const logout = useAuthStore((s) => s.logout);
+  const router = useRouter();
   const { setLang } = useLangStore();
   const { t, lang } = useT();
   const urlLang = useUrlLang();
+  const signOut = async () => {
+    setOpen(false);
+    await logout();
+    router.push(localePath(urlLang, '/'));
+  };
 
   const { hotelIds, houseIds, load } = useFavoritesStore();
   const [anonCount, setAnonCount] = useState(0);
@@ -170,6 +177,17 @@ export default function Navbar() {
             <User className="h-4 w-4 text-brand-500" />
             {user ? t.mySpace : t.login}
           </Link>
+          {user && (
+            <button
+              type="button"
+              onClick={signOut}
+              aria-label={t('Déconnexion')}
+              title={t('Déconnexion')}
+              className="grid h-10 w-10 place-items-center rounded-full border border-gray-200 bg-white text-gray-500 transition hover:bg-red-50 hover:text-red-600"
+            >
+              <LogOut className="h-4 w-4" aria-hidden="true" />
+            </button>
+          )}
 
           {/* Language Switcher Dropdown */}
           <div className="relative" ref={langRef}>
@@ -301,6 +319,15 @@ export default function Navbar() {
             >
               {user ? t.mySpace : t.login}
             </Link>
+            {user && (
+              <button
+                type="button"
+                onClick={signOut}
+                className="flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold text-red-600 hover:bg-red-50"
+              >
+                <LogOut className="h-4 w-4" aria-hidden="true" /> {t('Déconnexion')}
+              </button>
+            )}
           </div>
         </div>
       )}

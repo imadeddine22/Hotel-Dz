@@ -146,7 +146,7 @@ export default function OwnerBookingsPage() {
                     </td>
                     <td className="p-4 text-gray-600">
                       {new Date(b.checkIn).toLocaleDateString(dateLocale())} → {new Date(b.checkOut).toLocaleDateString(dateLocale())}
-                      <div className="text-xs text-gray-400">{b.nights} {t('nuit(s)')}</div>
+                      <div className="text-xs text-gray-400">{b.nights} {t(b.nights > 1 ? 'nuits' : 'nuit')}</div>
                     </td>
                     <td className="p-4 font-semibold text-brand-600">{formatDZD(b.totalPrice, b.currency)}</td>
                     <td className="p-4">

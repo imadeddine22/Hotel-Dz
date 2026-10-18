@@ -156,7 +156,7 @@ export default function AdminUsersPage() {
                     <td>{u.email}</td>
                     <td>
                       <span className={`admin-badge ${u.role}`}>
-                        {ROLE_LABELS[u.role] || u.role}
+                        {t(ROLE_LABELS[u.role] || u.role)}
                       </span>
                     </td>
                     <td>

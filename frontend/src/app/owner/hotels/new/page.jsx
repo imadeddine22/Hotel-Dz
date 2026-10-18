@@ -120,7 +120,7 @@ export default function NewHotelPage() {
                     if (e.target.checked) set('suitableFor', [...form.suitableFor, opt]);
                     else set('suitableFor', form.suitableFor.filter(x => x !== opt));
                   }}
-                /> {opt}
+                /> {t(opt)}
               </label>
             ))}
           </div>

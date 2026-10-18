@@ -100,8 +100,49 @@ export const PATTERNS = [
   [/^(.+) already exists$/, { fr: 'Cette valeur existe déjà ({0}).', ar: 'هذه القيمة موجودة مسبقاً ({0}).' }],
 ];
 
+// Field names in the API's form-validation messages ('"email" must be a valid email')
+const FIELDS = {
+  fullName: { fr: 'Le nom complet', ar: 'الاسم الكامل', en: 'Full name' },
+  name: { fr: 'Le nom', ar: 'الاسم', en: 'Name' },
+  email: { fr: "L'e-mail", ar: 'البريد الإلكتروني', en: 'Email' },
+  password: { fr: 'Le mot de passe', ar: 'كلمة السر', en: 'Password' },
+  phone: { fr: 'Le téléphone', ar: 'الهاتف', en: 'Phone' },
+  subject: { fr: 'Le sujet', ar: 'الموضوع', en: 'Subject' },
+  content: { fr: 'Le message', ar: 'الرسالة', en: 'Message' },
+  role: { fr: 'Le type de compte', ar: 'نوع الحساب', en: 'Account type' },
+  token: { fr: 'Le lien', ar: 'الرابط', en: 'Link' },
+};
+
+// Form-validation rules (Joi wording) → sentence per language; {f} = field, {n} = number
+const VALIDATION = [
+  [/^"(\w+)" is required$/, { fr: '{f} est obligatoire.', ar: '{f} إجباري.', en: '{f} is required.' }],
+  [/^"(\w+)" is not allowed to be empty$/, { fr: '{f} est obligatoire.', ar: '{f} إجباري.', en: '{f} is required.' }],
+  [/^"(\w+)" must be a valid email$/, { fr: "{f} n'est pas une adresse valide.", ar: '{f} غير صالح.', en: '{f} is not a valid address.' }],
+  [/^"(\w+)" length must be at least (\d+) characters long$/, { fr: '{f} doit contenir au moins {n} caractères.', ar: '{f}: {n} أحرف على الأقل.', en: '{f} must be at least {n} characters.' }],
+  [/^"(\w+)" length must be less than or equal to (\d+) characters long$/, { fr: '{f} doit contenir au plus {n} caractères.', ar: '{f}: {n} حرفاً كحد أقصى.', en: '{f} must be at most {n} characters.' }],
+  [/^"(\w+)" (?:must be|is) .+$/, { fr: '{f} est invalide.', ar: '{f} غير صالح.', en: '{f} is invalid.' }],
+];
+
+function translateValidation(lang, part) {
+  for (const [re, tpl] of VALIDATION) {
+    const m = part.match(re);
+    if (!m) continue;
+    const field = FIELDS[m[1]]?.[lang] || m[1];
+    return (tpl[lang] || tpl.en).replace('{f}', field).replace('{n}', m[2] ?? '');
+  }
+  return null;
+}
+
 export function translateMessage(lang, msg) {
   if (!msg) return msg;
+  // Form validation: one or more '"field" rule' messages joined by ", "
+  if (msg.startsWith('"')) {
+    const parts = msg.split(/, (?=")/).map((p) => translateValidation(lang, p));
+    if (parts.every(Boolean)) {
+      // capitalise the field name at the start of a French/English sentence
+      return parts.map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join(' ');
+    }
+  }
   const exact = MESSAGES[msg];
   if (exact) return exact[lang] || msg;
   for (const [re, tpl] of PATTERNS) {

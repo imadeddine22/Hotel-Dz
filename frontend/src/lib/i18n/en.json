@@ -1210,5 +1210,9 @@
   "Fermer le menu": "Close menu",
   "Idéal pour": "Ideal for",
   "Voir sur la carte": "View on map",
-  "Aucune chambre ajoutée": "No rooms added"
+  "Aucune chambre ajoutée": "No rooms added",
+  "annonces": "listings",
+  "résultats": "results",
+  "chambres": "rooms",
+  "lits": "beds"
 }
