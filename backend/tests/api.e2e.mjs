@@ -813,6 +813,37 @@ describe('Audit regressions: double booking, bad input, abuse limits');
   check('popular wilayas: ≤ 5 rows of { wilaya, count }, most listings first', pop.status === 200 && pop.data.wilayas.length <= 5 && pop.data.wilayas.every((w, i, a) => typeof w.wilaya === 'string' && w.count > 0 && (i === 0 || a[i - 1].count >= w.count)), JSON.stringify(pop.data.wilayas));
 }
 
+describe('Featured hotels (chosen by the admin)');
+{
+  const admin = await login('admin@hotelsdz.dz', 'admin123');
+  const before = await req('GET', '/hotels/featured');
+  check('home page section works before any choice (best-rated fallback)', before.status === 200 && before.data.chosen === false && before.data.count > 0);
+
+  expectStatus('customer cannot see hotel demand', await req('GET', '/admin/hotels/demand', { token: customer.token }), 403);
+  expectStatus('customer cannot choose featured hotels', await req('PUT', '/admin/hotels/featured', { token: customer.token, body: { ids: [] } }), 403);
+
+  const demand = await req('GET', '/admin/hotels/demand?days=0', { token: admin });
+  const rows = demand.data.hotels || [];
+  check('demand: approved hotels with request counts, most requested first', demand.status === 200 && rows.length > 1 && rows.every((h, i) => typeof h.requests === 'number' && (i === 0 || rows[i - 1].requests >= h.requests)));
+  check('demand: booking requests are counted', rows.some((h) => h.requests > 0) && rows.every((h) => h.confirmed <= h.requests));
+
+  const [a, b] = [rows[1]._id, rows[0]._id];
+  expectStatus('admin saves a selection', await req('PUT', '/admin/hotels/featured', { token: admin, body: { ids: [a, b] } }), 200);
+  const after = await req('GET', '/hotels/featured');
+  check('home page shows exactly the selection, in the chosen order', after.data.chosen === true && after.data.hotels.map((h) => h._id).join() === [a, b].join());
+  check('featured hotels carry their "from" price', after.data.hotels.every((h) => 'price' in h));
+  check('demand lists the selection in order', (await req('GET', '/admin/hotels/demand', { token: admin })).data.featured.join() === [a, b].join());
+
+  const tooMany = Array.from({ length: 13 }, (_, i) => `65a0000000000000000000${String(i).padStart(2, '0')}`);
+  expectStatus('more than 12 hotels rejected', await req('PUT', '/admin/hotels/featured', { token: admin, body: { ids: tooMany } }), 400);
+  expectStatus('unknown / unpublished hotel rejected', await req('PUT', '/admin/hotels/featured', { token: admin, body: { ids: ['65a000000000000000000001'] } }), 400);
+  expectStatus('ids must be a list', await req('PUT', '/admin/hotels/featured', { token: admin, body: { ids: 'x' } }), 400);
+  check('a rejected save leaves the selection unchanged', (await req('GET', '/hotels/featured')).data.hotels.map((h) => h._id).join() === [a, b].join());
+
+  expectStatus('admin clears the selection', await req('PUT', '/admin/hotels/featured', { token: admin, body: { ids: [] } }), 200);
+  check('back to the best-rated fallback', (await req('GET', '/hotels/featured')).data.chosen === false);
+}
+
 describe('No online payment');
 {
   const r = await fetch(`${API}/payments/webhook`, { method: 'POST', body: '{}' });

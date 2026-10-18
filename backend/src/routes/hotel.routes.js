@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import {
   getHotels,
+  getFeaturedHotels,
   getHotel,
   getMyHotels,
   createHotel,
@@ -16,6 +17,8 @@ const router = Router();
 
 // Public
 router.get('/', getHotels);
+// Home page selection (must be before /:id)
+router.get('/featured', getFeaturedHotels);
 
 // Owner: own hotels (must be before /:id)
 router.get('/my/list', protect, authorize('owner', 'admin'), getMyHotels);

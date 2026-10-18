@@ -1,6 +1,9 @@
 // Translations of the API's error/success messages (sent in English, sometimes French).
 // Exact messages are dictionary entries; messages with numbers or statuses go through PATTERNS.
 export const MESSAGES = {
+  'ids must be a list of hotels': { fr: "Liste d’hôtels invalide.", ar: "قائمة الفنادق غير صالحة." },
+  'Only approved hotels can be featured': { fr: "Seuls les hôtels publiés peuvent être mis en vedette.", ar: "يمكن تمييز الفنادق المنشورة فقط." },
+  'Invalid hotel id': { fr: "Hôtel invalide.", ar: "فندق غير صالح." },
   'If an account exists for this email, a reset link has been sent': { fr: "Si un compte existe pour cet email, un lien de réinitialisation a été envoyé.", ar: "إذا كان هناك حساب بهذا البريد، فقد أُرسل رابط إعادة التعيين." },
   'This reset link is invalid or has expired': { fr: "Ce lien de réinitialisation est invalide ou a expiré.", ar: "رابط إعادة التعيين غير صالح أو انتهت صلاحيته." },
   'Too many attempts, please try again later': { fr: "Trop de tentatives, réessayez plus tard.", ar: "محاولات كثيرة، أعد المحاولة لاحقًا." },
@@ -89,6 +92,7 @@ export const MESSAGES = {
 
 // Messages that embed values: regex on the English text → template per language
 export const PATTERNS = [
+  [/^At most (\d+) featured hotels$/, { fr: '{0} hôtels en vedette au maximum.', ar: '{0} فنادق مميزة كحد أقصى.' }],
   [/^Room (\d+): price per night is required$/, { fr: 'Chambre {0} : le prix par nuit est obligatoire.', ar: 'الغرفة {0}: السعر لليلة إجباري.' }],
   [/^Room (\d+): unknown room type$/, { fr: 'Chambre {0} : type de chambre inconnu.', ar: 'الغرفة {0}: نوع غرفة غير معروف.' }],
   [/^Room (\d+): invalid$/, { fr: 'Chambre {0} : données invalides.', ar: 'الغرفة {0}: بيانات غير صالحة.' }],

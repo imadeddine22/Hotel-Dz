@@ -46,6 +46,9 @@ const hotelSchema = new mongoose.Schema(
     reviewsCount: { type: Number, default: 0 },
     // Category averages (/10) from reviews: cleanliness, location, value, staff, comfort
     scores: { type: mongoose.Schema.Types.Mixed, default: {} },
+    // Home page "Hôtels en vedette": chosen by the admin, shown in featuredRank order (0 = first)
+    featured: { type: Boolean, default: false, index: true },
+    featuredRank: { type: Number, default: 0 },
   },
   { timestamps: true }
 );

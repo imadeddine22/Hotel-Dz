@@ -21,6 +21,7 @@ import {
   Mail,
   Tag,
   MessageSquareQuote,
+  Star,
 } from 'lucide-react';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
@@ -30,6 +31,7 @@ const ADMIN_MENU = [
   { href: '/admin', label: 'Tableau de bord', icon: LayoutDashboard },
   { href: '/admin/hotels', label: 'Approbations', icon: CheckSquare },
   { href: '/admin/all-hotels', label: 'Tous les hôtels', icon: Building2 },
+  { href: '/admin/featured', label: 'Hôtels en vedette', icon: Star },
   { href: '/admin/all-houses', label: 'Toutes les maisons', icon: Home },
   { href: '/admin/all-sales', label: 'Ventes immobilières', icon: Tag },
   { href: '/admin/users', label: 'Utilisateurs', icon: Users },

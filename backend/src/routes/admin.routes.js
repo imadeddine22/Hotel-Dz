@@ -25,6 +25,7 @@ import {
   deleteSale,
 } from '../controllers/admin.controller.js';
 import { addWilaya } from '../controllers/wilaya.controller.js';
+import { getHotelDemand, setFeaturedHotels } from '../controllers/featured.controller.js';
 import { protect, authorize } from '../middlewares/auth.middleware.js';
 import { upload } from '../middlewares/upload.middleware.js';
 
@@ -39,6 +40,9 @@ router.get('/recent-activity', getRecentActivity);
 // Hotels
 router.get('/hotels/pending', getPendingHotels);
 router.get('/hotels/all', getAllHotels);
+// Home page 'Hôtels en vedette': most requested hotels + the selection (before /hotels/:id)
+router.get('/hotels/demand', getHotelDemand);
+router.put('/hotels/featured', setFeaturedHotels);
 router.post('/hotels', upload.array('images', 10), createHotelByAdmin);
 router.put('/hotels/:id', upload.array('images', 10), updateHotelByAdmin);
 router.put('/hotels/:id/approve', approveHotel);
