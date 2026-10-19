@@ -173,7 +173,7 @@ export default function ProjectPage() {
             </div>
 
             {mine ? (
-              <Link href="/projects/mine" className="block rounded-3xl p-5 text-center font-bold text-white shadow-card" style={{ background: projectGradient }}>
+              <Link href="/investor/projects" className="block rounded-3xl p-5 text-center font-bold text-white shadow-card" style={{ background: projectGradient }}>
                 {t('Gérer mon projet et voir les demandes')}
               </Link>
             ) : (

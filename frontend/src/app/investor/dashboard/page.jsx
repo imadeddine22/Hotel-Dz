@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from '@/components/LocaleLink';
-import { Send, CheckCheck, Bookmark, Sparkles, Search, SlidersHorizontal, X, Save } from 'lucide-react';
+import { Send, CheckCheck, Bookmark, Sparkles, Search, SlidersHorizontal, X, Save, PlusCircle } from 'lucide-react';
 import DashboardShell from '@/components/DashboardShell';
 import ProjectCard from '@/components/ProjectCard';
 import InvestorRequestRow from '@/components/InvestorRequestRow';
@@ -42,8 +42,12 @@ export default function InvestorDashboard() {
       <div className="relative mb-8 overflow-hidden rounded-[2rem] px-8 py-10 text-white shadow-lg md:px-10" style={{ background: `linear-gradient(135deg, ${PROJECT_COLORS.ink}, #0b4a5c 60%, #00B3D2)` }}>
         <div className="relative z-10 max-w-xl">
           <p className="mb-2 text-sm font-bold uppercase tracking-wider text-cyan-200 rtl:tracking-normal">{t('Espace investisseur')}</p>
-          <h1 className="mb-6 text-3xl font-extrabold leading-tight md:text-4xl">{t('Trouvez le projet dans lequel investir')}</h1>
+          <h1 className="mb-2 text-3xl font-extrabold leading-tight md:text-4xl">{t('Trouvez le projet dans lequel investir')}</h1>
+          <p className="mb-6 text-sm text-white/80 md:text-base">{t('Ou publiez votre propre projet (terrain, local, bâtiment…) pour trouver un investisseur ou un associé.')}</p>
           <div className="flex flex-wrap gap-3">
+            <Link href="/investor/projects?new=1" className="inline-flex items-center gap-2 rounded-full px-6 py-3 font-bold text-white shadow-md transition hover:scale-105" style={{ background: projectGradient }}>
+              <PlusCircle className="h-5 w-5" aria-hidden="true" /> {t('Publier un projet')}
+            </Link>
             <Link href="/investir" className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 font-bold shadow-md transition hover:scale-105" style={{ color: PROJECT_COLORS.ink }}>
               <Search className="h-5 w-5" aria-hidden="true" /> {t('Explorer les projets')}
             </Link>

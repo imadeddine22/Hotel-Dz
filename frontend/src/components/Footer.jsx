@@ -28,7 +28,7 @@ const COLUMNS = [
       ['/messages', 'Messages'],
       ['/favorites', 'Favoris'],
       ['/profile', 'Mon profil'],
-      ['/projects/mine', 'Mes projets'],
+      ['/investor/projects', 'Mes projets'],
     ],
   },
   {

@@ -62,7 +62,7 @@ export default function InvestPage() {
     setFilters(EMPTY);
     setPage(1);
   };
-  const proposeHref = user ? '/projects/mine?new=1' : '/login?redirect=%2Fprojects%2Fmine%3Fnew%3D1';
+  const proposeHref = user ? '/investor/projects?new=1' : '/login?redirect=%2Finvestor%2Fprojects%3Fnew%3D1';
   const select = 'w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#00B3D2]';
 
   return (

@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import Link from '@/components/LocaleLink';
 import BrandLogo from '@/components/BrandLogo';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, Hotel, CalendarCheck, Users, CheckSquare, LogOut, Home, Mail, Globe, Tag, MessageCircle, Send, Bookmark, Landmark } from 'lucide-react';
+import { LayoutDashboard, Hotel, CalendarCheck, Users, CheckSquare, LogOut, Home, Mail, Globe, Tag, MessageCircle, Send, Bookmark, Landmark, FolderPlus } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import AccountMenu from '@/components/AccountMenu';
 import { SPACE_ROLES } from '@/lib/spaces';
@@ -27,6 +27,7 @@ const MENUS = {
   ],
   investor: [
     { href: '/investor/dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
+    { href: '/investor/projects', label: 'Mes projets publiés', icon: FolderPlus },
     { href: '/investor/requests', label: 'Mes demandes', icon: Send },
     { href: '/investor/saved', label: 'Projets sauvegardés', icon: Bookmark },
     { href: '/investir', label: 'Explorer les projets', icon: Landmark },
