@@ -4,10 +4,13 @@ import { useEffect } from 'react';
 import Link from '@/components/LocaleLink';
 import BrandLogo from '@/components/BrandLogo';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, Hotel, CalendarCheck, Users, CheckSquare, LogOut, Home, Mail, Globe, Tag, MessageCircle } from 'lucide-react';
+import { LayoutDashboard, Hotel, CalendarCheck, Users, CheckSquare, LogOut, Home, Mail, Globe, Tag, MessageCircle, Send, Bookmark, Landmark, FolderPlus } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
+import AccountMenu from '@/components/AccountMenu';
+import { SPACE_ROLES } from '@/lib/spaces';
 
 import { useT } from '@/lib/i18n/useT';
+
 const MENUS = {
   owner: [
     { href: '/owner/dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
@@ -20,6 +23,14 @@ const MENUS = {
   seller: [
     { href: '/seller/dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
     { href: '/seller/my-listings', label: 'Mes annonces', icon: Tag },
+    { href: '/', label: 'Site public', icon: Globe },
+  ],
+  investor: [
+    { href: '/investor/dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
+    { href: '/investor/projects', label: 'Mes projets publiés', icon: FolderPlus },
+    { href: '/investor/requests', label: 'Mes demandes', icon: Send },
+    { href: '/investor/saved', label: 'Projets sauvegardés', icon: Bookmark },
+    { href: '/investir', label: 'Explorer les projets', icon: Landmark },
     { href: '/', label: 'Site public', icon: Globe },
   ],
   admin: [
@@ -39,15 +50,20 @@ export default function DashboardShell({ role, title, children }) {
   const { t } = useT();
   const router = useRouter();
   const pathname = usePathname();
-  const { user, loading, logout } = useAuthStore();
+  const { user, loading, logout, switchSpace } = useAuthStore();
+  // Opening another space's page (e.g. a link to /seller/dashboard) switches the account to that space
+  const otherSpace = Boolean(user) && user.role !== role && user.role !== 'admin';
 
   useEffect(() => {
     if (loading) return;
     if (!user) router.replace('/login?redirect=' + pathname);
-    else if (user.role !== role && user.role !== 'admin') router.replace('/');
-  }, [user, loading, role, router, pathname]);
+    else if (otherSpace) {
+      if (SPACE_ROLES.includes(role)) switchSpace(role).catch(() => router.replace('/'));
+      else router.replace('/');
+    }
+  }, [user, loading, role, router, pathname, otherSpace, switchSpace]);
 
-  if (loading || !user) {
+  if (loading || !user || otherSpace) {
     return <div className="grid min-h-screen place-items-center text-gray-400 bg-[#f8f9fc]">{t('Loading...')}</div>;
   }
 
@@ -104,16 +120,8 @@ export default function DashboardShell({ role, title, children }) {
           {/* Search box and notification bell removed: they were placeholders with no behaviour */}
           <div className="flex items-center gap-6 ml-auto">
 
-            {/* User Profile */}
-            <div className="flex items-center gap-3 rounded-full bg-white p-1.5 pr-4 shadow-sm border border-gray-50 cursor-pointer hover:shadow-md transition-shadow">
-              <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 text-white font-bold text-sm">
-                {user.fullName?.charAt(0).toUpperCase()}
-              </div>
-              <div className="hidden md:block">
-                <p className="text-sm font-bold text-gray-800 leading-tight">{user.fullName}</p>
-                <p className="text-xs font-medium text-gray-400 capitalize leading-tight">{t(user.role)}</p>
-              </div>
-            </div>
+            {/* Account menu: profile, bookings and the other spaces (host, seller, investor…) */}
+            <AccountMenu />
           </div>
         </header>
 

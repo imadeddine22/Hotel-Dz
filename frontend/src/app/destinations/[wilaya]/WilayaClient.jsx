@@ -256,7 +256,7 @@ export default function WilayaClient({ wilayaName, children }) {
         <h2 style={{ fontSize: 16, fontWeight: 700, color: '#1e293b', marginBottom: 20 }}>
           {loading ? t('Chargement...') : (
             <>
-              {totalResults} {t('résultat')}{totalResults !== 1 ? 's' : ''}
+              {totalResults} {t(totalResults !== 1 ? 'résultats' : 'résultat')}
               {typeFilter && <span style={{ color: '#94a3b8', fontWeight: 400 }}> · {t(typeFilter)}</span>}
             </>
           )}

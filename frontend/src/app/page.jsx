@@ -5,12 +5,12 @@ import { X } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Hero from '@/components/Hero';
 import FeaturedHotels from '@/components/FeaturedHotels';
+import ReelsTeaser from '@/components/ReelsTeaser';
 import FeaturedHouses from '@/components/FeaturedHouses';
 import FeaturedSales from '@/components/FeaturedSales';
 import CitiesSection from '@/components/CitiesSection';
 import HotelsList from '@/components/HotelsList';
 import HomeDetailsSection from '@/components/HomeDetailsSection';
-import CtaBanner from '@/components/CtaBanner';
 import Footer from '@/components/Footer';
 import { findWilaya } from '@/hooks/useCommunes';
 
@@ -51,6 +51,7 @@ export default function HomePage() {
       ) : (
         <>
           <FeaturedHotels />
+          <ReelsTeaser />
           <CitiesSection selectedCity={place} onSelectCity={setPlace} />
           <FeaturedHouses selectedCity={place} />
           <FeaturedSales selectedCity={place} />
@@ -59,7 +60,6 @@ export default function HomePage() {
       )}
 
       <HomeDetailsSection />
-      <CtaBanner />
       <Footer />
     </main>
   );

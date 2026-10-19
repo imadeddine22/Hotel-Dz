@@ -38,7 +38,7 @@ async function req(method, path, { token, body, form } = {}) {
   if (form) {
     payload = new FormData();
     for (const [k, v] of Object.entries(form)) {
-      if (k === 'images') v.forEach((blob, i) => payload.append('images', blob, `img${i}.png`));
+      if (k === 'images' || k === 'documents') v.forEach((blob, i) => payload.append(k, blob, `img${i}.png`));
       else payload.append(k, typeof v === 'object' ? JSON.stringify(v) : String(v));
     }
   } else if (body !== undefined) {
@@ -121,7 +121,11 @@ describe('Visitor (public pages)');
   expectStatus('invalid hotel id → 404/400, not 500', { status: [400, 404].includes((await req('GET', '/hotels/not-an-id')).status) ? 404 : 500, data: {} }, 404);
   expectStatus('regex metacharacters in search do not crash', await req('GET', `/hotels?q=${encodeURIComponent('(*[')}`), 200);
 
-  expectStatus('contact form', await req('POST', '/messages', { body: { name: 'Test', email: 'v@test.dz', subject: 'Question', content: 'Bonjour' } }), 201);
+  expectStatus('contact form', await req('POST', '/messages', { body: { name: 'Test', email: 'v@test.dz', phone: '0555 12 34 56', subject: 'Question', content: 'Bonjour' } }), 201);
+  expectStatus('contact form: phone number required', await req('POST', '/messages', { body: { name: 'Test', email: 'v@test.dz', subject: 'Question', content: 'Bonjour' } }), 400);
+  for (const bad of ['123', 'abc12345678', '+213-------'])
+    expectStatus(`contact form: phone "${bad}" rejected`, await req('POST', '/messages', { body: { name: 'Test', email: 'v@test.dz', phone: bad, subject: 'Question', content: 'Bonjour' } }), 400);
+  expectStatus('contact form: international phone accepted', await req('POST', '/messages', { body: { name: 'Test', email: 'v@test.dz', phone: '+213 (21) 45-67-89', subject: 'Question', content: 'Bonjour' } }), 201);
   expectStatus('contact form validates fields', await req('POST', '/messages', { body: { name: 'Test' } }), 400);
 }
 
@@ -431,6 +435,7 @@ describe('Admin');
   const msgs = await req('GET', '/messages', { token: adminToken });
   const msg = msgs.data.messages?.[0];
   check('admin sees contact messages', Boolean(msg));
+  check('admin sees the sender phone', msgs.data.messages.some((m) => m.phone === '+213 (21) 45-67-89'));
   check('mark message read', (await req('PUT', `/messages/${msg._id}/read`, { token: adminToken })).data.message?.isRead === true);
   expectStatus('delete message', await req('DELETE', `/messages/${msg._id}`, { token: adminToken }), 200);
   expectStatus('owner cannot read messages', await req('GET', '/messages', { token: ownerToken }), 403);
@@ -794,8 +799,8 @@ describe('Audit regressions: double booking, bad input, abuse limits');
 
   // Contact form: validated
   expectStatus('contact form: missing fields rejected', await req('POST', '/messages', { body: { name: 'A' } }), 400);
-  expectStatus('contact form: 10 000-character message rejected', await req('POST', '/messages', { body: { name: 'Amel', email: 'amel@test.dz', subject: 'Question', content: 'x'.repeat(10000) } }), 400);
-  expectStatus('contact form: valid message accepted', await req('POST', '/messages', { body: { name: 'Amel', email: 'amel@test.dz', subject: 'Question', content: 'Bonjour, une question.' } }), 201);
+  expectStatus('contact form: 10 000-character message rejected', await req('POST', '/messages', { body: { name: 'Amel', email: 'amel@test.dz', phone: '0661 98 76 54', subject: 'Question', content: 'x'.repeat(10000) } }), 400);
+  expectStatus('contact form: valid message accepted', await req('POST', '/messages', { body: { name: 'Amel', email: 'amel@test.dz', phone: '0661 98 76 54', subject: 'Question', content: 'Bonjour, une question.' } }), 201);
 
   // Password guessing: 20 failed logins per account and IP, then 429 — other accounts unaffected
   const victim = `victim.${uid}@test.dz`;
@@ -811,6 +816,328 @@ describe('Audit regressions: double booking, bad input, abuse limits');
   // Footer destinations: counted server-side, small answer
   const pop = await req('GET', '/wilayas/popular?limit=5');
   check('popular wilayas: ≤ 5 rows of { wilaya, count }, most listings first', pop.status === 200 && pop.data.wilayas.length <= 5 && pop.data.wilayas.every((w, i, a) => typeof w.wilaya === 'string' && w.count > 0 && (i === 0 || a[i - 1].count >= w.count)), JSON.stringify(pop.data.wilayas));
+}
+
+describe('Featured hotels (chosen by the admin)');
+{
+  const admin = await login('admin@hotelsdz.dz', 'admin123');
+  const before = await req('GET', '/hotels/featured');
+  check('home page section works before any choice (best-rated fallback)', before.status === 200 && before.data.chosen === false && before.data.count > 0);
+
+  expectStatus('customer cannot see hotel demand', await req('GET', '/admin/hotels/demand', { token: customer.token }), 403);
+  expectStatus('customer cannot choose featured hotels', await req('PUT', '/admin/hotels/featured', { token: customer.token, body: { ids: [] } }), 403);
+
+  const demand = await req('GET', '/admin/hotels/demand?days=0', { token: admin });
+  const rows = demand.data.hotels || [];
+  check('demand: approved hotels with request counts, most requested first', demand.status === 200 && rows.length > 1 && rows.every((h, i) => typeof h.requests === 'number' && (i === 0 || rows[i - 1].requests >= h.requests)));
+  check('demand: booking requests are counted', rows.some((h) => h.requests > 0) && rows.every((h) => h.confirmed <= h.requests));
+
+  const [a, b] = [rows[1]._id, rows[0]._id];
+  expectStatus('admin saves a selection', await req('PUT', '/admin/hotels/featured', { token: admin, body: { ids: [a, b] } }), 200);
+  const after = await req('GET', '/hotels/featured');
+  check('home page shows exactly the selection, in the chosen order', after.data.chosen === true && after.data.hotels.map((h) => h._id).join() === [a, b].join());
+  check('featured hotels carry their "from" price', after.data.hotels.every((h) => 'price' in h));
+  check('demand lists the selection in order', (await req('GET', '/admin/hotels/demand', { token: admin })).data.featured.join() === [a, b].join());
+
+  const tooMany = Array.from({ length: 13 }, (_, i) => `65a0000000000000000000${String(i).padStart(2, '0')}`);
+  expectStatus('more than 12 hotels rejected', await req('PUT', '/admin/hotels/featured', { token: admin, body: { ids: tooMany } }), 400);
+  expectStatus('unknown / unpublished hotel rejected', await req('PUT', '/admin/hotels/featured', { token: admin, body: { ids: ['65a000000000000000000001'] } }), 400);
+  expectStatus('ids must be a list', await req('PUT', '/admin/hotels/featured', { token: admin, body: { ids: 'x' } }), 400);
+  check('a rejected save leaves the selection unchanged', (await req('GET', '/hotels/featured')).data.hotels.map((h) => h._id).join() === [a, b].join());
+
+  expectStatus('admin clears the selection', await req('PUT', '/admin/hotels/featured', { token: admin, body: { ids: [] } }), 200);
+  check('back to the best-rated fallback', (await req('GET', '/hotels/featured')).data.chosen === false);
+}
+
+describe('Profile photo (every role)');
+{
+  const putAvatar = async (token, file, name = 'me.png') => {
+    const fd = new FormData();
+    if (file) fd.append('avatar', file, name);
+    const r = await fetch(`${API}/auth/avatar`, { method: 'PUT', headers: { Authorization: `Bearer ${token}` }, body: fd });
+    return { status: r.status, data: await r.json().catch(() => ({})) };
+  };
+  const adminToken = await login('admin@hotelsdz.dz', 'admin123');
+  const people = {
+    customer: customer.token,
+    owner: (await register('owner')).token,
+    seller: (await register('seller')).token,
+    admin: adminToken,
+  };
+  for (const [role, token] of Object.entries(people)) {
+    const r = await putAvatar(token, PNG);
+    check(`${role} adds a profile photo`, r.status === 200 && Boolean(r.data.user?.avatar?.url), `${r.status} ${r.data.message || ''}`);
+  }
+  const me = (await req('GET', '/auth/me', { token: people.seller })).data.user;
+  check('the photo is part of the logged-in user', Boolean(me?.avatar?.url));
+  const img = await fetch(new URL(me.avatar.url, API.replace(/\/api\/v1$/, '/')));
+  check('the photo is served as an image', img.ok && (img.headers.get('content-type') || '').startsWith('image/'), `${img.status} ${img.headers.get('content-type')}`);
+
+  const first = me.avatar.url;
+  const again = await putAvatar(people.seller, PNG);
+  check('a new photo replaces the old one', again.status === 200 && again.data.user.avatar.url !== first);
+
+  expectStatus('no file → 400', await putAvatar(people.customer, null), 400);
+  expectStatus('not an image → 400', await putAvatar(people.customer, new Blob(['hello'], { type: 'text/plain' }), 'x.txt'), 400);
+  expectStatus('more than 2 MB → 400 (not 500)', await putAvatar(people.customer, new Blob([new Uint8Array(2 * 1024 * 1024 + 10)], { type: 'image/png' })), 400);
+  expectStatus('visitor cannot upload a photo', await putAvatar('', PNG), 401);
+
+  const del = await req('DELETE', '/auth/avatar', { token: people.customer });
+  check('photo removed (back to the initial)', del.status === 200 && !del.data.user?.avatar?.url);
+}
+
+describe('Meta catalog feed (Facebook / Instagram catalog ads)');
+{
+  const r = await fetch(`${API}/feeds/meta-catalog.csv`);
+  const csv = (await r.text()).replace(/^﻿/, '');
+  const [head, ...lines] = csv.trim().split('\n');
+  check('feed is a public CSV', r.ok && (r.headers.get('content-type') || '').startsWith('text/csv'));
+  check('feed has the Meta product columns', ['id', 'title', 'description', 'availability', 'condition', 'price', 'link', 'image_link', 'brand'].every((c) => head.split(',').includes(c)), head);
+  check('hotels, houses and properties for sale are all in it', ['hotel-', 'house-', 'sale-'].every((p) => lines.some((l) => l.startsWith(p))));
+  check('every item has a price in DZD, a photo URL and a tracked link', lines.every((l) => / DZD,/.test(l) && /,https?:\/\/[^,]+utm_source=facebook[^,]*,https?:\/\//.test(l)));
+
+  const admin = await login('admin@hotelsdz.dz', 'admin123');
+  const pending = (await req('GET', '/admin/houses/all?status=pending', { token: admin })).data.houses || [];
+  check('unpublished listings are left out', pending.length > 0 && pending.every((h) => !csv.includes(`house-${h._id}`)));
+
+  const ar = await (await fetch(`${API}/feeds/meta-catalog.csv?lang=ar`)).text();
+  check('Arabic catalog: Arabic place names and /ar links', /[؀-ۿ]/.test(ar) && /\/ar\/(hotels|houses|sales)\//.test(ar));
+}
+
+describe('Listing reels (videos)');
+{
+  const putReel = async (token, kind, id, blob, duration = '12', name = 'tour.mp4', size = { width: 1080, height: 1920 }) => {
+    const fd = new FormData();
+    if (blob) fd.append('video', blob, name);
+    if (duration !== null) fd.append('duration', duration);
+    if (size) {
+      fd.append('width', String(size.width));
+      fd.append('height', String(size.height));
+    }
+    const r = await fetch(`${API}/reels/${kind}/${id}`, { method: 'PUT', headers: token ? { Authorization: `Bearer ${token}` } : {}, body: fd });
+    return { status: r.status, data: await r.json().catch(() => ({})) };
+  };
+  const MP4 = new Blob([new Uint8Array(2048)], { type: 'video/mp4' }); // content isn't decoded server-side
+
+  const feed = await req('GET', '/reels?limit=20');
+  check('public feed: published reels of published listings', feed.status === 200 && feed.data.reels.length >= 3 && feed.data.reels.every((r) => r.reel.url && ['hotel', 'house', 'sale'].includes(r.kind)));
+  check('feed is newest first', feed.data.reels.every((r, i, a) => i === 0 || new Date(a[i - 1].reel.uploadedAt) >= new Date(r.reel.uploadedAt)));
+  check('reels waiting for the admin are not public', !feed.data.reels.some((r) => r.title === 'Riad Tlemcen'));
+  const sales = await req('GET', '/reels?type=sales');
+  check('category filter (sales only)', sales.data.reels.length > 0 && sales.data.reels.every((r) => r.kind === 'sale'));
+  check('feed cards carry price and listing photo', feed.data.reels.every((r) => 'price' in r && typeof r.image === 'string'));
+
+  // Wilaya filter (with or without a category)
+  const wl = await req('GET', '/reels/wilayas');
+  check('wilayas with reels, with counts', wl.status === 200 && wl.data.wilayas.length > 0 && wl.data.wilayas.every((w) => w.wilaya && w.count > 0) && wl.data.total === feed.data.total);
+  const top = wl.data.wilayas[0];
+  const inWilaya = await req('GET', `/reels?wilaya=${encodeURIComponent(top.wilaya)}&limit=20`);
+  check(`?wilaya=${top.wilaya}: only that wilaya, all categories`, inWilaya.data.reels.length === top.count && inWilaya.data.reels.every((r) => r.wilaya === top.wilaya));
+  const lower = await req('GET', `/reels?wilaya=${encodeURIComponent(top.wilaya.toLowerCase())}&limit=20`);
+  check('wilaya filter ignores case / accents', lower.data.reels.length === top.count);
+  const both = await req('GET', '/reels?type=sales&wilaya=Alger&limit=20');
+  check('category + wilaya combined', both.data.reels.every((r) => r.kind === 'sale' && r.wilaya === 'Alger'));
+  check('no partial matches (« Alg » ≠ Alger)', (await req('GET', '/reels?wilaya=Alg')).data.reels.length === 0);
+  const salesWl = await req('GET', '/reels/wilayas?type=sales');
+  check('wilaya list follows the category', salesWl.data.total === sales.data.total);
+
+  const ownerToken = await login('owner@hotelsdz.dz', 'owner123');
+  const myHouse = (await req('GET', '/houses/my/list', { token: ownerToken })).data.houses.find((h) => h.status === 'approved' && h.reel?.status !== 'pending');
+  const up = await putReel(ownerToken, 'house', myHouse._id, MP4);
+  check('owner uploads a reel for their house → waits for approval', up.status === 200 && up.data.reel?.status === 'pending' && up.data.reel.duration === 12, `${up.status} ${up.data.message || ''}`);
+  check('…not public yet', !(await req('GET', '/reels?type=houses&limit=20')).data.reels.some((r) => r._id === myHouse._id));
+  check('…listing itself stays published', (await req('GET', `/houses/${myHouse._id}`)).data.house?.status === 'approved');
+
+  const stranger = await register('owner');
+  expectStatus('another owner cannot touch it', await putReel(stranger.token, 'house', myHouse._id, MP4), 403);
+  expectStatus('a customer cannot upload reels', await putReel(customer.token, 'house', myHouse._id, MP4), 403);
+  expectStatus('visitor cannot upload reels', await putReel('', 'house', myHouse._id, MP4), 401);
+  expectStatus('not a video → 400', await putReel(ownerToken, 'house', myHouse._id, new Blob(['x'], { type: 'text/plain' }), '5', 'x.txt'), 400);
+  expectStatus('longer than 90 s → 400', await putReel(ownerToken, 'house', myHouse._id, MP4, '120'), 400);
+  expectStatus('no file → 400', await putReel(ownerToken, 'house', myHouse._id, null), 400);
+  expectStatus('unknown kind → 404', await putReel(ownerToken, 'boat', myHouse._id, MP4), 404);
+  // Reels format only
+  expectStatus('landscape video (16:9) refused', await putReel(ownerToken, 'house', myHouse._id, MP4, '12', 'tour.mp4', { width: 1920, height: 1080 }), 400);
+  expectStatus('square video refused', await putReel(ownerToken, 'house', myHouse._id, MP4, '12', 'tour.mp4', { width: 1080, height: 1080 }), 400);
+  expectStatus('3:4 video refused', await putReel(ownerToken, 'house', myHouse._id, MP4, '12', 'tour.mp4', { width: 1080, height: 1440 }), 400);
+  expectStatus('too small (360×640) refused', await putReel(ownerToken, 'house', myHouse._id, MP4, '12', 'tour.mp4', { width: 360, height: 640 }), 400);
+  expectStatus('missing dimensions refused', await putReel(ownerToken, 'house', myHouse._id, MP4, '12', 'tour.mp4', null), 400);
+  expectStatus('shorter than 3 s refused', await putReel(ownerToken, 'house', myHouse._id, MP4, '1'), 400);
+  const tall = await putReel(ownerToken, 'house', myHouse._id, MP4, '12', 'tour.mp4', { width: 1170, height: 2532 });
+  check('phone-screen 9:19.5 video accepted', tall.status === 200 && tall.data.reel?.width === 1170, `${tall.status} ${tall.data.message || ''}`);
+
+  const admin = await login('admin@hotelsdz.dz', 'admin123');
+  expectStatus('customer cannot see the moderation queue', await req('GET', '/admin/reels', { token: customer.token }), 403);
+  const queue = await req('GET', '/admin/reels?status=pending', { token: admin });
+  check('admin sees the reel waiting', queue.data.reels.some((r) => r._id === myHouse._id && r.owner?.email === 'owner@hotelsdz.dz'));
+  expectStatus('admin publishes it', await req('PUT', `/admin/reels/house/${myHouse._id}/approve`, { token: admin }), 200);
+  check('…now in the public feed', (await req('GET', '/reels?type=houses&limit=20')).data.reels.some((r) => r._id === myHouse._id));
+  check('…and on the listing', (await req('GET', `/houses/${myHouse._id}`)).data.house?.reel?.status === 'approved');
+  expectStatus('approving again → 404 (nothing pending)', await req('PUT', `/admin/reels/house/${myHouse._id}/approve`, { token: admin }), 404);
+
+  // Rejection with a reason
+  expectStatus('reject needs a reason', await req('PUT', `/admin/reels/house/${myHouse._id}/reject`, { token: admin, body: { reason: ' ' } }), 400);
+  expectStatus('owner cannot reject', await req('PUT', `/admin/reels/house/${myHouse._id}/reject`, { token: ownerToken, body: { reason: 'Floue' } }), 403);
+  expectStatus('admin rejects with a reason', await req('PUT', `/admin/reels/house/${myHouse._id}/reject`, { token: admin, body: { reason: 'Qualité insuffisante (floue)' } }), 200);
+  const mine = (await req('GET', '/houses/my/list', { token: ownerToken })).data.houses.find((h) => h._id === myHouse._id);
+  check('owner sees "rejected" and the reason', mine?.reel?.status === 'rejected' && mine.reel.rejectionReason === 'Qualité insuffisante (floue)');
+  check('rejected reel is no longer public', !(await req('GET', '/reels?type=houses&limit=20')).data.reels.some((r) => r._id === myHouse._id));
+  check('admin "rejected" tab lists it', (await req('GET', '/admin/reels?status=rejected', { token: admin })).data.reels.some((r) => r._id === myHouse._id));
+  expectStatus('admin can still publish a rejected reel', await req('PUT', `/admin/reels/house/${myHouse._id}/approve`, { token: admin }), 200);
+  check('…published again, reason cleared', (await req('GET', `/houses/${myHouse._id}`)).data.house?.reel?.rejectionReason === '');
+  const again = await putReel(ownerToken, 'house', myHouse._id, MP4);
+  check('a new upload goes back to review', again.data.reel?.status === 'pending' && again.data.reel.rejectionReason === '');
+
+  expectStatus('owner deletes the reel', await req('DELETE', `/reels/house/${myHouse._id}`, { token: ownerToken }), 200);
+  check('…gone from the feed', !(await req('GET', '/reels?type=houses&limit=20')).data.reels.some((r) => r._id === myHouse._id));
+  const adminUp = await putReel(admin, 'house', myHouse._id, MP4);
+  check('admin uploads are published at once', adminUp.data.reel?.status === 'approved');
+  await req('DELETE', `/reels/house/${myHouse._id}`, { token: admin });
+}
+
+describe('Investment projects (land or property looking for an investor)');
+{
+  const admin = await login('admin@hotelsdz.dz', 'admin123');
+  const list = await req('GET', '/projects');
+  check('public list: published projects only', list.status === 200 && list.data.total === 4 && list.data.projects.every((p) => p.status === 'approved' && p.owner?.fullName && !p.owner.email));
+  check('filter by project type', (await req('GET', '/projects?projectType=Agricole')).data.projects.every((p) => p.projectType === 'Agricole'));
+  check('filter by wilaya', (await req('GET', '/projects?wilaya=Tipaza')).data.projects.length === 1);
+  check('search', (await req('GET', '/projects?q=serres')).data.projects.length === 1);
+  check('unknown filter values ignored', (await req('GET', '/projects?projectType=Boat&partnership=x&assetType=Yacht')).data.total === 4);
+  const shops = (await req('GET', '/projects?assetType=' + encodeURIComponent('Local commercial'))).data;
+  check('filter by property type (not only land)', shops.total === 1 && shops.projects[0].assetType === 'Local commercial');
+
+  const pendingSeed = (await req('GET', '/admin/projects', { token: admin })).data.projects[0];
+  expectStatus('pending project hidden from visitors', await req('GET', `/projects/${pendingSeed._id}`), 404);
+
+  // A land owner (any registered user) posts a project
+  const landOwner = await register('customer');
+  const base = { title: `Terrain test ${uid}`, description: 'Projet de résidence', assetType: 'Terrain', projectType: 'Résidentiel', partnership: 'Construction contre logements', wilaya: 'Oran', city: 'Oran', area: 1500, landDocument: 'Acte notarié', budget: 90000000, ownerShare: 35 };
+  const created = await req('POST', '/projects', { token: landOwner.token, form: { ...base, images: [PNG], documents: [PNG] } });
+  check('any registered user can post a project → waits for approval', created.status === 201 && created.data.project?.status === 'pending' && /^PRJ-/.test(created.data.project.reference), `${created.status} ${created.data.message || ''}`);
+  const pid = created.data.project?._id;
+  expectStatus('visitor cannot post', await req('POST', '/projects', { form: base }), 401);
+  expectStatus('area is required', await req('POST', '/projects', { token: landOwner.token, form: { ...base, area: '' } }), 400);
+  expectStatus('unknown project type rejected', await req('POST', '/projects', { token: landOwner.token, form: { ...base, projectType: 'Casino' } }), 400);
+  expectStatus('unknown property type rejected', await req('POST', '/projects', { token: landOwner.token, form: { ...base, assetType: 'Bateau' } }), 400);
+  expectStatus('photo of the ownership document required', await req('POST', '/projects', { token: landOwner.token, form: { ...base, images: [PNG] } }), 400);
+  expectStatus('at most 2 document photos', await req('POST', '/projects', { token: landOwner.token, form: { ...base, images: [PNG], documents: [PNG, PNG, PNG] } }), 400);
+  const regularising = await req('POST', '/projects', { token: landOwner.token, form: { ...base, landDocument: 'En cours de régularisation', images: [PNG] } });
+  check('papers being regularised: no document photo needed', regularising.status === 201, String(regularising.status));
+  if (regularising.data.project) await req('DELETE', `/projects/${regularising.data.project._id}`, { token: landOwner.token });
+  expectStatus('"other" property must say what it is', await req('POST', '/projects', { token: landOwner.token, form: { ...base, assetType: 'Autre bien', images: [PNG], documents: [PNG] } }), 400);
+  const other = await req('POST', '/projects', { token: landOwner.token, form: { ...base, assetType: 'Autre bien', assetOther: 'Station-service', images: [PNG], documents: [PNG] } });
+  check('"other" property saved with its description', other.status === 201 && other.data.project?.assetOther === 'Station-service');
+  if (other.data.project) await req('DELETE', `/projects/${other.data.project._id}`, { token: landOwner.token });
+  expectStatus('"other" document must be named', await req('POST', '/projects', { token: landOwner.token, form: { ...base, landDocument: 'Autre', images: [PNG], documents: [PNG] } }), 400);
+  const mineView = await req('GET', `/projects/${pid}`, { token: landOwner.token });
+  check('owner sees their pending project with the document photo', mineView.status === 200 && mineView.data.project?.documentImages?.length === 1);
+  check('not public before approval', !(await req('GET', '/projects?limit=50')).data.projects.some((p) => p._id === pid));
+  check('"my projects" lists it', (await req('GET', '/projects/mine', { token: landOwner.token })).data.projects.some((p) => p._id === pid));
+
+  const stranger = await register('customer');
+  expectStatus('someone else cannot edit it', await req('PUT', `/projects/${pid}`, { token: stranger.token, body: { title: 'Piraté' } }), 403);
+  expectStatus('customer cannot moderate', await req('PUT', `/admin/projects/${pid}/approve`, { token: landOwner.token }), 403);
+  expectStatus('reject needs a reason', await req('PUT', `/admin/projects/${pid}/reject`, { token: admin, body: {} }), 400);
+  await req('PUT', `/admin/projects/${pid}/reject`, { token: admin, body: { reason: 'Photos du terrain manquantes' } });
+  check('owner sees the rejection reason', (await req('GET', '/projects/mine', { token: landOwner.token })).data.projects.find((p) => p._id === pid)?.rejectionReason === 'Photos du terrain manquantes');
+  const edited = await req('PUT', `/projects/${pid}`, { token: landOwner.token, body: { title: `Terrain test corrigé ${uid}` } });
+  check('editing sends it back to review, reason cleared', edited.data.project?.status === 'pending' && edited.data.project.rejectionReason === '');
+  expectStatus('admin approves', await req('PUT', `/admin/projects/${pid}/approve`, { token: admin }), 200);
+  check('now public', (await req('GET', '/projects?limit=50')).data.projects.some((p) => p._id === pid));
+  check('document photos never public (page)', (await req('GET', `/projects/${pid}`)).data.project?.documentImages === undefined);
+  check('document photos never public (list)', (await req('GET', '/projects?limit=50')).data.projects.every((p) => p.documentImages === undefined));
+  check('…not even for another member', (await req('GET', `/projects/${pid}`, { token: stranger.token })).data.project?.documentImages === undefined);
+  check('admin sees the document photo (verification)', (await req('GET', '/admin/projects?status=approved', { token: admin })).data.projects.find((p) => p._id === pid)?.documentImages?.length === 1);
+  expectStatus('removing the last document photo is refused', await req('PUT', `/projects/${pid}`, { token: landOwner.token, form: { keepDocuments: '[]' } }), 400);
+  check('…and nothing was changed', (await req('GET', `/projects/${pid}`, { token: landOwner.token })).data.project?.documentImages?.length === 1);
+
+  // Investors' requests
+  const interest = { name: 'Investisseur Test', phone: '0555 98 76 54', email: 'invest@test.dz', amount: 50000000, message: 'Projet intéressant, je souhaite en discuter.' };
+  expectStatus('investor (visitor) sends an interest request', await req('POST', `/projects/${pid}/interest`, { body: interest }), 201);
+  expectStatus('…phone number required', await req('POST', `/projects/${pid}/interest`, { body: { ...interest, phone: '' } }), 400);
+  expectStatus('…message too short', await req('POST', `/projects/${pid}/interest`, { body: { ...interest, message: 'Salut' } }), 400);
+  expectStatus('owner cannot answer their own project', await req('POST', `/projects/${pid}/interest`, { token: landOwner.token, body: interest }), 400);
+  expectStatus('no request on an unpublished project', await req('POST', `/projects/${pendingSeed._id}/interest`, { body: interest }), 404);
+  check('unread request counted in "my projects"', (await req('GET', '/projects/mine', { token: landOwner.token })).data.projects.find((p) => p._id === pid)?.unreadInterests === 1);
+  const received = await req('GET', `/projects/${pid}/interests`, { token: landOwner.token });
+  check('owner reads the request (name, phone, amount, message)', received.data.interests?.[0]?.phone === '0555 98 76 54' && received.data.interests[0].amount === 50000000);
+  check('…then it is marked read', (await req('GET', '/projects/mine', { token: landOwner.token })).data.projects.find((p) => p._id === pid)?.unreadInterests === 0);
+  expectStatus('others cannot read the requests', await req('GET', `/projects/${pid}/interests`, { token: stranger.token }), 403);
+  check('interest counter on the project', (await req('GET', `/projects/${pid}`)).data.project?.interestsCount === 1);
+
+  expectStatus('owner deletes the project', await req('DELETE', `/projects/${pid}`, { token: landOwner.token }), 200);
+  expectStatus('…gone', await req('GET', `/projects/${pid}`), 404);
+}
+
+describe('Investor space');
+{
+  const admin = await login('admin@hotelsdz.dz', 'admin123');
+  const inv = await register('investor');
+  check('anyone can sign up as an investor', inv.status === 201 && inv.user?.role === 'investor', String(inv.status));
+  const cust = await register('customer');
+  expectStatus('customer has no investor space', await req('GET', '/investor/dashboard', { token: cust.token }), 403);
+  expectStatus('visitor has no investor space', await req('GET', '/investor/dashboard'), 401);
+
+  const empty = (await req('GET', '/investor/dashboard', { token: inv.token })).data;
+  check('new investor: no preferences → every published project matches', empty.stats?.matches === 4 && empty.stats.requests === 0 && empty.stats.saved === 0);
+
+  expectStatus('unknown property type in preferences rejected', await req('PUT', '/investor/preferences', { token: inv.token, body: { assetTypes: ['Bateau'] } }), 400);
+  await req('PUT', '/investor/preferences', { token: inv.token, body: { wilayas: ['Alger'], assetTypes: ['Local commercial'], projectTypes: [], maxBudget: 30000000 } });
+  const prefs = (await req('GET', '/investor/dashboard', { token: inv.token })).data;
+  check('"projects for you" follow the preferences', prefs.stats.matches === 1 && prefs.matches[0]?.assetType === 'Local commercial' && prefs.prefs.wilayas[0] === 'Alger');
+
+  const shop = prefs.matches[0];
+  expectStatus('save a published project', await req('POST', `/investor/saved/${shop._id}`, { token: inv.token }), 200);
+  await req('POST', `/investor/saved/${shop._id}`, { token: inv.token }); // twice → still one
+  const saved = (await req('GET', '/investor/saved', { token: inv.token })).data;
+  check('saved list (no duplicates)', saved.projects.length === 1 && saved.ids.length === 1);
+  const pendingSeed = (await req('GET', '/admin/projects', { token: admin })).data.projects.find((p) => p.status === 'pending');
+  if (pendingSeed) expectStatus('cannot save an unpublished project', await req('POST', `/investor/saved/${pendingSeed._id}`, { token: inv.token }), 404);
+  await req('DELETE', `/investor/saved/${shop._id}`, { token: inv.token });
+  check('unsave', (await req('GET', '/investor/saved', { token: inv.token })).data.projects.length === 0);
+
+  await req('POST', `/projects/${shop._id}/interest`, { token: inv.token, body: { name: 'Test investor', phone: '0555000000', message: 'Je suis intéressé par ce local.' } });
+  const sent = (await req('GET', '/investor/requests', { token: inv.token })).data.requests;
+  check('the investor sees the request they sent, with the project', sent.length === 1 && sent[0].project?._id === shop._id && sent[0].seen === false);
+  check('investor can book a stay too (not refused by role)', (await req('POST', '/bookings', { token: inv.token, body: {} })).status !== 403);
+  const stats = (await req('GET', '/admin/stats', { token: admin })).data;
+  check('admin stats count investors', (stats.stats?.investors ?? stats.investors) >= 1);
+}
+
+describe('One account, every space (switch freely)');
+{
+  const me = await register('customer');
+  expectStatus('traveller cannot open the seller space yet', await req('GET', '/seller/stats', { token: me.token }), 403);
+  const toSeller = await req('PUT', '/auth/space', { token: me.token, body: { role: 'seller' } });
+  check('switch to seller', toSeller.status === 200 && toSeller.data.user?.role === 'seller');
+  expectStatus('…the seller space opens with the same token', await req('GET', '/seller/stats', { token: me.token }), 200);
+  await req('PUT', '/auth/space', { token: me.token, body: { role: 'investor' } });
+  expectStatus('switch to investor → investor space', await req('GET', '/investor/dashboard', { token: me.token }), 200);
+  await req('PUT', '/auth/space', { token: me.token, body: { role: 'owner' } });
+  expectStatus('switch to host → host space', await req('GET', '/owner/stats', { token: me.token }), 200);
+  expectStatus('cannot switch to admin', await req('PUT', '/auth/space', { token: me.token, body: { role: 'admin' } }), 400);
+  expectStatus('visitor cannot switch', await req('PUT', '/auth/space', { body: { role: 'owner' } }), 401);
+  const admin = await login('admin@hotelsdz.dz', 'admin123');
+  expectStatus('admin keeps the admin role', await req('PUT', '/auth/space', { token: admin, body: { role: 'customer' } }), 403);
+  check('back to traveller', (await req('PUT', '/auth/space', { token: me.token, body: { role: 'customer' } })).data.user?.role === 'customer');
+}
+
+describe('"How did you hear about us?" (welcome notification)');
+{
+  const admin = await login('admin@hotelsdz.dz', 'admin123');
+  const before = (await req('GET', '/admin/referrals', { token: admin })).data;
+  check('admin sees answers per source (every source listed)', before.sources?.length === 8 && before.total >= 29);
+  expectStatus('a visitor answers', await req('POST', '/referrals', { body: { source: 'TikTok', lang: 'ar', page: '/ar' } }), 201);
+  expectStatus('"other" with details', await req('POST', '/referrals', { body: { source: 'Autre', other: 'Radio Algérie', lang: 'fr' } }), 201);
+  expectStatus('unknown source rejected', await req('POST', '/referrals', { body: { source: 'Pigeon' } }), 400);
+  expectStatus('source required', await req('POST', '/referrals', { body: {} }), 400);
+  const after = (await req('GET', '/admin/referrals', { token: admin })).data;
+  check('answers reach the admin', after.total === before.total + 2 && after.sources.find((s) => s.source === 'TikTok').count === before.sources.find((s) => s.source === 'TikTok').count + 1);
+  check('latest answers with the "other" details', after.latest?.[0]?.other === 'Radio Algérie' || after.latest?.[1]?.other === 'Radio Algérie');
+  check('period filter', (await req('GET', '/admin/referrals?days=7', { token: admin })).data.total <= after.total);
+  const cust = await register('customer');
+  expectStatus('only the admin reads the answers', await req('GET', '/admin/referrals', { token: cust.token }), 403);
 }
 
 describe('No online payment');

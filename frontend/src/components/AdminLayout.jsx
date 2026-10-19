@@ -21,8 +21,14 @@ import {
   Mail,
   Tag,
   MessageSquareQuote,
+  Star,
+  Megaphone,
+  Clapperboard,
+  Landmark,
+  Radio,
 } from 'lucide-react';
 import api from '@/lib/api';
+import Avatar from '@/components/Avatar';
 import { useAuthStore } from '@/store/authStore';
 
 import { useT } from '@/lib/i18n/useT';
@@ -30,11 +36,16 @@ const ADMIN_MENU = [
   { href: '/admin', label: 'Tableau de bord', icon: LayoutDashboard },
   { href: '/admin/hotels', label: 'Approbations', icon: CheckSquare },
   { href: '/admin/all-hotels', label: 'Tous les hôtels', icon: Building2 },
+  { href: '/admin/featured', label: 'Hôtels en vedette', icon: Star },
+  { href: '/admin/meta', label: 'Publicité Meta', icon: Megaphone },
+  { href: '/admin/reels', label: 'Reels', icon: Clapperboard },
+  { href: '/admin/projects', label: 'Projets d’investissement', icon: Landmark },
   { href: '/admin/all-houses', label: 'Toutes les maisons', icon: Home },
   { href: '/admin/all-sales', label: 'Ventes immobilières', icon: Tag },
   { href: '/admin/users', label: 'Utilisateurs', icon: Users },
   { href: '/admin/messages', label: 'Messages', icon: Mail },
   { href: '/admin/testimonials', label: 'Avis clients', icon: MessageSquareQuote },
+  { href: '/admin/referrals', label: 'Comment ils nous ont connus', icon: Radio },
   { href: '/admin/bookings', label: 'Réservations', icon: CalendarCheck },
   { href: '/admin/pricing', label: 'Tarification', icon: Settings },
 ];
@@ -48,6 +59,8 @@ export default function AdminLayout({ children }) {
   const [profileOpen, setProfileOpen] = useState(false);
   const [unread, setUnread] = useState(0);
   const [pendingReviews, setPendingReviews] = useState(0);
+  const [pendingReels, setPendingReels] = useState(0);
+  const [pendingProjects, setPendingProjects] = useState(0);
 
   useEffect(() => {
     if (loading) return;
@@ -63,6 +76,12 @@ export default function AdminLayout({ children }) {
       .catch(() => {});
     api.get('/testimonials/admin?status=pending', { localize: false })
       .then(({ data }) => setPendingReviews(data.pending || 0))
+      .catch(() => {});
+    api.get('/admin/reels?status=pending', { localize: false })
+      .then(({ data }) => setPendingReels(data.pending || 0))
+      .catch(() => {});
+    api.get('/admin/projects?status=pending', { localize: false })
+      .then(({ data }) => setPendingProjects(data.pending || 0))
       .catch(() => {});
   }, [user, pathname]);
 
@@ -97,7 +116,7 @@ export default function AdminLayout({ children }) {
           {ADMIN_MENU.map((item) => {
             const Icon = item.icon;
             const active = pathname === item.href;
-            const badge = item.href === '/admin/messages' ? unread : item.href === '/admin/testimonials' ? pendingReviews : 0;
+            const badge = item.href === '/admin/messages' ? unread : item.href === '/admin/testimonials' ? pendingReviews : item.href === '/admin/reels' ? pendingReels : item.href === '/admin/projects' ? pendingProjects : 0;
             return (
               <Link
                 key={item.href}
@@ -143,9 +162,7 @@ export default function AdminLayout({ children }) {
                 className="admin-profile-btn"
                 onClick={() => setProfileOpen(!profileOpen)}
               >
-                <div className="admin-avatar">
-                  {user.fullName?.charAt(0)?.toUpperCase() || t('A')}
-                </div>
+                <Avatar user={user} className="admin-avatar" initialClassName="" />
                 <div className="admin-profile-info">
                   <span className="admin-profile-name">{user.fullName}</span>
                   <span className="admin-profile-role">{t('Administrateur')}</span>
@@ -155,7 +172,7 @@ export default function AdminLayout({ children }) {
               {profileOpen && (
                 <div className="admin-profile-dropdown">
                   <Link href="/profile" className="admin-dropdown-item">
-                    <Settings className="w-4 h-4" /> {t('Paramètres')}
+                    <Settings className="w-4 h-4" /> {t('Mon profil et ma photo')}
                   </Link>
                   <button
                     onClick={async () => { await logout(); router.push('/'); }}

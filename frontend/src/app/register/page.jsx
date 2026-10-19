@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from '@/components/LocaleLink';
 import BrandLogo from '@/components/BrandLogo';
 import { useAuthStore } from '@/store/authStore';
+import { SPACE_ROLES, spaceHome } from '@/lib/spaces';
 import GoogleSignIn from '@/components/GoogleSignIn';
 
 import { useT } from '@/lib/i18n/useT';
@@ -23,18 +24,15 @@ export default function RegisterPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Links like "Devenir propriétaire" point to /register?role=owner — preselect that role.
-  // (Read from window rather than useSearchParams to keep the page statically renderable.)
+  // Links like "Publier une annonce" point to /register?role=owner: the new account opens that space right away
+  // (it can switch at any time). Read from window rather than useSearchParams to keep the page static.
   useEffect(() => {
     const role = new URLSearchParams(window.location.search).get('role');
-    if (['customer', 'owner', 'seller'].includes(role)) setForm((f) => ({ ...f, role }));
+    if (SPACE_ROLES.includes(role)) setForm((f) => ({ ...f, role }));
   }, []);
 
   const goOn = (user) => {
-    if (user.role === 'admin') router.push('/admin');
-    else if (user.role === 'owner') router.push('/owner/dashboard');
-    else if (user.role === 'seller') router.push('/seller/dashboard');
-    else router.push('/');
+    router.push(user.role === 'customer' ? '/' : spaceHome(user.role));
   };
 
   const submit = async (e) => {
@@ -63,30 +61,10 @@ export default function RegisterPage() {
           <div className="mb-4 rounded-lg bg-red-50 px-4 py-2 text-sm text-red-600">{error}</div>
         )}
 
-        {/* Role switch */}
-        <div className="mb-5 grid grid-cols-3 gap-2">
-          {[
-            { v: 'customer', label: 'Voyageur', desc: 'Réserver & louer', icon: '🧳' },
-            { v: 'owner', label: 'Hôtelier', desc: 'Hôtels & locations', icon: '🏨' },
-            { v: 'seller', label: 'Vendeur', desc: 'Vendre un bien', icon: '🏠' },
-          ].map((r) => (
-            <button
-              key={r.v}
-              type="button"
-              aria-pressed={form.role === r.v}
-              onClick={() => setForm({ ...form, role: r.v })}
-              className={`flex flex-col items-center gap-1 rounded-xl border-2 px-2 py-3 text-center transition ${
-                form.role === r.v
-                  ? 'border-brand-500 bg-brand-50 text-brand-600 shadow-sm'
-                  : 'border-gray-100 bg-gray-50 text-gray-500 hover:border-gray-200'
-              }`}
-            >
-              <span className="text-xl" aria-hidden="true">{r.icon}</span>
-              <span className="text-xs font-bold leading-tight">{t(r.label)}</span>
-              <span className="text-[10px] font-medium leading-tight opacity-70">{t(r.desc)}</span>
-            </button>
-          ))}
-        </div>
+        {/* Everyone signs up as a traveller; the other spaces (host, seller, investor) open from the account menu */}
+        <p className="mb-5 rounded-xl bg-gray-50 px-4 py-3 text-xs leading-relaxed text-gray-600">
+          {t('Un seul compte pour tout : réservez, puis passez quand vous voulez à l’espace hôtels et locations, vente de biens ou investisseur depuis « Mon compte ».')}
+        </p>
 
         <GoogleSignIn role={form.role} onSuccess={goOn} onError={setError} />
 

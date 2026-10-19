@@ -466,7 +466,7 @@ export default function AdminDashboard() {
                           </div>
                           <div>
                             <p className="an-tbl-name">{b.customer?.fullName || t('Client')}</p>
-                            <p className="an-tbl-meta">{b.nights} {t('nuit')}{b.nights > 1 ? 's' : ''}</p>
+                            <p className="an-tbl-meta">{b.nights} {t(b.nights > 1 ? 'nuits' : 'nuit')}</p>
                           </div>
                         </div>
                       </td>

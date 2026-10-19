@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from '@/components/LocaleLink';
-import { usePathname } from 'next/navigation';
-import { ChevronDown, Menu, X, Heart, User, Globe, MessageCircle } from 'lucide-react';
+import Avatar from '@/components/Avatar';
+import { usePathname, useRouter } from 'next/navigation';
+import { ChevronDown, Menu, X, Heart, User, Globe, MessageCircle, LogOut } from 'lucide-react';
 import { useAuthStore, useLangStore } from '@/store/authStore';
 import { useFavoritesStore } from '@/store/favoritesStore';
 import BrandLogo, { brandName } from '@/components/BrandLogo';
@@ -11,6 +12,9 @@ import { useT } from '@/lib/i18n/useT';
 import { useUrlLang } from '@/components/UrlLang';
 import { localePath, splitLocale } from '@/lib/i18n/locale';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
+import AccountMenu from '@/components/AccountMenu';
+import SpaceSwitcher from '@/components/SpaceSwitcher';
+import { spaceHome } from '@/lib/spaces';
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
@@ -18,9 +22,16 @@ export default function Navbar() {
   const langRef = useRef(null);
   const pathname = splitLocale(usePathname() || '/').path; // without the /ar, /en prefix
   const user = useAuthStore((s) => s.user);
+  const logout = useAuthStore((s) => s.logout);
+  const router = useRouter();
   const { setLang } = useLangStore();
   const { t, lang } = useT();
   const urlLang = useUrlLang();
+  const signOut = async () => {
+    setOpen(false);
+    await logout();
+    router.push(localePath(urlLang, '/'));
+  };
 
   const { hotelIds, houseIds, load } = useFavoritesStore();
   const [anonCount, setAnonCount] = useState(0);
@@ -77,36 +88,39 @@ export default function Navbar() {
     else window.location.reload();
   };
 
-  const dashHref =
-    user?.role === 'admin' ? '/admin' : user?.role === 'owner' ? '/owner/dashboard' : user?.role === 'seller' ? '/seller/dashboard' : '/my-bookings';
+  const dashHref = spaceHome(user?.role);
 
   const navLinks = [
     { label: t.navHome, href: '/' },
     { label: t.navHotels, href: '/hotels' },
     { label: t.navHouses, href: '/houses' },
     { label: t.navSales || 'Ventes', href: '/sales' },
+    { label: 'Reels', href: '/reels' },
     { label: t.navDestinations, href: '/destinations' },
-    { label: t.navPricing, href: '/pricing' },
+    // land owners & investors (pricing stays in the footer, the menu is full at 1280 px)
+    { label: 'Investir', href: '/investir' },
+    // the contact form goes straight to the site owner (Admin → Messages)
+    { label: 'Contact', href: '/contact' },
   ];
 
   return (
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-xs">
-      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex h-20 max-w-[1440px] items-center justify-between gap-4 px-4 sm:px-6 2xl:gap-10">
         
         {/* Left: Brand Logo */}
-        <Link href="/" className="flex items-center shrink-0 group" aria-label={`${brandName(lang)} — ${t.tagline}`}>
+        <Link href="/" className="-ms-1 flex items-center shrink-0 group xl:me-2 2xl:me-6" aria-label={`${brandName(lang)} — ${t.tagline}`}>
           <span className="inline-block transition-transform duration-300 group-hover:scale-[1.03]"><BrandLogo className="h-10 sm:h-11" textClassName="text-2xl sm:text-[1.7rem]" alt="" priority /></span>
         </Link>
 
         {/* Center: Navigation Links */}
-        <nav className="hidden lg:flex items-center gap-1 bg-gray-50/80 p-1.5 rounded-full border border-gray-200/60">
+        <nav className="hidden xl:flex items-center gap-1 bg-gray-50/80 p-1.5 rounded-full border border-gray-200/60">
           {navLinks.map((link) => {
             const isActive = link.href === '/' ? pathname === '/' : pathname.startsWith(link.href);
             return (
               <Link
                 key={link.href}
                 href={link.href}
-                className={`px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
+                className={`whitespace-nowrap px-2.5 2xl:px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
                   isActive
                     ? 'bg-white text-brand-600 shadow-xs font-bold'
                     : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
@@ -119,7 +133,7 @@ export default function Navbar() {
         </nav>
 
         {/* Right: Actions */}
-        <div className="hidden lg:flex items-center gap-3">
+        <div className="hidden xl:flex items-center gap-3">
           {/* Favorites */}
           <Link
             href="/favorites"
@@ -154,22 +168,39 @@ export default function Navbar() {
             </Link>
           )}
 
-          {/* Add Hotel Button */}
-          <Link
-            href="/register?role=owner"
-            className="inline-flex items-center gap-2 rounded-full bg-brand-500 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-brand-600 hover:shadow-md"
-          >
-            {t.suggestHotel}
-          </Link>
+          {/* Add Hotel Button: it leads to the owner sign-up, so visitors only (also leaves room for the menu) */}
+          {!user && (
+            <Link
+              href="/register?role=owner"
+              className="inline-flex items-center gap-2 whitespace-nowrap rounded-full bg-brand-500 px-4 2xl:px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-brand-600 hover:shadow-md"
+            >
+              {t.suggestHotel}
+            </Link>
+          )}
 
-          {/* User Account / Espace */}
-          <Link
-            href={user ? dashHref : '/login'}
-            className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2.5 text-sm font-bold text-gray-700 hover:bg-gray-50 transition"
-          >
-            <User className="h-4 w-4 text-brand-500" />
-            {user ? t.mySpace : t.login}
-          </Link>
+          {/* User Account: menu with the account's spaces (traveller, host, seller, investor) */}
+          {user ? (
+            <AccountMenu />
+          ) : (
+            <Link
+              href="/login"
+              className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2.5 text-sm font-bold text-gray-700 hover:bg-gray-50 transition"
+            >
+              <User className="h-4 w-4 text-brand-500" />
+              {t.login}
+            </Link>
+          )}
+          {user && (
+            <button
+              type="button"
+              onClick={signOut}
+              aria-label={t('Déconnexion')}
+              title={t('Déconnexion')}
+              className="grid h-10 w-10 place-items-center rounded-full border border-gray-200 bg-white text-gray-500 transition hover:bg-red-50 hover:text-red-600"
+            >
+              <LogOut className="h-4 w-4" aria-hidden="true" />
+            </button>
+          )}
 
           {/* Language Switcher Dropdown */}
           <div className="relative" ref={langRef}>
@@ -215,7 +246,7 @@ export default function Navbar() {
           onClick={() => setOpen(!open)}
           aria-label={open ? t('Fermer le menu') : t('Ouvrir le menu')}
           aria-expanded={open}
-          className="grid h-11 w-11 place-items-center rounded-xl text-gray-700 hover:bg-gray-100 lg:hidden"
+          className="grid h-11 w-11 place-items-center rounded-xl text-gray-700 hover:bg-gray-100 xl:hidden"
         >
           {open ? <X className="h-6 w-6" aria-hidden="true" /> : <Menu className="h-6 w-6" aria-hidden="true" />}
         </button>
@@ -223,7 +254,7 @@ export default function Navbar() {
 
       {/* Mobile Navigation Drawer */}
       {open && (
-        <div className="border-t border-gray-100 bg-white px-4 py-6 lg:hidden space-y-3">
+        <div className="border-t border-gray-100 bg-white px-4 py-6 xl:hidden space-y-3">
           {/* Mobile Language Switcher */}
           <div className="flex items-center gap-2 mb-4 p-2 bg-gray-50 rounded-xl justify-center">
             <Globe className="h-4 w-4 text-brand-500" />
@@ -287,20 +318,33 @@ export default function Navbar() {
           </Link>
 
           <div className="pt-4 border-t border-gray-100 flex flex-col gap-3">
-            <Link
-              href="/register?role=owner"
-              onClick={() => setOpen(false)}
-              className="w-full rounded-xl bg-brand-500 py-3 text-center text-sm font-bold text-white shadow-sm"
-            >
-              {t.suggestHotel}
-            </Link>
+            {!user && (
+              <Link
+                href="/register?role=owner"
+                onClick={() => setOpen(false)}
+                className="w-full rounded-xl bg-brand-500 py-3 text-center text-sm font-bold text-white shadow-sm"
+              >
+                {t.suggestHotel}
+              </Link>
+            )}
             <Link
               href={user ? dashHref : '/login'}
               onClick={() => setOpen(false)}
-              className="w-full rounded-xl border border-gray-200 py-3 text-center text-sm font-bold text-gray-700 hover:bg-gray-50"
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 py-3 text-center text-sm font-bold text-gray-700 hover:bg-gray-50"
             >
+              {user && <Avatar user={user} className="h-7 w-7 rounded-full text-xs" initialClassName="bg-brand-500 text-white" />}
               {user ? t.mySpace : t.login}
             </Link>
+            {user && <SpaceSwitcher onDone={() => setOpen(false)} />}
+            {user && (
+              <button
+                type="button"
+                onClick={signOut}
+                className="flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold text-red-600 hover:bg-red-50"
+              >
+                <LogOut className="h-4 w-4" aria-hidden="true" /> {t('Déconnexion')}
+              </button>
+            )}
           </div>
         </div>
       )}

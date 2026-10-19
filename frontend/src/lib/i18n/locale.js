@@ -7,7 +7,7 @@ export const DEFAULT_LOCALE = 'fr';
 export const PREFIXED_LOCALES = ['ar', 'en'];
 
 // Account / back-office areas are never indexed, so they keep a single unprefixed URL.
-const UNPREFIXED = /^\/(admin|owner|seller|booking|my-bookings|messages|favorites|profile|login|register|forgot-password|reset-password|api|uploads|_next)(\/|$)/;
+const UNPREFIXED = /^\/(admin|owner|seller|investor|booking|my-bookings|messages|favorites|profile|login|register|forgot-password|reset-password|projects|api|uploads|_next)(\/|$)/;
 
 /** '/ar/hotels/1' → { lang: 'ar', path: '/hotels/1' };  '/hotels' → { lang: null, path: '/hotels' } */
 export function splitLocale(pathname = '/') {

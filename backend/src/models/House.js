@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import { autoTranslate } from '../utils/autoTranslate.js';
 import { countryPlugin } from '../utils/countryPlugin.js';
 import { policiesPlugin } from '../utils/policies.js';
+import { reelPlugin } from '../utils/reelPlugin.js';
 
 const houseSchema = new mongoose.Schema(
   {
@@ -60,6 +61,7 @@ houseSchema.index({ wilaya: 1, status: 1 });
 // Name/description/amenities are machine-translated into the other site languages after each save
 export const TRANSLATED_FIELDS = ['name', 'description', 'amenities'];
 countryPlugin(houseSchema);
+reelPlugin(houseSchema);
 policiesPlugin(houseSchema);
 discountPlugin(houseSchema);
 autoTranslate(houseSchema, TRANSLATED_FIELDS);

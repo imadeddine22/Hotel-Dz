@@ -14,6 +14,42 @@ import { canView } from '../middlewares/auth.middleware.js';
 const EDITABLE = ['name', 'description', 'country', 'wilaya', 'city', 'address', 'starRating', 'type'];
 const pick = (body, keys) => Object.fromEntries(keys.filter((k) => body[k] !== undefined).map((k) => [k, body[k]]));
 
+/** Adds the "À partir de" price (cheapest active room after discount) to lean hotels — hotels have no price of their own. */
+export async function attachPrices(hotels) {
+  const rooms = await Room.find({ hotel: { $in: hotels.map((h) => h._id) }, isActive: true })
+    .select('hotel pricePerNight discountPercent discountUntil')
+    .lean();
+  const best = new Map(); // hotel id → cheapest room price after discount
+  for (const r of rooms) {
+    const p = effectivePrice(r);
+    const cur = best.get(String(r.hotel));
+    if (!cur || p.price < cur.price) best.set(String(r.hotel), p);
+  }
+  hotels.forEach((h) => {
+    const p = best.get(String(h._id));
+    h.price = p?.price ?? null;
+    h.originalPrice = p?.discountPercent ? p.original : null;
+    h.discountPercent = p?.discountPercent || 0;
+  });
+  return hotels;
+}
+
+export const MAX_FEATURED = 12;
+
+// GET /hotels/featured — the home page "Hôtels en vedette": the admin's selection in its order,
+// or the best-rated hotels while the admin hasn't chosen any
+export const getFeaturedHotels = async (req, res, next) => {
+  try {
+    let hotels = await Hotel.find({ status: 'approved', featured: true }).sort({ featuredRank: 1, updatedAt: -1 }).limit(MAX_FEATURED).lean();
+    const chosen = hotels.length > 0;
+    if (!chosen) hotels = await Hotel.find({ status: 'approved' }).sort({ avgRating: -1, createdAt: -1 }).limit(8).lean();
+    await attachPrices(hotels);
+    res.json({ success: true, chosen, count: hotels.length, hotels });
+  } catch (err) {
+    next(err);
+  }
+};
+
 // GET /hotels  — public list of APPROVED hotels with filters
 export const getHotels = async (req, res, next) => {
   try {
@@ -44,22 +80,7 @@ export const getHotels = async (req, res, next) => {
       .limit(lim)
       .lean();
 
-    // "À partir de" price = cheapest active room of each hotel (hotels have no price of their own)
-    const rooms = await Room.find({ hotel: { $in: hotels.map((h) => h._id) }, isActive: true })
-      .select('hotel pricePerNight discountPercent discountUntil')
-      .lean();
-    const best = new Map(); // hotel id → cheapest room price after discount
-    for (const r of rooms) {
-      const p = effectivePrice(r);
-      const cur = best.get(String(r.hotel));
-      if (!cur || p.price < cur.price) best.set(String(r.hotel), p);
-    }
-    hotels.forEach((h) => {
-      const p = best.get(String(h._id));
-      h.price = p?.price ?? null;
-      h.originalPrice = p?.discountPercent ? p.original : null;
-      h.discountPercent = p?.discountPercent || 0;
-    });
+    await attachPrices(hotels);
 
     res.json({
       success: true,

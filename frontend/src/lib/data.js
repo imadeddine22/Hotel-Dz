@@ -30,13 +30,20 @@ export const CATEGORIES = [
 ];
 
 // Cities with hotel counts (Découvrez par ville)
+// Real photos of each city, stored in public/cities/ (1280px copies from Wikimedia Commons):
+//   Alger       — Maqam Echahid           commons.wikimedia.org/wiki/File:Maqam_Echahid_Algiers.jpg (CC BY 2.0)
+//   Oran        — Santa Cruz over the bay commons.wikimedia.org/wiki/File:Vue_sur_Oran_-_Chapelle_de_Santa-Cruz.jpg (CC BY-SA 4.0, R hakka)
+//   Constantine — El Kantara bridge       commons.wikimedia.org/wiki/File:Constantine_infrastructures_-_Bridges_3.jpg (CC BY-SA 4.0, Abdellah zou)
+//   Sétif       — tram & Aïn El Fouara    commons.wikimedia.org/wiki/File:Sétif_tram_&_Aïn_el_Fouara,_June_2024.jpg (CC BY-SA 4.0, Zach1055)
+//   Annaba      — Basilica of St Augustine commons.wikimedia.org/wiki/File:Basilique_saint_augustin_annaba_2.jpg (CC BY-SA 4.0, alioueche mokhtar)
+//   Tlemcen     — Mansourah minaret       commons.wikimedia.org/wiki/File:Mansourah_Mosque_01.jpg (CC BY 4.0, Bernard Gagnon)
 export const CITIES = [
-  { name: 'Alger', count: 362, img: img('1583422409516-2895a77efded') },
-  { name: 'Oran', count: 118, img: img('1590490360182-c33d57733427') },
-  { name: 'Constantine', count: 64, img: img('1539037116277-4db20889f2d4') },
-  { name: 'Sétif', count: 37, img: img('1502602898657-3e91760cbb34') },
-  { name: 'Annaba', count: 28, img: img('1512453979798-5ea266f8880c') },
-  { name: 'Tlemcen', count: 21, img: img('1518684079-3c830dcef090') },
+  { name: 'Alger', count: 362, img: '/cities/alger.jpg' },
+  { name: 'Oran', count: 118, img: '/cities/oran.jpg' },
+  { name: 'Constantine', count: 64, img: '/cities/constantine.jpg' },
+  { name: 'Sétif', count: 37, img: '/cities/setif.jpg' },
+  { name: 'Annaba', count: 28, img: '/cities/annaba.jpg' },
+  { name: 'Tlemcen', count: 21, img: '/cities/tlemcen.jpg' },
 ];
 
 // Featured hotels (En Vedette)

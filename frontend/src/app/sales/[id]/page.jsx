@@ -12,6 +12,9 @@ import { monthlyPayment } from '@/components/tools/MortgageCalculator';
 
 import { useT } from '@/lib/i18n/useT';
 import { useInitialData } from '@/components/InitialData';
+import Avatar from '@/components/Avatar';
+import ShareButton from '@/components/ShareButton';
+import ListingReel from '@/components/ListingReel';
 /** "0552 22 22 22" → "213552222222" for wa.me links */
 const waNumber = (phone) => {
   const d = String(phone || '').replace(/\D/g, '');
@@ -145,7 +148,11 @@ export default function SaleDetailPage() {
                       {listing.address && `${listing.address}, `}{t(listing.city)}, {t(listing.wilaya)}
                     </p>
                   </div>
-                  <div className="text-right">
+                  <div className="flex flex-col items-end gap-2 text-right">
+                    <ShareButton
+                      title={`${t(listing.title)} — ${formatDZD(listing.price, listing.currency)}`}
+                      text={t('Regarde ce bien à vendre sur Meskan : {title} à {city}', { title: t(listing.title), city: t(listing.city) })}
+                    />
                     <p className="text-2xl font-extrabold text-emerald-600">{formatDZD(listing.price, listing.currency)}</p>
                     {listing.area > 0 && (
                       <p className="text-xs font-semibold text-gray-500">{formatDZD(Math.round(listing.price / listing.area), listing.currency)} / {t('m²')}</p>
@@ -208,14 +215,13 @@ export default function SaleDetailPage() {
 
             {/* Right: Contact Card */}
             <div className="space-y-6">
+              <ListingReel kind="sale" listing={listing} />
               <div className="rounded-2xl bg-white p-6 shadow-sm border border-gray-100 sticky top-24">
                 <h3 className="font-bold text-gray-900 mb-4">{t('Contacter le vendeur')}</h3>
                 
                 {/* Seller Info */}
                 <div className="flex items-center gap-3 mb-6 p-3 rounded-xl bg-gray-50">
-                  <div className="grid h-12 w-12 place-items-center rounded-full bg-gradient-to-tr from-emerald-500 to-teal-500 text-white font-bold">
-                    {seller.fullName?.charAt(0)?.toUpperCase() || t('V')}
-                  </div>
+                  <Avatar user={{ ...seller, fullName: seller.fullName || t('Vendeur') }} className="h-12 w-12 rounded-full" initialClassName="bg-gradient-to-tr from-emerald-500 to-teal-500 text-white" />
                   <div>
                     <p className="font-bold text-gray-900">{seller.fullName || t('Vendeur')}</p>
                     <p className="text-xs text-gray-400">{t('Vendeur vérifié')}</p>

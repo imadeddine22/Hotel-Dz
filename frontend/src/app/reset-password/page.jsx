@@ -49,6 +49,7 @@ function ResetForm() {
       if (user.role === 'admin') router.push('/admin');
       else if (user.role === 'owner') router.push('/owner/dashboard');
       else if (user.role === 'seller') router.push('/seller/dashboard');
+      else if (user.role === 'investor') router.push('/investor/dashboard');
       else router.push('/');
     } catch (err) {
       setError(err.message);

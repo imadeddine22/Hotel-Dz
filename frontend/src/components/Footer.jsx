@@ -18,6 +18,7 @@ const COLUMNS = [
       ['/houses', 'Maisons à louer'],
       ['/sales', 'Biens à vendre'],
       ['/destinations', 'Destinations'],
+      ['/investir', 'Projets et investissement'],
     ],
   },
   {
@@ -27,6 +28,7 @@ const COLUMNS = [
       ['/messages', 'Messages'],
       ['/favorites', 'Favoris'],
       ['/profile', 'Mon profil'],
+      ['/investor/projects', 'Mes projets'],
     ],
   },
   {

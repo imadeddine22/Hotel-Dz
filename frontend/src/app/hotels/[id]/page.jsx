@@ -8,6 +8,8 @@ const ROOM_PLACEHOLDER = 'https://images.unsplash.com/photo-1631049307264-da0ec9
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import FavoriteButton from '@/components/FavoriteButton';
+import ShareButton from '@/components/ShareButton';
+import ListingReel from '@/components/ListingReel';
 import LocationMap from '@/components/LocationMap';
 import api, { getImageUrl, resolveImg } from '@/lib/api';
 import { ROOM_TYPE_LABELS } from '@/lib/statusLabels';
@@ -88,7 +90,8 @@ export default function HotelDetailPage() {
         {cover && <img src={cover} alt={hotel.name} className="h-full w-full object-cover" />}
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
         {(hotel._id || hotel.id) && (
-          <div className="absolute right-4 top-4">
+          <div className="absolute right-4 top-4 flex items-center gap-2">
+            <ShareButton title={`${hotel.name} — ${t(hotel.city)}, ${t(hotel.wilaya)}`} text={t('Regarde cet hôtel sur Meskan : {name} à {city}', { name: hotel.name, city: t(hotel.city) })} />
             <FavoriteButton type="hotel" id={hotel._id || hotel.id} size={20} />
           </div>
         )}
@@ -123,6 +126,11 @@ export default function HotelDetailPage() {
               </div>
             </div>
           )}
+
+          {/* Reel */}
+          <div className="mb-8 empty:hidden">
+            <ListingReel kind="hotel" listing={hotel} />
+          </div>
 
           {/* Location map */}
           <div className="mb-8">
@@ -161,7 +169,7 @@ export default function HotelDetailPage() {
                 })}
               </div>
               <span className="text-sm text-gray-400">
-                {filteredRooms.length} {t('sur')} {rooms.length} {t('chambre')}{rooms.length > 1 ? 's' : ''}
+                {filteredRooms.length} {t('sur')} {rooms.length} {t(rooms.length > 1 ? 'chambres' : 'chambre')}
               </span>
             </div>
           )}
@@ -189,7 +197,7 @@ export default function HotelDetailPage() {
                     <h3 className="font-bold text-ink">{t(room.title)}</h3>
                     <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-gray-500">
                       <span className="flex items-center gap-1 rounded-md bg-brand-50 px-2 py-0.5 font-medium text-brand-700">
-                        <BedDouble className="h-3.5 w-3.5" /> {room.bedsCount} {t('lit')}{room.bedsCount > 1 ? 's' : ''}
+                        <BedDouble className="h-3.5 w-3.5" /> {room.bedsCount} {t(room.bedsCount > 1 ? 'lits' : 'lit')}
                       </span>
                       <span className="flex items-center gap-1"><Users className="h-4 w-4" /> {room.capacity} {t('pers.')}</span>
                       <span>{ROOM_TYPE_LABELS[room.type] || room.type}</span>

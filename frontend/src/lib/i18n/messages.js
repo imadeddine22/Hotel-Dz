@@ -1,6 +1,38 @@
 // Translations of the API's error/success messages (sent in English, sometimes French).
 // Exact messages are dictionary entries; messages with numbers or statuses go through PATTERNS.
 export const MESSAGES = {
+  'Thank you for your answer': { fr: "Merci pour votre réponse.", ar: "شكرًا على إجابتك." },
+  'Project not found': { fr: "Projet introuvable.", ar: "المشروع غير موجود." },
+  'Project deleted': { fr: "Projet supprimé.", ar: "تم حذف المشروع." },
+  'This is your own project': { fr: "C’est votre propre projet.", ar: "هذا مشروعك أنت." },
+  'Your request has been sent to the owner': { fr: "Votre demande a été envoyée au propriétaire.", ar: "تم إرسال طلبك إلى المالك." },
+  'Add a photo of the property documents': { fr: "Ajoutez une photo des papiers du bien.", ar: "أضف صورة لوثيقة العقار." },
+  'At most 2 photos of the documents': { fr: "2 photos des papiers au maximum.", ar: "صورتان على الأكثر لوثيقة العقار." },
+  'Too many files': { fr: "Trop de fichiers envoyés.", ar: "عدد الملفات كبير جدًا." },
+  'Image too large (5 MB max)': { fr: "Image trop lourde (5 Mo maximum).", ar: "الصورة كبيرة جدًا (5 ميغابايت كحد أقصى)." },
+  'Area is required': { fr: "La surface est obligatoire.", ar: "المساحة إجبارية." },
+  'Video dimensions are required': { fr: "Dimensions de la vidéo manquantes.", ar: "أبعاد الفيديو مطلوبة." },
+  'Reels must be vertical videos (9:16 format)': { fr: "Les reels doivent être des vidéos verticales (format 9:16).", ar: "يجب أن تكون الريلز فيديوهات عمودية (صيغة 9:16)." },
+  'Video resolution too low (480×854 minimum)': { fr: "Qualité de la vidéo trop faible (480×854 minimum).", ar: "جودة الفيديو ضعيفة (480×854 كحد أدنى)." },
+  'Give the reason for the rejection': { fr: "Indiquez le motif du refus.", ar: "اكتب سبب الرفض." },
+  'No reel to reject': { fr: "Aucune vidéo à refuser.", ar: "لا يوجد فيديو لرفضه." },
+  'Reel rejected': { fr: "Vidéo refusée.", ar: "تم رفض الفيديو." },
+  'Choose a video': { fr: "Choisissez une vidéo.", ar: "اختر فيديو." },
+  'Video too large (50 MB max)': { fr: "Vidéo trop lourde (50 Mo maximum).", ar: "الفيديو كبير جدًا (50 ميغابايت كحد أقصى)." },
+  'Only MP4, WebM or MOV videos are allowed': { fr: "Seules les vidéos MP4, WebM ou MOV sont acceptées.", ar: "فقط فيديوهات MP4 أو WebM أو MOV مقبولة." },
+  'Invalid video': { fr: "Vidéo invalide.", ar: "فيديو غير صالح." },
+  'No reel waiting for approval': { fr: "Aucune vidéo en attente pour cette annonce.", ar: "لا يوجد فيديو في الانتظار لهذا الإعلان." },
+  'Reel deleted': { fr: "Vidéo supprimée.", ar: "تم حذف الفيديو." },
+  'Reel approved': { fr: "Vidéo publiée.", ar: "تم نشر الفيديو." },
+  'Invalid phone number': { fr: "Numéro de téléphone invalide.", ar: "رقم هاتف غير صالح." },
+  'Phone number is required': { fr: "Le numéro de téléphone est obligatoire.", ar: "رقم الهاتف إجباري." },
+  'Choose an image': { fr: "Choisissez une image.", ar: "اختر صورة." },
+  'Image too large (2 MB max)': { fr: "Image trop lourde (2 Mo maximum).", ar: "الصورة كبيرة جدًا (2 ميغابايت كحد أقصى)." },
+  'Only image files are allowed': { fr: "Seules les images sont acceptées.", ar: "الصور فقط مقبولة." },
+  'Invalid image': { fr: "Image invalide.", ar: "صورة غير صالحة." },
+  'ids must be a list of hotels': { fr: "Liste d’hôtels invalide.", ar: "قائمة الفنادق غير صالحة." },
+  'Only approved hotels can be featured': { fr: "Seuls les hôtels publiés peuvent être mis en vedette.", ar: "يمكن تمييز الفنادق المنشورة فقط." },
+  'Invalid hotel id': { fr: "Hôtel invalide.", ar: "فندق غير صالح." },
   'If an account exists for this email, a reset link has been sent': { fr: "Si un compte existe pour cet email, un lien de réinitialisation a été envoyé.", ar: "إذا كان هناك حساب بهذا البريد، فقد أُرسل رابط إعادة التعيين." },
   'This reset link is invalid or has expired': { fr: "Ce lien de réinitialisation est invalide ou a expiré.", ar: "رابط إعادة التعيين غير صالح أو انتهت صلاحيته." },
   'Too many attempts, please try again later': { fr: "Trop de tentatives, réessayez plus tard.", ar: "محاولات كثيرة، أعد المحاولة لاحقًا." },
@@ -89,6 +121,9 @@ export const MESSAGES = {
 
 // Messages that embed values: regex on the English text → template per language
 export const PATTERNS = [
+  [/^Video too short \((\d+) seconds min\)$/, { fr: 'Vidéo trop courte ({0} secondes minimum).', ar: 'الفيديو قصير جدًا ({0} ثوانٍ كحد أدنى).' }],
+  [/^Video too long \((\d+) seconds max\)$/, { fr: 'Vidéo trop longue ({0} secondes maximum).', ar: 'الفيديو طويل جدًا ({0} ثانية كحد أقصى).' }],
+  [/^At most (\d+) featured hotels$/, { fr: '{0} hôtels en vedette au maximum.', ar: '{0} فنادق مميزة كحد أقصى.' }],
   [/^Room (\d+): price per night is required$/, { fr: 'Chambre {0} : le prix par nuit est obligatoire.', ar: 'الغرفة {0}: السعر لليلة إجباري.' }],
   [/^Room (\d+): unknown room type$/, { fr: 'Chambre {0} : type de chambre inconnu.', ar: 'الغرفة {0}: نوع غرفة غير معروف.' }],
   [/^Room (\d+): invalid$/, { fr: 'Chambre {0} : données invalides.', ar: 'الغرفة {0}: بيانات غير صالحة.' }],
@@ -100,8 +135,49 @@ export const PATTERNS = [
   [/^(.+) already exists$/, { fr: 'Cette valeur existe déjà ({0}).', ar: 'هذه القيمة موجودة مسبقاً ({0}).' }],
 ];
 
+// Field names in the API's form-validation messages ('"email" must be a valid email')
+const FIELDS = {
+  fullName: { fr: 'Le nom complet', ar: 'الاسم الكامل', en: 'Full name' },
+  name: { fr: 'Le nom', ar: 'الاسم', en: 'Name' },
+  email: { fr: "L'e-mail", ar: 'البريد الإلكتروني', en: 'Email' },
+  password: { fr: 'Le mot de passe', ar: 'كلمة السر', en: 'Password' },
+  phone: { fr: 'Le téléphone', ar: 'الهاتف', en: 'Phone' },
+  subject: { fr: 'Le sujet', ar: 'الموضوع', en: 'Subject' },
+  content: { fr: 'Le message', ar: 'الرسالة', en: 'Message' },
+  role: { fr: 'Le type de compte', ar: 'نوع الحساب', en: 'Account type' },
+  token: { fr: 'Le lien', ar: 'الرابط', en: 'Link' },
+};
+
+// Form-validation rules (Joi wording) → sentence per language; {f} = field, {n} = number
+const VALIDATION = [
+  [/^"(\w+)" is required$/, { fr: '{f} est obligatoire.', ar: '{f} إجباري.', en: '{f} is required.' }],
+  [/^"(\w+)" is not allowed to be empty$/, { fr: '{f} est obligatoire.', ar: '{f} إجباري.', en: '{f} is required.' }],
+  [/^"(\w+)" must be a valid email$/, { fr: "{f} n'est pas une adresse valide.", ar: '{f} غير صالح.', en: '{f} is not a valid address.' }],
+  [/^"(\w+)" length must be at least (\d+) characters long$/, { fr: '{f} doit contenir au moins {n} caractères.', ar: '{f}: {n} أحرف على الأقل.', en: '{f} must be at least {n} characters.' }],
+  [/^"(\w+)" length must be less than or equal to (\d+) characters long$/, { fr: '{f} doit contenir au plus {n} caractères.', ar: '{f}: {n} حرفاً كحد أقصى.', en: '{f} must be at most {n} characters.' }],
+  [/^"(\w+)" (?:must be|is) .+$/, { fr: '{f} est invalide.', ar: '{f} غير صالح.', en: '{f} is invalid.' }],
+];
+
+function translateValidation(lang, part) {
+  for (const [re, tpl] of VALIDATION) {
+    const m = part.match(re);
+    if (!m) continue;
+    const field = FIELDS[m[1]]?.[lang] || m[1];
+    return (tpl[lang] || tpl.en).replace('{f}', field).replace('{n}', m[2] ?? '');
+  }
+  return null;
+}
+
 export function translateMessage(lang, msg) {
   if (!msg) return msg;
+  // Form validation: one or more '"field" rule' messages joined by ", "
+  if (msg.startsWith('"')) {
+    const parts = msg.split(/, (?=")/).map((p) => translateValidation(lang, p));
+    if (parts.every(Boolean)) {
+      // capitalise the field name at the start of a French/English sentence
+      return parts.map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join(' ');
+    }
+  }
   const exact = MESSAGES[msg];
   if (exact) return exact[lang] || msg;
   for (const [re, tpl] of PATTERNS) {

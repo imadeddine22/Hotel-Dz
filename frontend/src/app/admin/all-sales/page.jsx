@@ -139,7 +139,7 @@ export default function AdminAllSales() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-extrabold text-gray-900">{t('Ventes Immobilières')}</h1>
-          <p className="text-sm text-gray-500 mt-1">{total} {t('annonce')}{total !== 1 ? 's' : ''} {t('au total')}</p>
+          <p className="text-sm text-gray-500 mt-1">{total} {t(total !== 1 ? 'annonces' : 'annonce')} {t('au total')}</p>
         </div>
         {!showForm && (
           <button
@@ -446,7 +446,7 @@ export default function AdminAllSales() {
 
               {/* Status */}
               <span className={`shrink-0 rounded-full border px-3 py-1 text-xs font-bold ${STATUS_BADGE[sale.status]}`}>
-                {STATUS_LABEL[sale.status]}
+                {t(STATUS_LABEL[sale.status])}
               </span>
 
               {/* Actions */}
@@ -562,7 +562,7 @@ export default function AdminAllSales() {
               <div>
                 <p className="text-xs text-gray-400 font-bold uppercase">{t('Statut')}</p>
                 <span className={`inline-block mt-1 rounded-full border px-3 py-0.5 text-xs font-bold ${STATUS_BADGE[viewingSale.status]}`}>
-                  {STATUS_LABEL[viewingSale.status]}
+                  {t(STATUS_LABEL[viewingSale.status])}
                 </span>
               </div>
             </div>

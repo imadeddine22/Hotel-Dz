@@ -17,7 +17,7 @@ const SUBJECTS = [
 
 export default function ContactPage() {
   const { t } = useT();
-  const [form, setForm] = useState({ name: '', email: '', subject: SUBJECTS[0], message: '' });
+  const [form, setForm] = useState({ name: '', email: '', phone: '', subject: SUBJECTS[0], message: '' });
   const [errors, setErrors] = useState({});
   const [sent, setSent] = useState(false);
   const [sending, setSending] = useState(false);
@@ -28,6 +28,9 @@ export default function ContactPage() {
     const errs = {};
     if (form.name.trim().length < 2) errs.name = 'Veuillez entrer votre nom complet.';
     if (!/^\S+@\S+\.\S+$/.test(form.email)) errs.email = 'Adresse email invalide.';
+    // so the site owner can call back: 8 to 15 digits, + ( ) - . and spaces allowed
+    if (!/^\+?[\d\s().-]{8,22}$/.test(form.phone.trim()) || !/^\d{8,15}$/.test(form.phone.replace(/\D/g, '')))
+      errs.phone = 'Numéro de téléphone invalide (ex. 0555 12 34 56).';
     if (form.message.trim().length < 10)
       errs.message = 'Votre message doit contenir au moins 10 caractères.';
     return errs;
@@ -46,7 +49,7 @@ export default function ContactPage() {
       await api.post('/messages', { ...rest, content: message });
       setSent(true);
     } catch (err) {
-      alert(t('Erreur lors de l\'envoi du message. Veuillez réessayer.'));
+      alert(err.message || t('Erreur lors de l\'envoi du message. Veuillez réessayer.'));
     } finally {
       setSending(false);
     }
@@ -105,7 +108,7 @@ export default function ContactPage() {
                 <button
                   onClick={() => {
                     setSent(false);
-                    setForm({ name: '', email: '', subject: SUBJECTS[0], message: '' });
+                    setForm({ name: '', email: '', phone: '', subject: SUBJECTS[0], message: '' });
                   }}
                   className="mt-2 rounded-full border border-gray-300 px-6 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
                 >
@@ -130,7 +133,7 @@ export default function ContactPage() {
                       }`}
                       placeholder={t('Votre nom')}
                     />
-                    {errors.name && <p className="mt-1.5 text-sm text-red-600">{errors.name}</p>}
+                    {errors.name && <p className="mt-1.5 text-sm text-red-600">{t(errors.name)}</p>}
                   </div>
                   <div>
                     <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-gray-700">
@@ -147,11 +150,31 @@ export default function ContactPage() {
                       }`}
                       placeholder={t('vous@exemple.com')}
                     />
-                    {errors.email && <p className="mt-1.5 text-sm text-red-600">{errors.email}</p>}
+                    {errors.email && <p className="mt-1.5 text-sm text-red-600">{t(errors.email)}</p>}
                   </div>
                 </div>
 
-                <div className="mt-5">
+                <div className="mt-5 grid gap-5 sm:grid-cols-2">
+                <div>
+                  <label htmlFor="phone" className="mb-1.5 block text-sm font-medium text-gray-700">
+                    {t('Téléphone')} <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    id="phone"
+                    type="tel"
+                    inputMode="tel"
+                    dir="ltr"
+                    value={form.phone}
+                    onChange={set('phone')}
+                    autoComplete="tel"
+                    className={`w-full rounded-xl border px-4 py-3 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100 rtl:text-right ${
+                      errors.phone ? 'border-red-400' : 'border-gray-200'
+                    }`}
+                    placeholder="0555 12 34 56"
+                  />
+                  {errors.phone && <p className="mt-1.5 text-sm text-red-600">{t(errors.phone)}</p>}
+                </div>
+                <div>
                   <label htmlFor="subject" className="mb-1.5 block text-sm font-medium text-gray-700">
                     {t('Sujet')}
                   </label>
@@ -165,6 +188,7 @@ export default function ContactPage() {
                       <option key={s}>{t(s)}</option>
                     ))}
                   </select>
+                </div>
                 </div>
 
                 <div className="mt-5">
@@ -181,7 +205,7 @@ export default function ContactPage() {
                     }`}
                     placeholder={t('Décrivez votre demande...')}
                   />
-                  {errors.message && <p className="mt-1.5 text-sm text-red-600">{errors.message}</p>}
+                  {errors.message && <p className="mt-1.5 text-sm text-red-600">{t(errors.message)}</p>}
                 </div>
 
                 <button

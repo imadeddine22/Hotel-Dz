@@ -16,10 +16,10 @@ export default function FeaturedHotels() {
   const [hotels, setHotels] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Best-rated approved hotels from the API (previously hard-coded demo data with dead links)
+  // Hotels chosen by the admin (Admin → Hôtels en vedette), in their order; best-rated until a choice is made
   useEffect(() => {
     api
-      .get('/hotels', { params: { limit: 8, sort: 'rating' } })
+      .get('/hotels/featured')
       .then(({ data }) => setHotels(data.hotels || []))
       .catch(() => setHotels([]))
       .finally(() => setLoading(false));

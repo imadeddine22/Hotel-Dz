@@ -150,7 +150,7 @@ export default function AdminBookingsPage() {
                     </td>
                     <td>
                       <span className={`admin-badge ${b.paymentStatus}`}>
-                        {PAYMENT_LABELS[b.paymentStatus] || b.paymentStatus}
+                        {t(PAYMENT_LABELS[b.paymentStatus] || b.paymentStatus)}
                       </span>
                     </td>
                   </tr>

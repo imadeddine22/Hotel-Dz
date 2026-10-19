@@ -72,18 +72,23 @@ export default function SalesPage() {
   const [showMore, setShowMore] = useState(false);
   const [activeId, setActiveId] = useState(null);
 
-  // /sales?wilaya=… links (destination pages, home search)
+  // /sales?wilaya=…&type=… links (destination pages, home search, home banner categories)
   useEffect(() => {
-    const w = new URLSearchParams(window.location.search).get('wilaya');
-    if (w) {
-      setForm((f) => ({ ...f, wilaya: w }));
-      setFilters((f) => ({ ...f, wilaya: w }));
+    const q = new URLSearchParams(window.location.search);
+    const w = q.get('wilaya');
+    const type = PROPERTY_TYPES.includes(q.get('type')) ? q.get('type') : '';
+    if (w || type) {
+      const preset = { ...(w && { wilaya: w }), ...(type && { type }) };
+      setForm((f) => ({ ...f, ...preset }));
+      setFilters((f) => ({ ...f, ...preset }));
     }
   }, []);
 
   const silentFirstFetch = useRef(Boolean(initial));
+  const lastRequest = useRef(0); // only the latest request may update the list (filters can change mid-flight)
   useEffect(() => {
     (async () => {
+      const id = ++lastRequest.current;
       if (!silentFirstFetch.current) setLoading(true);
       silentFirstFetch.current = false;
       try {
@@ -96,13 +101,14 @@ export default function SalesPage() {
         if (filters.maxArea) params.maxArea = filters.maxArea;
         if (filters.reference) params.reference = filters.reference.trim();
         const { data } = await api.get('/sales', { params });
+        if (id !== lastRequest.current) return; // an older request answering late
         setListings(data.listings || []);
         setTotal(data.total || 0);
         setPages(data.pages || 1);
       } catch (err) {
         console.error(err);
       } finally {
-        setLoading(false);
+        if (id === lastRequest.current) setLoading(false);
       }
     })();
   }, [page, filters, sort]);

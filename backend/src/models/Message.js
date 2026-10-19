@@ -12,6 +12,12 @@ const messageSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    // so the site owner can call back (required on the contact form since 2026-10)
+    phone: {
+      type: String,
+      trim: true,
+      default: '',
+    },
     subject: {
       type: String,
       required: true,

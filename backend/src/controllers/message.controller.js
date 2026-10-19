@@ -3,12 +3,12 @@ import Message from '../models/Message.js';
 // POST /messages — Public endpoint to send a message to admin
 export const sendMessage = async (req, res, next) => {
   try {
-    const { name, email, subject, content } = req.body;
+    const { name, email, phone, subject, content } = req.body;
     if (!name || !email || !subject || !content) {
       return res.status(400).json({ success: false, message: 'All fields are required' });
     }
 
-    const message = await Message.create({ name, email, subject, content });
+    const message = await Message.create({ name, email, phone, subject, content });
     res.status(201).json({ success: true, message: 'Message sent successfully', data: message });
   } catch (err) {
     next(err);

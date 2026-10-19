@@ -18,6 +18,9 @@ import Message from './models/Message.js';
 import Testimonial from './models/Testimonial.js';
 import Conversation from './models/Conversation.js';
 import HouseForSale from './models/HouseForSale.js';
+import InvestmentProject from './models/InvestmentProject.js';
+import InvestorInterest from './models/InvestorInterest.js';
+import Referral from './models/Referral.js';
 import { ENABLED_COUNTRIES } from './utils/countries.js';
 
 const img = (id) => ({
@@ -51,9 +54,9 @@ const HOUSES = [
 ];
 
 const MESSAGES = [
-  { name: 'Mohamed Salah', email: 'mohamed@example.com', subject: 'Inscrire mon hôtel', content: 'Bonjour, je possède un hôtel à Annaba et je souhaite le référencer sur votre plateforme. Quelles sont les étapes ?' },
-  { name: 'Amel Khelifi', email: 'amel@example.com', subject: 'Question sur une réservation', content: 'Bonjour, est-il possible de modifier les dates de ma réservation après confirmation ? Merci.' },
-  { name: 'Reda Bouzid', email: 'reda@example.com', subject: 'Partenariat', content: 'Nous sommes une agence de voyage et aimerions discuter d\'un partenariat. Pouvez-vous me recontacter ?' },
+  { name: 'Mohamed Salah', email: 'mohamed@example.com', phone: '0555 12 34 56', subject: 'Inscrire mon hôtel', content: 'Bonjour, je possède un hôtel à Annaba et je souhaite le référencer sur votre plateforme. Quelles sont les étapes ?' },
+  { name: 'Amel Khelifi', email: 'amel@example.com', phone: '0661 98 76 54', subject: 'Question sur une réservation', content: 'Bonjour, est-il possible de modifier les dates de ma réservation après confirmation ? Merci.' },
+  { name: 'Reda Bouzid', email: 'reda@example.com', phone: '+213 21 45 67 89', subject: 'Partenariat', content: 'Nous sommes une agence de voyage et aimerions discuter d\'un partenariat. Pouvez-vous me recontacter ?' },
 ];
 
 const rand = (arr) => arr[Math.floor(Math.random() * arr.length)];
@@ -68,6 +71,7 @@ export const seedDatabase = async () => {
   await Promise.all([
     User.deleteMany({}), Hotel.deleteMany({}), House.deleteMany({}), Room.deleteMany({}),
     Booking.deleteMany({}), Review.deleteMany({}), Message.deleteMany({}), Testimonial.deleteMany({}), Conversation.deleteMany({}), HouseForSale.deleteMany({}),
+    InvestmentProject.deleteMany({}), InvestorInterest.deleteMany({}), Referral.deleteMany({}),
   ]);
 
   // --- Users ---
@@ -189,9 +193,64 @@ export const seedDatabase = async () => {
   }
   console.log(`🏷️  Sales: ${SALES.length} (seller vendeur@hotelsdz.dz / seller123)`);
 
+  // --- Investment projects: property owners looking for an investor / partner (not selling) ---
+  const PROJECTS = [
+    { owner: seller, assetType: 'Local commercial', title: 'Local de 250 m² cherche partenaire pour un restaurant', projectType: 'Commercial', partnership: 'Exploitation en commun', wilaya: 'Alger', city: 'Bab Ezzouar', area: 250, landDocument: 'Acte notarié', budget: 25000000, ownerShare: 50, photo: '1517248135467-4c7edcad34c4', status: 'approved',
+      description: "Local commercial au rez-de-chaussée, grande vitrine sur un boulevard passant, près de l'université. J'apporte le local, je cherche un associé qui finance l'aménagement et gère le restaurant ; bénéfices partagés à 50/50." },
+    { owner: seller, title: 'Terrain en bord de mer pour résidence touristique', projectType: 'Hôtel et tourisme', partnership: 'Partenariat (parts du projet)', wilaya: 'Tipaza', city: 'Cherchell', area: 12000, landDocument: 'Livret foncier', budget: 450000000, ownerShare: 40, photo: '1501785888041-af3ef285b470', status: 'approved',
+      description: "Terrain plat de 1,2 ha à 300 m de la plage, accès par route goudronnée. Je cherche un investisseur pour construire un complexe touristique (bungalows + restaurant). J'apporte le terrain, l'investisseur finance la construction ; partage des bénéfices selon les parts." },
+    { owner: customers[0], title: 'Lot en centre-ville pour immeuble de logements', projectType: 'Résidentiel', partnership: 'Construction contre logements', wilaya: 'Sétif', city: 'Sétif', area: 900, landDocument: 'Acte notarié', budget: 180000000, photo: '1500382017468-9049fed747ef', status: 'approved',
+      description: "Terrain de 900 m² en zone urbaine, permis de construire R+6 possible. Proposition classique : le promoteur construit, je garde une partie des appartements, il vend le reste." },
+    { owner: seller, title: 'Terre agricole irriguée pour serres et élevage', projectType: 'Agricole', partnership: 'Location longue durée', wilaya: 'Biskra', city: 'Tolga', area: 50000, landDocument: 'Acte administratif', budget: 60000000, photo: '1500076656116-558758c991c1', status: 'approved',
+      description: 'Cinq hectares avec forage et électricité. Idéal pour des serres de primeurs ou un élevage. Location longue durée (20 ans) ou partenariat sur la production.' },
+    { owner: customers[1], title: 'Terrain en montagne pour gîte et activités', projectType: 'Hôtel et tourisme', partnership: 'À discuter', wilaya: 'Tizi Ouzou', city: 'Azazga', area: 3000, landDocument: 'En cours de régularisation', budget: 0, photo: '1464822759023-fed622ff2c3b', status: 'pending',
+      description: 'Terrain avec vue sur la forêt, pour un gîte écologique et des randonnées.' },
+  ];
+  const projects = [];
+  for (const p of PROJECTS) {
+    projects.push(await InvestmentProject.create({
+      owner: p.owner._id, assetType: p.assetType || 'Terrain', title: p.title, description: p.description, projectType: p.projectType, partnership: p.partnership,
+      wilaya: p.wilaya, city: p.city, area: p.area, landDocument: p.landDocument, budget: p.budget, ownerShare: p.ownerShare,
+      images: [img(p.photo)], documentImages: [img('1450101499163-c8848c66ca85')], contactPhone: p.owner.phone || '', contactEmail: p.owner.email, status: p.status,
+    }));
+  }
+  const investor = await User.create({
+    fullName: 'Karim Investissements', email: 'investisseur@hotelsdz.dz', password: 'investor123', phone: '0661234567', role: 'investor', isVerified: true,
+    savedProjects: [projects[1]._id],
+    investorPrefs: { wilayas: ['Alger', 'Tipaza', 'Oran'], assetTypes: [], projectTypes: ['Commercial', 'Hôtel et tourisme'], maxBudget: 500000000 },
+  });
+  await InvestorInterest.create({
+    project: projects[0]._id, owner: seller._id, investor: investor._id, name: investor.fullName, phone: '0661 23 45 67',
+    email: investor.email, amount: 15000000, message: 'Bonjour, je finance des restaurants à Alger et votre local m’intéresse. Pouvons-nous le visiter cette semaine ?',
+  });
+  await InvestmentProject.updateOne({ _id: projects[0]._id }, { $inc: { interestsCount: 1 } });
+  console.log(`💼 Projects: ${PROJECTS.length} (3 published, 1 waiting), 1 investor request`);
+
+  // --- 'How did you hear about us?' answers (welcome notification) ---
+  const REFERRALS = [['Facebook', 9], ['Instagram', 6], ['TikTok', 5], ['Google', 4], ['Ami ou famille', 3], ['YouTube', 1], ['Autre', 1]];
+  await Referral.insertMany(REFERRALS.flatMap(([source, n]) => Array.from({ length: n }, (_, i) => ({
+    source, other: source === 'Autre' ? 'Salon de l’immobilier à Alger' : '', lang: i % 2 ? 'ar' : 'fr', page: '/',
+    createdAt: daysFromNow(-(i * 3 + 1)),
+  }))));
+  console.log('📣 Referrals: 29 answers');
+
   // --- Contact messages ---
   await Message.create(MESSAGES);
   console.log(`✉️  Messages: ${MESSAGES.length}`);
+
+  // --- Demo reels: a free (CC0) sample clip from MDN; real reels are uploaded by owners.
+  // No poster: the site shows the listing photo until the video plays.
+  const SAMPLE = 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower';
+  const demoReel = (file, status, minutesAgo) => ({
+    reel: { url: `${SAMPLE}.${file}`, publicId: '', poster: '', duration: 5, status, uploadedAt: new Date(Date.now() - minutesAgo * 60000) },
+  });
+  await Hotel.updateOne({ name: 'Sofitel Algiers Hamma' }, demoReel('mp4', 'approved', 5));
+  await Hotel.updateOne({ name: 'Le Méridien Oran' }, demoReel('mp4', 'approved', 40));
+  await House.updateOne({ name: 'Villa Yasmine' }, demoReel('webm', 'approved', 15));
+  await House.updateOne({ name: 'Riad Tlemcen' }, demoReel('mp4', 'pending', 2)); // waits for the admin
+  await HouseForSale.updateOne({ title: 'Villa avec jardin et vue mer' }, demoReel('mp4', 'approved', 25));
+  await HouseForSale.updateOne({ title: 'Grande villa avec piscine' }, demoReel('mp4', 'approved', 60));
+  console.log('🎬 Reels: 5 published, 1 waiting for the admin');
 
   // --- Home page testimonials (3 published, 1 waiting for the admin) ---
   await Testimonial.create([
@@ -299,7 +358,8 @@ export const seedDatabase = async () => {
   console.log('   Admin   →  admin@hotelsdz.dz  /  admin123');
   console.log('   Hôtelier→  owner@hotelsdz.dz  /  owner123');
   console.log('   Client  →  sara@example.com   /  pass123');
-  console.log('   Vendeur →  vendeur@hotelsdz.dz / seller123\n');
+  console.log('   Vendeur →  vendeur@hotelsdz.dz / seller123');
+  console.log('   Investisseur → investisseur@hotelsdz.dz / investor123\n');
 };
 
 // CLI entry: `npm run seed` connects to the configured DB, seeds, disconnects.

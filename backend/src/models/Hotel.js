@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import { autoTranslate } from '../utils/autoTranslate.js';
 import { countryPlugin } from '../utils/countryPlugin.js';
 import { policiesPlugin } from '../utils/policies.js';
+import { reelPlugin } from '../utils/reelPlugin.js';
 
 const hotelSchema = new mongoose.Schema(
   {
@@ -46,6 +47,9 @@ const hotelSchema = new mongoose.Schema(
     reviewsCount: { type: Number, default: 0 },
     // Category averages (/10) from reviews: cleanliness, location, value, staff, comfort
     scores: { type: mongoose.Schema.Types.Mixed, default: {} },
+    // Home page "Hôtels en vedette": chosen by the admin, shown in featuredRank order (0 = first)
+    featured: { type: Boolean, default: false, index: true },
+    featuredRank: { type: Number, default: 0 },
   },
   { timestamps: true }
 );
@@ -55,6 +59,7 @@ hotelSchema.index({ wilaya: 1, status: 1 });
 // Name/description/amenities are machine-translated into the other site languages after each save
 export const TRANSLATED_FIELDS = ['name', 'description', 'amenities'];
 countryPlugin(hotelSchema);
+reelPlugin(hotelSchema);
 policiesPlugin(hotelSchema);
 autoTranslate(hotelSchema, TRANSLATED_FIELDS);
 

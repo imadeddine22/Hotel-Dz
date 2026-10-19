@@ -21,10 +21,11 @@ async function fetchAll(path, key) {
 
 export default async function sitemap() {
   const now = new Date();
-  const [hotels, houses, sales] = await Promise.all([
+  const [hotels, houses, sales, projects] = await Promise.all([
     fetchAll('/hotels', 'hotels'),
     fetchAll('/houses', 'houses'),
     fetchAll('/sales', 'listings'),
+    fetchAll('/projects', 'projects'),
   ]);
 
   const staticPages = [
@@ -33,6 +34,8 @@ export default async function sitemap() {
     { path: '/houses', priority: 0.9, changeFrequency: 'daily' },
     { path: '/sales', priority: 0.9, changeFrequency: 'daily' },
     { path: '/destinations', priority: 0.8, changeFrequency: 'weekly' },
+    { path: '/reels', priority: 0.7, changeFrequency: 'daily' },
+    { path: '/investir', priority: 0.8, changeFrequency: 'daily' },
     { path: '/outils', priority: 0.7, changeFrequency: 'monthly' },
     { path: '/comparatif', priority: 0.6, changeFrequency: 'monthly' },
     ...TOOLS.map((t) => ({ path: `/outils/${t.slug}`, priority: 0.7, changeFrequency: 'monthly' })),
@@ -65,7 +68,7 @@ export default async function sitemap() {
       priority: 0.7,
     }));
 
-  const all = [...staticPages, ...wilayaPages, ...entries(hotels, 'hotels'), ...entries(houses, 'houses'), ...entries(sales, 'sales')];
+  const all = [...staticPages, ...wilayaPages, ...entries(hotels, 'hotels'), ...entries(houses, 'houses'), ...entries(sales, 'sales'), ...entries(projects, 'investir')];
   // Every page in its 3 languages (/…, /ar/…, /en/…), each listing all versions as hreflang alternates
   return all.flatMap((entry) => {
     const path = entry.url.slice(SITE_URL.length) || '/';

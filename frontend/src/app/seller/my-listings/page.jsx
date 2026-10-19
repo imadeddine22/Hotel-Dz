@@ -14,6 +14,8 @@ import { useT } from '@/lib/i18n/useT';
 import CountrySelect from '@/components/CountrySelect';
 import { currencyOf } from '@/lib/countries';
 import { MULTI_COUNTRY } from '@/lib/countries';
+import PromoteListing from '@/components/PromoteListing';
+import ReelManager from '@/components/ReelManager';
 const PROPERTY_TYPES = ['Appartement', 'Villa', 'Maison', 'Duplex', 'Studio', 'Terrain', 'Local commercial', 'Ferme', 'Chalet', 'Immeuble'];
 
 const STATUS_BADGE = {
@@ -398,6 +400,8 @@ function SellerListingsContent() {
                   )}
 
                   <div className="flex gap-2 mt-4">
+                    <PromoteListing kind="sale" listing={listing} className="rounded-xl" />
+                    <ReelManager kind="sale" listing={listing} className="rounded-xl" />
                     <button
                       onClick={() => openEdit(listing)}
                       className="flex-1 inline-flex items-center justify-center gap-1 rounded-xl border border-gray-200 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition"

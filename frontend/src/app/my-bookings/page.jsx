@@ -168,9 +168,13 @@ export default function MyBookingsPage() {
                     )}
 
                     <div className="mt-auto flex items-end justify-between pt-3">
-                      <p className="text-sm text-gray-500">
-                        {new Date(b.checkIn).toLocaleDateString(dateLocale())} → {new Date(b.checkOut).toLocaleDateString(dateLocale())}
-                        <span className="ml-2 font-bold text-brand-600">{formatDZD(b.totalPrice, b.currency)}</span>
+                      <p className="flex flex-wrap items-center gap-x-2 text-sm text-gray-500">
+                        {/* own direction for each part, so dates and price don't run together in Arabic */}
+                        <bdi dir="ltr">
+                          {/* Arabic dates carry right-to-left marks that scramble a left-to-right range */}
+                          {[b.checkIn, b.checkOut].map((d) => new Date(d).toLocaleDateString(dateLocale()).replace(/[\u200e\u200f]/g, '')).join(' → ')}
+                        </bdi>
+                        <bdi className="font-bold text-brand-600">{formatDZD(b.totalPrice, b.currency)}</bdi>
                       </p>
                       {/* a real stay (paid on site, or confirmed and over) can be reviewed once */}
                       {b.status !== 'cancelled' && (b.paymentStatus === 'paid' || (b.status === 'confirmed' && new Date(b.checkOut) < new Date())) && (

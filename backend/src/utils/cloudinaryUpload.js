@@ -108,3 +108,53 @@ export const destroyImage = async (publicId) => {
     // ignore — image may already be gone
   }
 };
+
+// ── Videos (listing reels) ──────────────────────────────────────────────
+const VIDEO_EXT = { 'video/mp4': '.mp4', 'video/webm': '.webm', 'video/quicktime': '.mov' };
+export const VIDEO_TYPES = Object.keys(VIDEO_EXT);
+
+/**
+ * Upload a video buffer (Cloudinary, or local disk as fallback).
+ * Returns { url, publicId, poster, duration, width, height } — the last four only known with Cloudinary.
+ */
+export const uploadVideo = (buffer, folder, mimetype) => {
+  if (!isCloudinaryEnabled()) {
+    const dir = ensureDir(folder);
+    const fileName = `${uniqueName()}${VIDEO_EXT[mimetype] || '.mp4'}`;
+    fs.writeFileSync(path.join(dir, fileName), buffer);
+    return Promise.resolve({ url: `/uploads/${folder}/${fileName}`, publicId: `${folder}/${fileName}`, poster: '', duration: 0, width: 0, height: 0 });
+  }
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      { folder, public_id: uniqueName(), resource_type: 'video', allowed_formats: ['mp4', 'mov', 'webm'] },
+      (err, result) => {
+        if (err) return reject(err);
+        resolve({
+          url: result.secure_url,
+          publicId: result.public_id,
+          // Cloudinary serves a frame of the video as an image when the extension is .jpg
+          poster: result.secure_url.replace(/\.[a-z0-9]+$/i, '.jpg'),
+          duration: Math.round(result.duration || 0),
+          width: result.width || 0,
+          height: result.height || 0,
+        });
+      }
+    );
+    stream.end(buffer);
+  });
+};
+
+/** Remove a video by public id (best-effort). */
+export const destroyVideo = async (publicId) => {
+  if (!publicId) return;
+  try {
+    if (!Object.values(VIDEO_EXT).some((ext) => publicId.endsWith(ext))) {
+      if (isCloudinaryEnabled()) await cloudinary.uploader.destroy(publicId, { resource_type: 'video' });
+      return;
+    }
+    const filePath = path.join(UPLOADS_DIR, publicId);
+    if (filePath.startsWith(UPLOADS_DIR) && fs.existsSync(filePath)) fs.unlinkSync(filePath);
+  } catch {
+    // ignore — video may already be gone
+  }
+};
