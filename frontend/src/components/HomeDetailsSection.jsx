@@ -13,7 +13,7 @@ export default function HomeDetailsSection() {
       <div className="text-center space-y-6">
         <h2 className="text-3xl md:text-5xl font-black font-serif text-slate-800 tracking-tight leading-none">
           {t('Your Journey To The Perfect')} <br className="hidden md:inline" />
-          {t('Home')} <span className="text-teal-500 italic font-medium font-serif leading-none tracking-normal">{t('Starts With Us')}</span>
+          {t('Home (property)')} <span className="text-teal-500 italic font-medium font-serif leading-none tracking-normal">{t('Starts With Us')}</span>
         </h2>
         <p className="max-w-2xl mx-auto text-slate-500 text-xs md:text-sm font-medium leading-relaxed">
           {t('With a proven track record and in-depth market knowledge, we\'re here to make your real estate journey smooth and stress-free. Whether buying, selling, or renting, you can count on our team to deliver results with integrity.')}
