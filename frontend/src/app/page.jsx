@@ -11,6 +11,7 @@ import FeaturedSales from '@/components/FeaturedSales';
 import CitiesSection from '@/components/CitiesSection';
 import HotelsList from '@/components/HotelsList';
 import HomeDetailsSection from '@/components/HomeDetailsSection';
+import InvestTeaser from '@/components/InvestTeaser';
 import Footer from '@/components/Footer';
 import { findWilaya } from '@/hooks/useCommunes';
 
@@ -60,6 +61,7 @@ export default function HomePage() {
       )}
 
       <HomeDetailsSection />
+      <InvestTeaser />
       <Footer />
     </main>
   );
