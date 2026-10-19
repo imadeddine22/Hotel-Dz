@@ -6,11 +6,14 @@ import BrandLogo from '@/components/BrandLogo';
 import { useT } from '@/lib/i18n/useT';
 
 // The photo side is the designer's artwork (public/brand/home-banner.webp, 1357×510): only its left
-// part is shown (up to x = 845, before the artwork's own text), the rest is rebuilt below as live,
-// translatable text. Colours sampled from the artwork.
+// part is shown — the villa and Algiers, up to x = 585, before the two round photos — then the
+// "house for sale" illustration (public/brand/home-sale-illustration.jpg), then the artwork's text
+// rebuilt as live, translatable text. Colours sampled from the artwork.
 // left: columns 0–5 are the mock-up's light frame and an anti-aliased edge
-const ART = { width: 1357, height: 510, left: 6, top: 8, bottom: 495, cut: 845 };
-const SHOWN_W = ART.cut - ART.left; // 839 px of photo; the 512 px text panel is rebuilt in code
+const ART = { width: 1357, height: 510, left: 6, top: 8, bottom: 495, cut: 585 };
+const SHOWN_W = ART.cut - ART.left; // 579 px of photo
+// Large screens: photo | illustration | text, in these proportions (heights all 487)
+const COLS = { photo: SHOWN_W, art: 380, text: 512 };
 // 487: the artwork's content only — rows 0–7 are its grey frame, rows 496+ the mock-up's drop shadow
 const SHOWN_H = ART.bottom - ART.top;
 const COLORS = { panel: '#F6FAFD', ink: '#152A41', teal: '#0CB2AE', button: '#01C2C2', icon: '#0A8F96', label: '#396465' };
@@ -22,9 +25,9 @@ const CATEGORIES = [
   { href: '/houses', label: 'Maisons à vendre et à louer', icon: House },
 ];
 
-/** Home page banner: Algiers photo montage + brand, headline, categories and "start now" (→ properties for sale). */
+/** Home page banner: Algiers photo + "house for sale" illustration + brand, headline, categories and "start now" (→ properties for sale). */
 export default function HomeBanner() {
-  const { t } = useT();
+  const { t, lang } = useT();
 
   const photo = (
     <div className="relative h-full w-full overflow-hidden" aria-hidden="true">
@@ -52,12 +55,23 @@ export default function HomeBanner() {
       className="mt-12 overflow-hidden rounded-3xl shadow-lg ring-1 ring-black/5"
       style={{ background: COLORS.panel }}
     >
-      <div className="lg:relative">
-        {/* Photo: full width on phones, left 62 % on large screens */}
-        <div className="aspect-[839/487] w-full lg:absolute lg:inset-y-0 lg:left-0 lg:aspect-auto lg:w-[62.1%]">{photo}</div>
+      {/* dir=ltr: the photo stays on the left in Arabic too (as in the artwork); the text panel gets the page direction back */}
+      <div
+        dir="ltr"
+        className="lg:grid lg:aspect-[var(--banner-ratio)] lg:[grid-template-columns:var(--banner-cols)]"
+        style={{ '--banner-ratio': `${COLS.photo + COLS.art + COLS.text}/${SHOWN_H}`, '--banner-cols': `${COLS.photo}fr ${COLS.art}fr ${COLS.text}fr` }}
+      >
+        {/* Photo (villa and Algiers): full width on phones, first column on large screens */}
+        <div className="aspect-[579/487] w-full lg:aspect-auto lg:h-full">{photo}</div>
+
+        {/* "House for sale" illustration where the artwork's two round photos were.
+            multiply: its white background takes the panel's colour; the mask fades the image's off-white edges */}
+        <div className="flex items-center justify-center px-6 pt-6 lg:p-3" aria-hidden="true">
+          <img src="/brand/home-sale-illustration.jpg" alt="" loading="lazy" draggable={false} className="max-h-56 w-auto select-none object-contain mix-blend-multiply [mask-image:radial-gradient(ellipse_at_center,#000_62%,transparent_78%)] lg:max-h-full lg:w-full" />
+        </div>
 
         {/* Live text panel (translated) */}
-        <div className="relative flex flex-col items-center gap-4 px-5 py-8 text-center lg:ml-[62.1%] lg:aspect-[512/487] lg:justify-center lg:gap-3 lg:px-6 lg:py-6 xl:gap-5">
+        <div dir={lang === 'ar' ? 'rtl' : 'ltr'} className="relative flex flex-col items-center gap-4 px-5 py-8 text-center lg:justify-center lg:gap-3 lg:px-6 lg:py-6 xl:gap-5">
           <BrandLogo className="h-12 xl:h-16" textClassName="text-4xl xl:text-5xl !text-[#152A41]" alt="" />
 
           <h2 className="font-extrabold leading-tight">
