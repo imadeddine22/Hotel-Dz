@@ -30,17 +30,17 @@ export default function InvestTeaser() {
         {/* Text: second column on large screens (the picture comes first) */}
         <div className="flex flex-col lg:order-2 lg:mt-16">
           <div className="flex justify-center">
-            <BrandLogo className="h-14 md:h-20" textClassName="text-5xl md:text-7xl !text-[#152A41]" alt="" />
+            <BrandLogo className="h-12 md:h-14" textClassName="text-4xl md:text-5xl !text-[#152A41]" alt="" />
           </div>
 
-          <h2 id="invest-teaser-title" className="mt-6 text-center text-4xl font-black leading-[1.15] lg:text-start lg:text-5xl xl:text-[3.5rem]" style={{ color: INK }}>
+          <h2 id="invest-teaser-title" className="mt-6 text-center text-3xl font-black leading-[1.2] lg:text-start lg:text-[2.1rem] xl:text-[2.6rem]" style={{ color: INK }}>
             <span className="block">{t('Découvrez votre opportunité')}</span>
             <span className="block">
               <span style={{ color: TEAL }}>{t('d’investissement')}</span> {t('en Algérie')}
             </span>
           </h2>
 
-          <p className="mt-4 text-center text-base text-slate-600 md:text-lg lg:text-start">
+          <p className="mt-4 text-center text-sm text-slate-600 md:text-base lg:text-start">
             {t('Terrains, locaux commerciaux et projets d’investissement prometteurs vous attendent.')}
           </p>
 
@@ -54,19 +54,19 @@ export default function InvestTeaser() {
                 className={`flex flex-col items-center gap-2 px-2 text-center ${i % 2 ? 'border-s-2' : ''} ${i === 2 ? 'sm:border-s-2' : ''}`}
                 style={{ borderColor: `${TEAL}55` }}
               >
-                <Icon className="h-10 w-10" style={{ color: INK }} strokeWidth={1.6} aria-hidden="true" />
-                <span className="text-sm font-semibold leading-snug md:text-base" style={{ color: INK }}>{t(label)}</span>
+                <Icon className="h-8 w-8" style={{ color: INK }} strokeWidth={1.6} aria-hidden="true" />
+                <span className="text-xs font-semibold leading-snug md:text-sm" style={{ color: INK }}>{t(label)}</span>
               </li>
             ))}
           </ul>
 
           <Link
             href="/investir"
-            className="mt-10 inline-flex items-center justify-center gap-3 self-center rounded-full px-8 py-4 text-base font-bold text-white shadow-lg transition hover:scale-[1.03] hover:shadow-xl md:text-lg lg:self-start"
+            className="mt-10 inline-flex items-center justify-center gap-3 self-center rounded-full px-7 py-3.5 text-sm font-bold text-white shadow-lg transition hover:scale-[1.03] hover:shadow-xl md:text-base lg:self-start"
             style={{ background: INK }}
           >
             {t('Découvrez les opportunités d’investissement')}
-            <ArrowRight className="h-6 w-6 rtl:rotate-180" style={{ color: TEAL }} aria-hidden="true" />
+            <ArrowRight className="h-5 w-5 rtl:rotate-180" style={{ color: TEAL }} aria-hidden="true" />
           </Link>
         </div>
 
