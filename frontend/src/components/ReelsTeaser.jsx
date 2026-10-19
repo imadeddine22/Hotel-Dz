@@ -1,12 +1,15 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Clapperboard, Play, ChevronRight, MapPin } from 'lucide-react';
+import { Clapperboard, Play, ChevronRight, MapPin, Upload } from 'lucide-react';
 import Link from '@/components/LocaleLink';
 import api, { getImageUrl } from '@/lib/api';
 import { useT } from '@/lib/i18n/useT';
+import { useAuthStore } from '@/store/authStore';
 
 const TAB = { hotel: 'hotels', house: 'houses', sale: 'sales' };
+// where an owner adds the video of a listing (the "Reel" button on each listing)
+const OWNER_LISTINGS = { owner: '/owner/my-hotels', seller: '/seller/my-listings', admin: '/admin/reels' };
 const BADGE = { hotel: 'Hôtel', house: 'Location', sale: 'À vendre' };
 
 // Decorations cut out of the designer's mock-up (public/brand/reels-bg.webp, 1983×793):
@@ -32,9 +35,13 @@ function ArtPiece({ x, y, w, h, height, style, className = '' }) {
   );
 }
 
-/** Home page strip of the latest reels, with the way into the Reels page (hidden when there are none). */
+/**
+ * Home page strip of the latest reels, with the way into the Reels page.
+ * Before the first video is published it stays visible and invites owners to add theirs.
+ */
 export default function ReelsTeaser() {
   const { t } = useT();
+  const user = useAuthStore((st) => st.user);
   const [reels, setReels] = useState(null);
 
   useEffect(() => {
@@ -44,7 +51,9 @@ export default function ReelsTeaser() {
       .catch(() => setReels([]));
   }, []);
 
-  if (!reels?.length) return null;
+  if (reels === null) return null; // loading
+  const empty = reels.length === 0;
+  const publishHref = OWNER_LISTINGS[user?.role] || '/register?role=owner';
 
   return (
     <section className="relative overflow-hidden py-12 lg:py-20" style={{ background: COLORS.bg }} aria-labelledby="reels-teaser">
@@ -69,7 +78,18 @@ export default function ReelsTeaser() {
           </p>
         </div>
 
-        {/* Cards */}
+        {/* Cards — or, before the first published video, an invitation to owners */}
+        {empty ? (
+          <div className="w-full rounded-3xl border-2 border-dashed border-slate-300 bg-white/60 px-6 py-10 text-center backdrop-blur lg:min-w-0 lg:flex-1">
+            <span className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-full text-white shadow" style={{ background: gradient }}>
+              <Clapperboard className="h-7 w-7" aria-hidden="true" />
+            </span>
+            <p className="text-lg font-extrabold" style={{ color: COLORS.ink }}>{t('Les premières vidéos arrivent bientôt')}</p>
+            <p className="mx-auto mt-1 max-w-md text-sm" style={{ color: COLORS.sub }}>
+              {t('Propriétaires d’hôtels, de maisons ou de biens à vendre : ajoutez une courte vidéo verticale à votre annonce, elle apparaîtra ici après validation.')}
+            </p>
+          </div>
+        ) : (
         <ul className="-mx-4 flex w-[calc(100%+2rem)] snap-x gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] lg:mx-0 lg:w-auto lg:min-w-0 lg:flex-1 lg:px-1">
           {reels.map((r) => {
             const cover = getImageUrl(r.reel.poster) || getImageUrl(r.image);
@@ -104,15 +124,17 @@ export default function ReelsTeaser() {
             </Link>
           </li>
         </ul>
+        )}
 
         {/* Call to action */}
         <div className="flex shrink-0 flex-col items-center gap-6 lg:w-52">
           <Link
-            href="/reels"
+            href={empty ? publishHref : '/reels'}
             className="inline-flex items-center gap-2 rounded-full px-7 py-3.5 text-base font-bold text-white shadow-lg transition hover:scale-105 hover:shadow-xl"
             style={{ background: gradient }}
           >
-            <Play className="h-4 w-4 fill-current" aria-hidden="true" /> {t('Regarder les reels')}
+            {empty ? <Upload className="h-4 w-4" aria-hidden="true" /> : <Play className="h-4 w-4 fill-current" aria-hidden="true" />}
+            {empty ? t('Publier une vidéo') : t('Regarder les reels')}
           </Link>
           <p className="relative -rotate-2 text-center text-2xl font-extrabold leading-snug" style={{ color: COLORS.ink }}>
             {t('Découvrez')}
