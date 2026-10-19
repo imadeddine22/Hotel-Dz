@@ -5,7 +5,7 @@ import { CheckCircle, Trash2, ExternalLink, Landmark, XCircle } from 'lucide-rea
 import Link from '@/components/LocaleLink';
 import api, { getImageUrl } from '@/lib/api';
 import { formatDZD } from '@/lib/data';
-import { formatArea } from '@/lib/projects';
+import { formatArea, assetLabel, documentLabel } from '@/lib/projects';
 import { useT } from '@/lib/i18n/useT';
 import { dateLocale } from '@/lib/i18n/format';
 
@@ -107,10 +107,25 @@ export default function AdminProjectsPage() {
                 <p className="text-xs text-gray-400">{p.reference} · {new Date(p.updatedAt).toLocaleString(dateLocale())}</p>
                 <p className="font-bold text-ink">{p.title}</p>
                 <p className="text-sm text-gray-500">
-                  {t(p.city)}, {t(p.wilaya)} · {t(p.assetType || 'Terrain')} · {formatArea(p.area, lang)} · {t(p.projectType)} · {t(p.partnership)} · {t(p.landDocument)}
+                  {t(p.city)}, {t(p.wilaya)} · {assetLabel(p, t)} · {formatArea(p.area, lang)} · {t(p.projectType)} · {t(p.partnership)} · {documentLabel(p, t)}
                 </p>
                 <p className="text-sm font-semibold text-gray-700">{p.budget ? formatDZD(p.budget) : t('Budget à définir')}{p.ownerShare != null ? ` · ${t('Part du propriétaire')} ${p.ownerShare} %` : ''}</p>
                 {p.description && <p className="mt-2 line-clamp-4 whitespace-pre-line text-sm text-gray-600">{p.description}</p>}
+                {/* Ownership document photos: private, for checking the property before publishing */}
+                <div className="mt-3 rounded-xl bg-slate-50 p-3">
+                  <p className="text-xs font-bold text-gray-600">{t('Document de propriété')} : {documentLabel(p, t)}</p>
+                  {p.documentImages?.length ? (
+                    <div className="mt-2 flex gap-2">
+                      {p.documentImages.map((d, i) => (
+                        <a key={d.publicId} href={getImageUrl(d.url)} target="_blank" rel="noopener noreferrer" title={t('Ouvrir en grand')} className="block h-24 w-20 overflow-hidden rounded-lg ring-1 ring-slate-200 hover:ring-[#00B3D2]">
+                          <img src={getImageUrl(d.url)} alt={`${t('Document de propriété')} ${i + 1}`} className="h-full w-full object-cover" />
+                        </a>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="mt-1 text-xs text-amber-700">{t('Aucune photo du document.')}</p>
+                  )}
+                </div>
                 <p className="mt-2 text-xs text-gray-500">{p.owner?.fullName} · {p.owner?.email}{p.owner?.phone ? ` · ${p.owner.phone}` : ''}</p>
                 {p.status === 'rejected' && p.rejectionReason && (
                   <p className="mt-2 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700"><strong>{t('Motif du refus :')}</strong> {p.rejectionReason}</p>

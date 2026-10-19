@@ -4,7 +4,7 @@ import { CheckCheck, Clock } from 'lucide-react';
 import Link from '@/components/LocaleLink';
 import { getImageUrl } from '@/lib/api';
 import { formatDZD } from '@/lib/data';
-import { PROJECT_COLORS } from '@/lib/projects';
+import { PROJECT_COLORS, assetLabel } from '@/lib/projects';
 import { dateLocale } from '@/lib/i18n/format';
 import { useT } from '@/lib/i18n/useT';
 
@@ -34,7 +34,7 @@ export default function InvestorRequestRow({ request: r, full = false }) {
           )}
         </div>
         <p className="mt-0.5 text-xs text-slate-500">
-          {t(p.assetType || 'Terrain')} · {t(p.city)}, {t(p.wilaya)} · {p.reference}
+          {assetLabel(p, t)} · {t(p.city)}, {t(p.wilaya)} · {p.reference}
         </p>
         <p className="mt-1 text-xs text-slate-500">
           {t('Envoyée le {date}', { date: new Date(r.createdAt).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'long', year: 'numeric' }) })}

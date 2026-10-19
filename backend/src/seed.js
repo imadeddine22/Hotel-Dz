@@ -210,7 +210,7 @@ export const seedDatabase = async () => {
     projects.push(await InvestmentProject.create({
       owner: p.owner._id, assetType: p.assetType || 'Terrain', title: p.title, description: p.description, projectType: p.projectType, partnership: p.partnership,
       wilaya: p.wilaya, city: p.city, area: p.area, landDocument: p.landDocument, budget: p.budget, ownerShare: p.ownerShare,
-      images: [img(p.photo)], contactPhone: p.owner.phone || '', contactEmail: p.owner.email, status: p.status,
+      images: [img(p.photo)], documentImages: [img('1450101499163-c8848c66ca85')], contactPhone: p.owner.phone || '', contactEmail: p.owner.email, status: p.status,
     }));
   }
   const investor = await User.create({

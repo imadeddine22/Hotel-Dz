@@ -38,7 +38,7 @@ async function req(method, path, { token, body, form } = {}) {
   if (form) {
     payload = new FormData();
     for (const [k, v] of Object.entries(form)) {
-      if (k === 'images') v.forEach((blob, i) => payload.append('images', blob, `img${i}.png`));
+      if (k === 'images' || k === 'documents') v.forEach((blob, i) => payload.append(k, blob, `img${i}.png`));
       else payload.append(k, typeof v === 'object' ? JSON.stringify(v) : String(v));
     }
   } else if (body !== undefined) {
@@ -1013,14 +1013,25 @@ describe('Investment projects (land or property looking for an investor)');
   // A land owner (any registered user) posts a project
   const landOwner = await register('customer');
   const base = { title: `Terrain test ${uid}`, description: 'Projet de résidence', assetType: 'Terrain', projectType: 'Résidentiel', partnership: 'Construction contre logements', wilaya: 'Oran', city: 'Oran', area: 1500, landDocument: 'Acte notarié', budget: 90000000, ownerShare: 35 };
-  const created = await req('POST', '/projects', { token: landOwner.token, form: { ...base, images: [PNG] } });
+  const created = await req('POST', '/projects', { token: landOwner.token, form: { ...base, images: [PNG], documents: [PNG] } });
   check('any registered user can post a project → waits for approval', created.status === 201 && created.data.project?.status === 'pending' && /^PRJ-/.test(created.data.project.reference), `${created.status} ${created.data.message || ''}`);
   const pid = created.data.project?._id;
   expectStatus('visitor cannot post', await req('POST', '/projects', { form: base }), 401);
   expectStatus('area is required', await req('POST', '/projects', { token: landOwner.token, form: { ...base, area: '' } }), 400);
   expectStatus('unknown project type rejected', await req('POST', '/projects', { token: landOwner.token, form: { ...base, projectType: 'Casino' } }), 400);
   expectStatus('unknown property type rejected', await req('POST', '/projects', { token: landOwner.token, form: { ...base, assetType: 'Bateau' } }), 400);
-  expectStatus('owner sees their pending project', await req('GET', `/projects/${pid}`, { token: landOwner.token }), 200);
+  expectStatus('photo of the ownership document required', await req('POST', '/projects', { token: landOwner.token, form: { ...base, images: [PNG] } }), 400);
+  expectStatus('at most 2 document photos', await req('POST', '/projects', { token: landOwner.token, form: { ...base, images: [PNG], documents: [PNG, PNG, PNG] } }), 400);
+  const regularising = await req('POST', '/projects', { token: landOwner.token, form: { ...base, landDocument: 'En cours de régularisation', images: [PNG] } });
+  check('papers being regularised: no document photo needed', regularising.status === 201, String(regularising.status));
+  if (regularising.data.project) await req('DELETE', `/projects/${regularising.data.project._id}`, { token: landOwner.token });
+  expectStatus('"other" property must say what it is', await req('POST', '/projects', { token: landOwner.token, form: { ...base, assetType: 'Autre bien', images: [PNG], documents: [PNG] } }), 400);
+  const other = await req('POST', '/projects', { token: landOwner.token, form: { ...base, assetType: 'Autre bien', assetOther: 'Station-service', images: [PNG], documents: [PNG] } });
+  check('"other" property saved with its description', other.status === 201 && other.data.project?.assetOther === 'Station-service');
+  if (other.data.project) await req('DELETE', `/projects/${other.data.project._id}`, { token: landOwner.token });
+  expectStatus('"other" document must be named', await req('POST', '/projects', { token: landOwner.token, form: { ...base, landDocument: 'Autre', images: [PNG], documents: [PNG] } }), 400);
+  const mineView = await req('GET', `/projects/${pid}`, { token: landOwner.token });
+  check('owner sees their pending project with the document photo', mineView.status === 200 && mineView.data.project?.documentImages?.length === 1);
   check('not public before approval', !(await req('GET', '/projects?limit=50')).data.projects.some((p) => p._id === pid));
   check('"my projects" lists it', (await req('GET', '/projects/mine', { token: landOwner.token })).data.projects.some((p) => p._id === pid));
 
@@ -1034,6 +1045,12 @@ describe('Investment projects (land or property looking for an investor)');
   check('editing sends it back to review, reason cleared', edited.data.project?.status === 'pending' && edited.data.project.rejectionReason === '');
   expectStatus('admin approves', await req('PUT', `/admin/projects/${pid}/approve`, { token: admin }), 200);
   check('now public', (await req('GET', '/projects?limit=50')).data.projects.some((p) => p._id === pid));
+  check('document photos never public (page)', (await req('GET', `/projects/${pid}`)).data.project?.documentImages === undefined);
+  check('document photos never public (list)', (await req('GET', '/projects?limit=50')).data.projects.every((p) => p.documentImages === undefined));
+  check('…not even for another member', (await req('GET', `/projects/${pid}`, { token: stranger.token })).data.project?.documentImages === undefined);
+  check('admin sees the document photo (verification)', (await req('GET', '/admin/projects?status=approved', { token: admin })).data.projects.find((p) => p._id === pid)?.documentImages?.length === 1);
+  expectStatus('removing the last document photo is refused', await req('PUT', `/projects/${pid}`, { token: landOwner.token, form: { keepDocuments: '[]' } }), 400);
+  check('…and nothing was changed', (await req('GET', `/projects/${pid}`, { token: landOwner.token })).data.project?.documentImages?.length === 1);
 
   // Investors' requests
   const interest = { name: 'Investisseur Test', phone: '0555 98 76 54', email: 'invest@test.dz', amount: 50000000, message: 'Projet intéressant, je souhaite en discuter.' };

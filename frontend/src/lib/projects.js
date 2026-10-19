@@ -2,7 +2,12 @@
 export const ASSET_TYPES = ['Terrain', 'Local commercial', 'Bâtiment / immeuble', 'Maison / villa', 'Hangar / entrepôt', 'Ferme', 'Hôtel / établissement existant', 'Autre bien'];
 export const PROJECT_TYPES = ['Résidentiel', 'Hôtel et tourisme', 'Commercial', 'Bureaux', 'Industriel', 'Agricole', 'Santé et éducation', 'Mixte', 'Autre'];
 export const PARTNERSHIP_TYPES = ['Partenariat (parts du projet)', 'Construction contre logements', 'Location longue durée', 'Financement contre bénéfices', 'Exploitation en commun', 'À discuter'];
-export const LAND_DOCUMENTS = ['Acte notarié', 'Livret foncier', 'Acte administratif', 'En cours de régularisation', 'Autre'];
+export const LAND_DOCUMENTS = ['Acte notarié', 'Livret foncier', 'Acte administratif', 'Acte sous seing privé', 'Décision de concession', 'Certificat de possession', 'En cours de régularisation', 'Autre'];
+
+/** "Terrain", "Local commercial"… or what the owner wrote when they picked "Autre bien". */
+export const assetLabel = (p, t) => (p.assetType === 'Autre bien' && p.assetOther ? p.assetOther : t(p.assetType || 'Terrain'));
+/** Type of ownership document, or its name when "Autre" was picked. */
+export const documentLabel = (p, t) => (p.landDocument === 'Autre' && p.documentOther ? p.documentOther : t(p.landDocument));
 
 // Colours of the brand banner (teal gradient + navy)
 export const PROJECT_COLORS = { ink: '#152A41', from: '#0DD5C4', to: '#00B3D2' };

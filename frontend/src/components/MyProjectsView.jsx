@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { PlusCircle, Pencil, Trash2, Eye, Users, X, Clock, CheckCircle2, XCircle, Phone, Mail, ExternalLink, ImagePlus } from 'lucide-react';
+import { PlusCircle, Pencil, Trash2, Eye, Users, X, Clock, CheckCircle2, XCircle, Phone, Mail, ExternalLink, ImagePlus, FileText, Lock } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import DashboardShell from '@/components/DashboardShell';
@@ -11,12 +11,15 @@ import Link from '@/components/LocaleLink';
 import api, { getImageUrl } from '@/lib/api';
 import { formatDZD } from '@/lib/data';
 import { useWilayas } from '@/hooks/useWilayas';
-import { ASSET_TYPES, PROJECT_TYPES, PARTNERSHIP_TYPES, LAND_DOCUMENTS, PROJECT_COLORS, projectGradient, formatArea } from '@/lib/projects';
+import { ASSET_TYPES, PROJECT_TYPES, PARTNERSHIP_TYPES, LAND_DOCUMENTS, PROJECT_COLORS, projectGradient, formatArea, assetLabel } from '@/lib/projects';
 import { useAuthStore } from '@/store/authStore';
 import { useT } from '@/lib/i18n/useT';
 import { dateLocale } from '@/lib/i18n/format';
 
-const EMPTY = { assetType: 'Terrain', title: '', description: '', projectType: 'Résidentiel', partnership: 'À discuter', wilaya: '', city: '', address: '', area: '', landDocument: 'Acte notarié', budget: '', ownerShare: '', contactPhone: '', contactEmail: '' };
+const EMPTY = { assetType: 'Terrain', assetOther: '', title: '', description: '', projectType: 'Résidentiel', partnership: 'À discuter', wilaya: '', city: '', address: '', area: '', landDocument: 'Acte notarié', documentOther: '', budget: '', ownerShare: '', contactPhone: '', contactEmail: '' };
+const NO_DOCUMENT = 'En cours de régularisation'; // papers not ready: no document photo asked
+const MAX_DOCUMENTS = 2;
+
 const STATUS = {
   pending: { label: 'En attente de validation', icon: Clock, cls: 'bg-amber-50 text-amber-700' },
   approved: { label: 'Publié', icon: CheckCircle2, cls: 'bg-emerald-50 text-emerald-700' },
@@ -119,7 +122,7 @@ function MyProjects({ inDashboard }) {
                       </div>
                       <p className="mt-1 truncate text-lg font-bold" style={{ color: PROJECT_COLORS.ink }}>{p.title}</p>
                       <p className="text-sm text-slate-500">
-                        {t(p.city)}, {t(p.wilaya)} · {t(p.assetType || 'Terrain')} · {formatArea(p.area, lang)} · {t(p.projectType)} · {p.budget ? formatDZD(p.budget) : t('Budget à définir')}
+                        {t(p.city)}, {t(p.wilaya)} · {assetLabel(p, t)} · {formatArea(p.area, lang)} · {t(p.projectType)} · {p.budget ? formatDZD(p.budget) : t('Budget à définir')}
                       </p>
                       {p.status === 'rejected' && p.rejectionReason && (
                         <p className="mt-2 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700">
@@ -216,6 +219,10 @@ function ProjectForm({ project, user, onClose, onSaved }) {
   );
   const [keep, setKeep] = useState(project?.images || []);
   const [files, setFiles] = useState([]);
+  // photos of the ownership document (1–2), seen only by the owner and the admins
+  const [docKeep, setDocKeep] = useState(project?.documentImages || []);
+  const [docFiles, setDocFiles] = useState([]);
+  const docCount = docKeep.length + docFiles.length;
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
@@ -227,10 +234,17 @@ function ProjectForm({ project, user, onClose, onSaved }) {
     if (!form.wilaya || !form.city.trim()) return setError(t('Indiquez la wilaya et la commune du bien.'));
     if (!(Number(form.area) > 0)) return setError(t('Indiquez la surface du bien.'));
     if (!project && files.length === 0) return setError(t('Ajoutez au moins une photo du bien.'));
+    if (form.assetType === 'Autre bien' && form.assetOther.trim().length < 2) return setError(t('Précisez de quel bien il s’agit.'));
+    if (form.landDocument === 'Autre' && form.documentOther.trim().length < 2) return setError(t('Précisez le type de document.'));
+    if (form.landDocument !== NO_DOCUMENT && docCount === 0) return setError(t('Ajoutez une ou deux photos du document de propriété.'));
     const fd = new FormData();
     Object.entries(form).forEach(([k, v]) => fd.append(k, String(v ?? '').trim()));
-    if (project) fd.append('keepImages', JSON.stringify(keep.map((i) => i.publicId)));
+    if (project) {
+      fd.append('keepImages', JSON.stringify(keep.map((i) => i.publicId)));
+      fd.append('keepDocuments', JSON.stringify(docKeep.map((i) => i.publicId)));
+    }
     files.forEach((f) => fd.append('images', f));
+    docFiles.forEach((f) => fd.append('documents', f));
     setSaving(true);
     try {
       if (project) await api.put(`/projects/${project._id}`, fd);
@@ -283,6 +297,12 @@ function ProjectForm({ project, user, onClose, onSaved }) {
                 </button>
               ))}
             </div>
+            {form.assetType === 'Autre bien' && (
+              <label className={`${label} mt-3`}>
+                {t('De quel bien s’agit-il ?')} *
+                <input value={form.assetOther} onChange={set('assetOther')} maxLength={80} autoFocus placeholder={t('Ex : station-service, salle des fêtes, carrière…')} className={`${input} mt-1`} />
+              </label>
+            )}
           </fieldset>
           <label className={`${label} sm:col-span-2`}>
             {t('Titre')} *
@@ -324,12 +344,6 @@ function ProjectForm({ project, user, onClose, onSaved }) {
             <input value={form.area} onChange={set('area')} inputMode="numeric" dir="ltr" className={`${input} mt-1 rtl:text-right`} />
           </label>
           <label className={label}>
-            {t('Papiers du bien')}
-            <select value={form.landDocument} onChange={set('landDocument')} className={`${input} mt-1`}>
-              {LAND_DOCUMENTS.map((x) => <option key={x} value={x}>{t(x)}</option>)}
-            </select>
-          </label>
-          <label className={label}>
             {t('Investissement estimé (DZD)')}
             <input value={form.budget} onChange={set('budget')} inputMode="numeric" dir="ltr" placeholder={t('Laisser vide si à définir')} className={`${input} mt-1 rtl:text-right`} />
           </label>
@@ -345,6 +359,60 @@ function ProjectForm({ project, user, onClose, onSaved }) {
             {t('Email de contact')}
             <input value={form.contactEmail} onChange={set('contactEmail')} type="email" className={`${input} mt-1`} />
           </label>
+
+          {/* Ownership document: its type, then 1–2 photos for the admin's check (never shown to visitors) */}
+          <div className="rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-100 sm:col-span-2">
+            <p className="flex items-center gap-1.5 text-sm font-bold" style={{ color: PROJECT_COLORS.ink }}>
+              <FileText className="h-4 w-4 text-[#00B3D2]" aria-hidden="true" /> {t('Document de propriété')}
+            </p>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <label className={label}>
+                {t('Type de document')} *
+                <select value={form.landDocument} onChange={set('landDocument')} className={`${input} mt-1`}>
+                  {LAND_DOCUMENTS.map((x) => <option key={x} value={x}>{t(x)}</option>)}
+                </select>
+              </label>
+              {form.landDocument === 'Autre' && (
+                <label className={label}>
+                  {t('Nom du document')} *
+                  <input value={form.documentOther} onChange={set('documentOther')} maxLength={80} placeholder={t('Ex : attestation de la commune')} className={`${input} mt-1`} />
+                </label>
+              )}
+            </div>
+            {form.landDocument !== NO_DOCUMENT && (
+              <>
+                <p className={`${label} mt-3`}>{t('Photo du document (1 ou 2 : recto, verso)')} *</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {docKeep.map((img) => (
+                    <div key={img.publicId} className="relative h-24 w-20 overflow-hidden rounded-xl bg-white ring-1 ring-slate-200">
+                      <img src={getImageUrl(img.url)} alt={t('Document de propriété')} className="h-full w-full object-cover" />
+                      <button type="button" onClick={() => setDocKeep((k) => k.filter((x) => x.publicId !== img.publicId))} aria-label={t('Retirer la photo')} className="absolute end-1 top-1 grid h-6 w-6 place-items-center rounded-full bg-black/60 text-white">
+                        <X className="h-3.5 w-3.5" aria-hidden="true" />
+                      </button>
+                    </div>
+                  ))}
+                  {docFiles.map((file, i) => (
+                    <div key={`${file.name}-${i}`} className="relative h-24 w-20 overflow-hidden rounded-xl bg-white ring-1 ring-slate-200">
+                      <img src={URL.createObjectURL(file)} alt={t('Document de propriété')} className="h-full w-full object-cover" />
+                      <button type="button" onClick={() => setDocFiles((fs) => fs.filter((_, j) => j !== i))} aria-label={t('Retirer la photo')} className="absolute end-1 top-1 grid h-6 w-6 place-items-center rounded-full bg-black/60 text-white">
+                        <X className="h-3.5 w-3.5" aria-hidden="true" />
+                      </button>
+                    </div>
+                  ))}
+                  {docCount < MAX_DOCUMENTS && (
+                    <label className="grid h-24 w-20 cursor-pointer place-items-center rounded-xl border-2 border-dashed border-slate-300 bg-white text-slate-400 hover:border-[#00B3D2] hover:text-[#00B3D2]">
+                      <ImagePlus className="h-6 w-6" aria-hidden="true" />
+                      <span className="sr-only">{t('Ajouter la photo du document')}</span>
+                      <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => { const picked = Array.from(e.target.files || []); setDocFiles((fs) => [...fs, ...picked].slice(0, MAX_DOCUMENTS - docKeep.length)); e.target.value = ''; }} />
+                    </label>
+                  )}
+                </div>
+                <p className="mt-2 flex items-start gap-1.5 text-xs text-slate-500">
+                  <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" /> {t('Visible seulement par vous et l’administration, pour vérifier le bien. Jamais affichée aux visiteurs.')}
+                </p>
+              </>
+            )}
+          </div>
 
           <div className="sm:col-span-2">
             <p className={label}>{t('Photos du bien')} {project ? '' : '*'}</p>

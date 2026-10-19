@@ -6,7 +6,9 @@ import { countryPlugin } from '../utils/countryPlugin.js';
 export const ASSET_TYPES = ['Terrain', 'Local commercial', 'Bâtiment / immeuble', 'Maison / villa', 'Hangar / entrepôt', 'Ferme', 'Hôtel / établissement existant', 'Autre bien'];
 export const PROJECT_TYPES = ['Résidentiel', 'Hôtel et tourisme', 'Commercial', 'Bureaux', 'Industriel', 'Agricole', 'Santé et éducation', 'Mixte', 'Autre'];
 export const PARTNERSHIP_TYPES = ['Partenariat (parts du projet)', 'Construction contre logements', 'Location longue durée', 'Financement contre bénéfices', 'Exploitation en commun', 'À discuter'];
-export const LAND_DOCUMENTS = ['Acte notarié', 'Livret foncier', 'Acte administratif', 'En cours de régularisation', 'Autre'];
+export const LAND_DOCUMENTS = ['Acte notarié', 'Livret foncier', 'Acte administratif', 'Acte sous seing privé', 'Décision de concession', 'Certificat de possession', 'En cours de régularisation', 'Autre'];
+// Without papers yet: no document photo is asked for
+export const NO_DOCUMENT = 'En cours de régularisation';
 
 const investmentProjectSchema = new mongoose.Schema(
   {
@@ -14,6 +16,7 @@ const investmentProjectSchema = new mongoose.Schema(
     title: { type: String, required: [true, 'Title is required'], trim: true, maxlength: 120 },
     description: { type: String, default: '', maxlength: 5000 }, // the project the owner has in mind
     assetType: { type: String, enum: ASSET_TYPES, default: 'Terrain', index: true }, // what the owner brings
+    assetOther: { type: String, trim: true, maxlength: 80, default: '' }, // what it is, when assetType is 'Autre bien'
     projectType: { type: String, enum: PROJECT_TYPES, default: 'Résidentiel' },
     partnership: { type: String, enum: PARTNERSHIP_TYPES, default: 'À discuter' },
     wilaya: { type: String, required: [true, 'Wilaya is required'] },
@@ -22,6 +25,9 @@ const investmentProjectSchema = new mongoose.Schema(
     coordinates: { lat: { type: Number }, lng: { type: Number } },
     area: { type: Number, required: [true, 'Area is required'], min: 1 }, // m²
     landDocument: { type: String, enum: LAND_DOCUMENTS, default: 'Acte notarié' },
+    documentOther: { type: String, trim: true, maxlength: 80, default: '' }, // the document's name, when landDocument is 'Autre'
+    // 1–2 photos of the ownership document: seen only by the owner and the admins (verification), never public
+    documentImages: { type: [{ url: { type: String, required: true }, publicId: { type: String, required: true } }], select: false },
     budget: { type: Number, default: 0, min: 0 }, // estimated investment needed (0 = to be defined)
     ownerShare: { type: Number, min: 0, max: 100 }, // share of the project the property owner proposes to keep (%)
     images: [{ url: { type: String, required: true }, publicId: { type: String, required: true } }],

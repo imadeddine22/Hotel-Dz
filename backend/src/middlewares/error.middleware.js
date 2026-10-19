@@ -25,6 +25,14 @@ export const errorHandler = (err, req, res, next) => {
     message = `Invalid value for ${err.path}`;
   }
 
+  // Upload errors (too many files, too big, wrong type): the client's fault, not a crash
+  if (err.name === 'MulterError') {
+    statusCode = 400;
+    message = err.code === 'LIMIT_FILE_SIZE' ? 'Image too large (5 MB max)' : 'Too many files';
+  } else if (err.message === 'Only image files are allowed') {
+    statusCode = 400;
+  }
+
   // Mongoose duplicate key
   if (err.code === 11000) {
     statusCode = 409;

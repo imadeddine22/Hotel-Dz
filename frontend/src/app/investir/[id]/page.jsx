@@ -12,7 +12,7 @@ import SaveProjectButton from '@/components/SaveProjectButton';
 import LocationMap from '@/components/LocationMap';
 import api, { getImageUrl } from '@/lib/api';
 import { formatDZD } from '@/lib/data';
-import { formatArea, PROJECT_COLORS, projectGradient } from '@/lib/projects';
+import { formatArea, assetLabel, documentLabel, PROJECT_COLORS, projectGradient } from '@/lib/projects';
 import { useInitialData } from '@/components/InitialData';
 import { useAuthStore } from '@/store/authStore';
 import { useT } from '@/lib/i18n/useT';
@@ -66,11 +66,11 @@ export default function ProjectPage() {
   const images = (p.images || []).map((i) => getImageUrl(i.url || i));
   const mine = user && String(p.owner?._id || p.owner) === String(user._id);
   const facts = [
-    { icon: Home, label: 'Type de bien', value: t(p.assetType || 'Terrain') },
+    { icon: Home, label: 'Type de bien', value: assetLabel(p, t) },
     { icon: Maximize2, label: 'Surface', value: formatArea(p.area, lang) },
     { icon: Building2, label: 'Type de projet', value: t(p.projectType) },
     { icon: Handshake, label: 'Partenariat proposé', value: t(p.partnership) },
-    { icon: FileCheck2, label: 'Papiers du bien', value: t(p.landDocument) },
+    { icon: FileCheck2, label: 'Papiers du bien', value: documentLabel(p, t) },
     { icon: Coins, label: 'Investissement estimé', value: p.budget ? formatDZD(p.budget) : t('À définir') },
     ...(p.ownerShare != null ? [{ icon: PieChart, label: 'Part gardée par le propriétaire', value: `${p.ownerShare} %` }] : []),
   ];

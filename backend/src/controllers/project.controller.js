@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import InvestmentProject, { ASSET_TYPES, PROJECT_TYPES, PARTNERSHIP_TYPES } from '../models/InvestmentProject.js';
+import InvestmentProject, { ASSET_TYPES, PROJECT_TYPES, PARTNERSHIP_TYPES, NO_DOCUMENT } from '../models/InvestmentProject.js';
 import InvestorInterest from '../models/InvestorInterest.js';
 import { uploadMany, destroyImage } from '../utils/cloudinaryUpload.js';
 import { parseCoordinates } from '../utils/parseCoordinates.js';
@@ -11,9 +11,22 @@ import { escapeHtml } from '../utils/escapeHtml.js';
 
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000';
 // Fields the property owner may set. Status, views, reference and counters are server-controlled.
-const EDITABLE = ['title', 'description', 'assetType', 'projectType', 'partnership', 'country', 'wilaya', 'city', 'address', 'area', 'landDocument', 'budget', 'ownerShare', 'contactPhone', 'contactEmail'];
+const EDITABLE = ['title', 'description', 'assetType', 'assetOther', 'projectType', 'partnership', 'country', 'wilaya', 'city', 'address', 'area', 'landDocument', 'documentOther', 'budget', 'ownerShare', 'contactPhone', 'contactEmail'];
 const pick = (body, keys) => Object.fromEntries(keys.filter((k) => body[k] !== undefined && body[k] !== '').map((k) => [k, body[k]]));
 const isOwner = (req, p) => String(p.owner?._id || p.owner) === String(req.user?._id);
+const MAX_DOCUMENTS = 2;
+const photosOf = (req) => req.files?.images || [];
+const documentsOf = (req) => req.files?.documents || [];
+/** JSON list of public ids kept by the edit form; undefined when the form didn't send it. */
+const keptIds = (raw) => {
+  if (raw === undefined) return undefined;
+  try {
+    const list = JSON.parse(raw);
+    return Array.isArray(list) ? list : [];
+  } catch {
+    return [];
+  }
+};
 const notify = (to, subject, html) => to && sendEmail({ to, subject, html }).catch((e) => console.error('Email failed:', e.message));
 
 // GET /projects?wilaya=&assetType=&projectType=&partnership=&minArea=&maxArea=&q=&sort=newest|area|budget&page=
@@ -49,11 +62,14 @@ export const getProject = async (req, res, next) => {
   try {
     const project = await InvestmentProject.findById(req.params.id).populate('owner', 'fullName avatar createdAt');
     if (!project || !canView(req, project)) return res.status(404).json({ success: false, message: 'Project not found' });
+    const privileged = req.user && (req.user.role === 'admin' || isOwner(req, project));
     // ?noview=1: the server-side render of the page, so a visit is only counted once (by the browser)
     if (project.status === 'approved' && !isOwner(req, project) && !req.query.noview) {
       await InvestmentProject.updateOne({ _id: project._id }, { $inc: { views: 1 } });
     }
-    res.json({ success: true, project });
+    const body = project.toObject();
+    if (privileged) body.documentImages = (await InvestmentProject.findById(project._id).select('+documentImages').lean())?.documentImages || [];
+    res.json({ success: true, project: body });
   } catch (err) {
     next(err);
   }
@@ -62,7 +78,7 @@ export const getProject = async (req, res, next) => {
 // GET /projects/mine — the owner's projects with their unread interest requests
 export const getMyProjects = async (req, res, next) => {
   try {
-    const projects = await InvestmentProject.find({ owner: req.user._id }).sort({ createdAt: -1 }).lean();
+    const projects = await InvestmentProject.find({ owner: req.user._id }).select('+documentImages').sort({ createdAt: -1 }).lean();
     const unread = await InvestorInterest.aggregate([
       { $match: { owner: req.user._id, seen: false } },
       { $group: { _id: '$project', n: { $sum: 1 } } },
@@ -75,15 +91,24 @@ export const getMyProjects = async (req, res, next) => {
   }
 };
 
-// POST /projects (multipart: fields + images[])
+// POST /projects (multipart: fields + images[] + documents[])
 export const createProject = async (req, res, next) => {
   try {
-    const images = req.files?.length ? await uploadMany(req.files, 'dzhotels/projects') : [];
+    const docs = documentsOf(req);
+    // a photo of the ownership document is needed for the admin's check (unless the papers are being regularised)
+    if (req.user.role !== 'admin' && !docs.length && (req.body.landDocument || 'Acte notarié') !== NO_DOCUMENT) {
+      return res.status(400).json({ success: false, message: 'Add a photo of the property documents' });
+    }
+    const [images, documentImages] = await Promise.all([
+      uploadMany(photosOf(req), 'dzhotels/projects'),
+      uploadMany(docs.slice(0, MAX_DOCUMENTS), 'dzhotels/project-documents'),
+    ]);
     const coordinates = parseCoordinates(req.body);
     const project = await InvestmentProject.create({
       ...pick(req.body, EDITABLE),
       ...(coordinates && { coordinates }),
       images,
+      documentImages,
       owner: req.user._id,
       contactPhone: req.body.contactPhone || req.user.phone || '',
       contactEmail: req.body.contactEmail || req.user.email || '',
@@ -99,10 +124,22 @@ export const createProject = async (req, res, next) => {
 // PUT /projects/:id — owner (goes back to moderation) or admin
 export const updateProject = async (req, res, next) => {
   try {
-    const project = await InvestmentProject.findById(req.params.id);
+    const project = await InvestmentProject.findById(req.params.id).select('+documentImages');
     if (!project) return res.status(404).json({ success: false, message: 'Project not found' });
     const admin = req.user.role === 'admin';
     if (!admin && !isOwner(req, project)) return res.status(403).json({ success: false, message: 'Not authorized' });
+
+    // Document photos are checked before anything is changed: at most 2, and at least 1 when the
+    // form sent its list (unless the papers are being regularised)
+    const keepDocs = keptIds(req.body.keepDocuments);
+    const keptDocs = keepDocs ? project.documentImages.filter((i) => keepDocs.includes(i.publicId)) : project.documentImages;
+    const newDocs = documentsOf(req);
+    if (keptDocs.length + newDocs.length > MAX_DOCUMENTS) {
+      return res.status(400).json({ success: false, message: 'At most 2 photos of the documents' });
+    }
+    if (!admin && keepDocs && !keptDocs.length && !newDocs.length && (req.body.landDocument || project.landDocument) !== NO_DOCUMENT) {
+      return res.status(400).json({ success: false, message: 'Add a photo of the property documents' });
+    }
 
     Object.assign(project, pick(req.body, EDITABLE));
     if (req.body.ownerShare === '') project.ownerShare = undefined;
@@ -121,7 +158,15 @@ export const updateProject = async (req, res, next) => {
       removed.forEach((i) => destroyImage(i.publicId));
       project.images = project.images.filter((i) => keep.includes(i.publicId));
     }
-    if (req.files?.length) project.images.push(...(await uploadMany(req.files, 'dzhotels/projects')));
+    if (photosOf(req).length) project.images.push(...(await uploadMany(photosOf(req), 'dzhotels/projects')));
+    // document photos (checked above): drop the removed ones, then add the new uploads
+    if (keepDocs) {
+      project.documentImages.filter((i) => !keepDocs.includes(i.publicId)).forEach((i) => destroyImage(i.publicId));
+      project.documentImages = keptDocs;
+    }
+    if (newDocs.length) project.documentImages.push(...(await uploadMany(newDocs, 'dzhotels/project-documents')));
+    if (project.assetType !== 'Autre bien') project.assetOther = '';
+    if (project.landDocument !== 'Autre') project.documentOther = '';
     if (!admin) {
       project.status = 'pending';
       project.rejectionReason = '';
@@ -136,10 +181,10 @@ export const updateProject = async (req, res, next) => {
 // DELETE /projects/:id — owner or admin
 export const deleteProject = async (req, res, next) => {
   try {
-    const project = await InvestmentProject.findById(req.params.id);
+    const project = await InvestmentProject.findById(req.params.id).select('+documentImages');
     if (!project) return res.status(404).json({ success: false, message: 'Project not found' });
     if (req.user.role !== 'admin' && !isOwner(req, project)) return res.status(403).json({ success: false, message: 'Not authorized' });
-    project.images.forEach((i) => destroyImage(i.publicId));
+    [...project.images, ...(project.documentImages || [])].forEach((i) => destroyImage(i.publicId));
     await InvestorInterest.deleteMany({ project: project._id });
     await project.deleteOne();
     res.json({ success: true, message: 'Project deleted' });
@@ -205,7 +250,7 @@ export const getProjectQueue = async (req, res, next) => {
   try {
     const status = ['approved', 'rejected'].includes(req.query.status) ? req.query.status : 'pending';
     const [projects, pending] = await Promise.all([
-      InvestmentProject.find({ status }).populate('owner', 'fullName email phone').sort({ updatedAt: -1 }).lean(),
+      InvestmentProject.find({ status }).select('+documentImages').populate('owner', 'fullName email phone').sort({ updatedAt: -1 }).lean(),
       InvestmentProject.countDocuments({ status: 'pending' }),
     ]);
     res.json({ success: true, pending, projects });
