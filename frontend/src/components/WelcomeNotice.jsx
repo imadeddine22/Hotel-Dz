@@ -52,6 +52,13 @@ export default function WelcomeNotice() {
     return () => clearTimeout(timer);
   }, [path]);
 
+  useEffect(() => {
+    if (!open) return undefined;
+    const esc = (e) => e.key === 'Escape' && close();
+    document.addEventListener('keydown', esc);
+    return () => document.removeEventListener('keydown', esc);
+  });
+
   const remember = (value) => {
     try {
       localStorage.setItem(KEY, JSON.stringify({ state: value, at: Date.now() }));
@@ -82,13 +89,17 @@ export default function WelcomeNotice() {
   if (!open || HIDDEN.test(path)) return null;
 
   return (
+    // Centered over a dimmed page (like a pop-up ad); a click outside or Escape closes it
+    <div className="fixed inset-0 z-[90] grid place-items-center overflow-y-auto bg-slate-900/60 p-4 backdrop-blur-sm animate-[welcome-fade_.25s_ease-out]" onClick={close}>
     <aside
       role="dialog"
+      aria-modal="true"
       aria-labelledby="welcome-title"
-      className="fixed inset-x-3 bottom-3 z-[90] mx-auto max-w-sm overflow-hidden rounded-3xl bg-white shadow-2xl ring-1 ring-black/5 animate-[welcome-in_.35s_ease-out] sm:inset-x-auto sm:bottom-5 sm:start-5 sm:mx-0"
+      onClick={(e) => e.stopPropagation()}
+      className="relative w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl ring-1 ring-black/5 animate-[welcome-in_.35s_ease-out]"
     >
       {/* Header: brand + what Meskan is */}
-      <div className="relative px-5 pb-4 pt-5 text-white" style={{ background: `linear-gradient(135deg, ${INK}, #0b4a5c 65%, #00B3D2)` }}>
+      <div className="relative px-6 pb-5 pt-6 text-white" style={{ background: `linear-gradient(135deg, ${INK}, #0b4a5c 65%, #00B3D2)` }}>
         <button type="button" onClick={close} aria-label={t('Fermer')} className="absolute end-3 top-3 grid h-8 w-8 place-items-center rounded-full bg-white/10 transition hover:bg-white/20">
           <X className="h-4 w-4" aria-hidden="true" />
         </button>
@@ -99,7 +110,7 @@ export default function WelcomeNotice() {
             {t('Bienvenue')}
           </span>
         </div>
-        <p id="welcome-title" className="mt-3 text-base font-extrabold leading-snug">
+        <p id="welcome-title" className="mt-4 text-xl font-extrabold leading-snug">
           {t('Hôtels, locations, ventes et investissement dans toute l’Algérie')}
         </p>
         <ul className="mt-3 flex flex-wrap gap-1.5 text-[11px] font-bold">
@@ -121,8 +132,8 @@ export default function WelcomeNotice() {
           <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-500" aria-hidden="true" /> {t('Merci ! Bonne visite sur Meskan.')}
         </p>
       ) : (
-        <form onSubmit={send} className="px-5 pb-5 pt-4">
-          <p className="text-sm font-extrabold" style={{ color: INK }}>{t('Comment nous avez-vous connus ?')}</p>
+        <form onSubmit={send} className="px-6 pb-6 pt-5">
+          <p className="text-base font-extrabold" style={{ color: INK }}>{t('Comment nous avez-vous connus ?')}</p>
           <div className="mt-3 grid grid-cols-4 gap-1.5">
             {SOURCES.map(({ value, icon: Icon }) => {
               const on = source === value;
@@ -132,10 +143,10 @@ export default function WelcomeNotice() {
                   type="button"
                   aria-pressed={on}
                   onClick={() => setSource(value)}
-                  className={`flex flex-col items-center gap-1 rounded-xl px-1 py-2 text-[10.5px] font-bold leading-tight transition ${on ? 'text-white shadow' : 'bg-slate-50 text-slate-600 ring-1 ring-slate-100 hover:bg-slate-100'}`}
+                  className={`flex flex-col items-center gap-1.5 rounded-xl px-1 py-2.5 text-[11px] font-bold leading-tight transition ${on ? 'text-white shadow' : 'bg-slate-50 text-slate-600 ring-1 ring-slate-100 hover:bg-slate-100'}`}
                   style={on ? { background: GRADIENT } : undefined}
                 >
-                  <Icon className="h-4 w-4" aria-hidden="true" />
+                  <Icon className="h-5 w-5" aria-hidden="true" />
                   <span className="line-clamp-2 text-center">{t(value)}</span>
                 </button>
               );
@@ -163,5 +174,6 @@ export default function WelcomeNotice() {
         </form>
       )}
     </aside>
+    </div>
   );
 }

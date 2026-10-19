@@ -120,11 +120,15 @@ details[open] > summary::after { transform: rotate(45deg); }
   }
 }
 
-/* Welcome notification (WelcomeNotice): slides up from the bottom */
+/* Welcome notification (WelcomeNotice): centred pop-up over a dimmed page */
+@keyframes welcome-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
 @keyframes welcome-in {
-  from { opacity: 0; transform: translateY(16px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(16px) scale(.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 @media (prefers-reduced-motion: reduce) {
-  [class*="welcome-in"] { animation: none !important; }
+  [class*="welcome-in"], [class*="welcome-fade"] { animation: none !important; }
 }
