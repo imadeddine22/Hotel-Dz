@@ -71,11 +71,10 @@ export default function InvestTeaser() {
         </div>
 
         {/* Laptop + scrolling page mock-up (transparent background) */}
-        {/* Picture on a soft brand backdrop: light turquoise panel, glow and a faint Meskan mark */}
-        <div className="relative flex justify-center overflow-hidden rounded-[2rem] px-2 py-8 lg:order-1 lg:px-1 lg:py-10" style={{ background: 'linear-gradient(135deg, #E3F6F5 0%, #F1FAFB 55%, #E6F1F6 100%)' }}>
-          <span aria-hidden="true" className="pointer-events-none absolute -top-16 end-[-10%] h-72 w-72 rounded-full bg-[#0DD5C4]/20 blur-3xl" />
-          <span aria-hidden="true" className="pointer-events-none absolute -bottom-20 start-[-8%] h-64 w-64 rounded-full bg-[#00B3D2]/15 blur-3xl" />
-          <img src="/brand/meskan-mark.png" alt="" aria-hidden="true" className="pointer-events-none absolute -bottom-10 end-6 h-48 w-auto opacity-[0.05]" />
+        {/* Picture with two faint Meskan marks behind it (bottom, and top left) */}
+        <div className="relative flex justify-center px-2 py-8 lg:order-1 lg:px-1 lg:py-10">
+          <img src="/brand/meskan-mark.png" alt="" aria-hidden="true" className="pointer-events-none absolute bottom-0 end-6 h-48 w-auto opacity-[0.05]" />
+          <img src="/brand/meskan-mark.png" alt="" aria-hidden="true" className="pointer-events-none absolute left-0 top-0 h-40 w-auto opacity-[0.05]" />
           <img
             src="/brand/invest-mockup.webp"
             alt={t('Meskan sur ordinateur : la page Investir et les projets')}
