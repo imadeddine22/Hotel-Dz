@@ -26,14 +26,14 @@ export default function InvestTeaser() {
 
   return (
     <section aria-labelledby="invest-teaser-title" className="relative mt-16 overflow-hidden">
-      <div className="relative mx-auto grid max-w-7xl items-center gap-10 px-6 py-14 lg:grid-cols-[1.05fr_1fr] lg:gap-10 xl:gap-14 lg:py-20">
+      <div className="relative mx-auto grid max-w-7xl items-center gap-10 px-6 py-14 lg:grid-cols-[0.85fr_1.15fr] lg:gap-16 xl:gap-24 lg:py-20">
         {/* Text: second column on large screens (the picture comes first) */}
-        <div className="flex flex-col lg:order-2">
+        <div className="flex flex-col lg:order-2 lg:mt-16">
           <div className="flex justify-center">
             <BrandLogo className="h-14 md:h-20" textClassName="text-5xl md:text-7xl !text-[#152A41]" alt="" />
           </div>
 
-          <h2 id="invest-teaser-title" className="mt-6 text-center text-4xl font-black leading-[1.15] lg:text-start lg:text-[2.6rem] xl:text-[3.2rem]" style={{ color: INK }}>
+          <h2 id="invest-teaser-title" className="mt-6 text-center text-4xl font-black leading-[1.15] lg:text-start lg:text-5xl xl:text-[3.5rem]" style={{ color: INK }}>
             <span className="block">{t('Découvrez votre opportunité')}</span>
             <span className="block">
               <span style={{ color: TEAL }}>{t('d’investissement')}</span> {t('en Algérie')}
@@ -71,7 +71,7 @@ export default function InvestTeaser() {
         </div>
 
         {/* Laptop + scrolling page mock-up (transparent background) */}
-        <div className="flex justify-center lg:order-1 lg:-mt-10 lg:self-start">
+        <div className="flex justify-center lg:order-1">
           <img
             src="/brand/invest-mockup.webp"
             alt={t('Meskan sur ordinateur : la page Investir et les projets')}
@@ -79,7 +79,7 @@ export default function InvestTeaser() {
             height={928}
             loading="lazy"
             draggable={false}
-            className="h-auto w-full max-w-[760px] select-none lg:scale-110 drop-shadow-[0_30px_40px_rgba(21,42,65,0.18)]"
+            className="h-auto w-full max-w-[640px] select-none drop-shadow-[0_30px_40px_rgba(21,42,65,0.18)]"
           />
         </div>
       </div>
