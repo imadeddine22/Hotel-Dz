@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowRight, FileText, ShieldCheck, MapPin, ChartNoAxesCombined } from 'lucide-react';
+import { ArrowRight, FileText, ShieldCheck, MapPin, ChartNoAxesCombined, Sprout, Play } from 'lucide-react';
 import Link from '@/components/LocaleLink';
 import BrandLogo from '@/components/BrandLogo';
 import { useT } from '@/lib/i18n/useT';
@@ -8,6 +8,10 @@ import { useT } from '@/lib/i18n/useT';
 // Brand colours (same as the /investir pages)
 const INK = '#152A41';
 const TEAL = '#0CB2AE';
+
+// Photos of the picture side: farmland (back) and a property (front)
+const FARMLAND = 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=900&q=70';
+const PROPERTY = 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=70';
 
 const FEATURES = [
   { icon: FileText, label: 'Des choix variés pour tous' },
@@ -18,8 +22,8 @@ const FEATURES = [
 
 /**
  * Home page, before the footer: invitation to the investment section (/investir).
- * Text and logo are live (translated); the picture is the designer's laptop + page mock-up,
- * cut out of its background (public/brand/invest-mockup.webp, 1123×928, transparent).
+ * Text and logo are live (translated); the picture side is two overlapping photos (farmland +
+ * a property) with a teal card and a play button, as in the designer's mock-up.
  */
 export default function InvestTeaser() {
   const { t } = useT();
@@ -70,20 +74,41 @@ export default function InvestTeaser() {
           </Link>
         </div>
 
-        {/* Laptop + scrolling page mock-up (transparent background) */}
-        {/* Picture with two faint Meskan marks behind it (bottom, and top left) */}
-        <div className="relative flex justify-center px-2 py-8 lg:order-1 lg:px-1 lg:py-10">
-          <img src="/brand/meskan-mark.png" alt="" aria-hidden="true" className="pointer-events-none absolute bottom-0 end-6 h-48 w-auto opacity-[0.05]" />
-          <img src="/brand/meskan-mark.png" alt="" aria-hidden="true" className="pointer-events-none absolute left-0 top-0 h-40 w-auto opacity-[0.05]" />
-          <img
-            src="/brand/invest-mockup.webp"
-            alt={t('Meskan sur ordinateur : la page Investir et les projets')}
-            width={1123}
-            height={928}
-            loading="lazy"
-            draggable={false}
-            className="relative h-auto w-full max-w-[640px] select-none drop-shadow-[0_30px_40px_rgba(21,42,65,0.18)]"
-          />
+        {/* Two photos, as in the design: farmland at the back, a property in front,
+            a teal card and a play button (→ the listings' videos) */}
+        <div className="relative mx-auto w-full max-w-[560px] lg:order-1" dir="ltr">
+          <img src="/brand/meskan-mark.png" alt="" aria-hidden="true" className="pointer-events-none absolute -bottom-6 end-6 h-48 w-auto opacity-[0.05]" />
+          <img src="/brand/meskan-mark.png" alt="" aria-hidden="true" className="pointer-events-none absolute -left-6 -top-6 h-40 w-auto opacity-[0.05]" />
+
+          <div className="relative aspect-[1/0.92]">
+            {/* farmland (back) */}
+            <div className="absolute left-[6%] top-0 h-[74%] w-[62%] overflow-hidden rounded-[1.75rem] shadow-xl">
+              <img src={FARMLAND} alt={t('Terre agricole à investir')} loading="lazy" className="h-full w-full object-cover" />
+            </div>
+            {/* property (front) */}
+            <div className="absolute bottom-0 right-0 h-[52%] w-[58%] overflow-hidden rounded-[1.75rem] border-[6px] border-white shadow-2xl">
+              <img src={PROPERTY} alt={t('Bien immobilier à investir')} loading="lazy" className="h-full w-full object-cover" />
+            </div>
+            {/* teal card */}
+            <div className="absolute right-[2%] top-[14%] flex items-center gap-3 rounded-2xl px-4 py-3 text-white shadow-lg" style={{ background: `linear-gradient(135deg, #0DD5C4, #00B3D2)` }} dir="auto">
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-white/60">
+                <Sprout className="h-5 w-5" aria-hidden="true" />
+              </span>
+              <span className="leading-tight">
+                <span className="block text-sm font-bold">{t('Terre agricole')}</span>
+                <span className="block text-xs text-white/85">{t('Terrains et biens à investir')}</span>
+              </span>
+            </div>
+            {/* play button: the listings' videos */}
+            <Link
+              href="/reels"
+              aria-label={t('Voir les vidéos des biens')}
+              className="absolute bottom-[14%] left-0 grid h-20 w-20 place-items-center rounded-full border-[6px] border-white text-white shadow-xl transition hover:scale-105"
+              style={{ background: INK }}
+            >
+              <Play className="ms-1 h-7 w-7 fill-white" aria-hidden="true" />
+            </Link>
+          </div>
         </div>
       </div>
     </section>
