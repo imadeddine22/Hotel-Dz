@@ -27,10 +27,10 @@ export default function HomeBanner() {
       style={{ background: COLORS.panel }}
     >
       {/* dir=ltr: illustration on the left and text on the right in every language; the text gets the page direction back */}
-      <div dir="ltr" className="lg:grid lg:grid-cols-[5fr_6fr] lg:items-center">
+      <div dir="ltr" className="lg:grid lg:grid-cols-2 lg:items-center">
       {/* multiply: the illustration's white background takes the panel's colour; the mask fades its off-white edges */}
-      <div className="flex items-center justify-center px-6 pt-8 lg:p-8" aria-hidden="true">
-        <img src="/brand/home-sale-illustration.jpg" alt="" loading="lazy" draggable={false} className="max-h-60 w-auto select-none object-contain mix-blend-multiply [mask-image:radial-gradient(ellipse_at_center,#000_62%,transparent_78%)] lg:max-h-[22rem]" />
+      <div className="flex items-center justify-center px-4 pt-6 lg:p-4" aria-hidden="true">
+        <img src="/brand/home-sale-illustration.jpg" alt="" loading="lazy" draggable={false} className="max-h-72 w-auto select-none object-contain mix-blend-multiply [mask-image:radial-gradient(ellipse_at_center,#000_62%,transparent_78%)] lg:max-h-[27rem]" />
       </div>
 
       {/* Live text panel (translated) */}
