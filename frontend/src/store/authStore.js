@@ -51,6 +51,14 @@ export const useAuthStore = create((set, get) => ({
     return data.user;
   },
 
+  /** Open another space (customer, owner, seller, investor) on the same account. */
+  switchSpace: async (role) => {
+    if (get().user?.role === role) return get().user;
+    const { data } = await api.put('/auth/space', { role });
+    set({ user: data.user });
+    return data.user;
+  },
+
   logout: async () => {
     try {
       await api.post('/auth/logout');

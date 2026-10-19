@@ -265,3 +265,15 @@ export async function findOrCreateGoogleUser(profile, role = 'customer') {
   });
   return { user, created: true };
 }
+
+// PUT /auth/space — switch the account to another space (traveller, host, seller, investor).
+// Everyone signs up as a traveller and may move freely between spaces; listings stay attached to the account.
+export const switchSpace = async (req, res, next) => {
+  try {
+    if (req.user.role === 'admin') return res.status(403).json({ success: false, message: 'Admins keep their role' });
+    const user = await User.findByIdAndUpdate(req.user._id, { role: req.body.role }, { new: true });
+    res.json({ success: true, user: sanitize(user) });
+  } catch (err) {
+    next(err);
+  }
+};

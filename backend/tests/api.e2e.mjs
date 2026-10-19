@@ -1088,6 +1088,24 @@ describe('Investor space');
   check('admin stats count investors', (stats.stats?.investors ?? stats.investors) >= 1);
 }
 
+describe('One account, every space (switch freely)');
+{
+  const me = await register('customer');
+  expectStatus('traveller cannot open the seller space yet', await req('GET', '/seller/stats', { token: me.token }), 403);
+  const toSeller = await req('PUT', '/auth/space', { token: me.token, body: { role: 'seller' } });
+  check('switch to seller', toSeller.status === 200 && toSeller.data.user?.role === 'seller');
+  expectStatus('…the seller space opens with the same token', await req('GET', '/seller/stats', { token: me.token }), 200);
+  await req('PUT', '/auth/space', { token: me.token, body: { role: 'investor' } });
+  expectStatus('switch to investor → investor space', await req('GET', '/investor/dashboard', { token: me.token }), 200);
+  await req('PUT', '/auth/space', { token: me.token, body: { role: 'owner' } });
+  expectStatus('switch to host → host space', await req('GET', '/owner/stats', { token: me.token }), 200);
+  expectStatus('cannot switch to admin', await req('PUT', '/auth/space', { token: me.token, body: { role: 'admin' } }), 400);
+  expectStatus('visitor cannot switch', await req('PUT', '/auth/space', { body: { role: 'owner' } }), 401);
+  const admin = await login('admin@hotelsdz.dz', 'admin123');
+  expectStatus('admin keeps the admin role', await req('PUT', '/auth/space', { token: admin, body: { role: 'customer' } }), 403);
+  check('back to traveller', (await req('PUT', '/auth/space', { token: me.token, body: { role: 'customer' } })).data.user?.role === 'customer');
+}
+
 describe('No online payment');
 {
   const r = await fetch(`${API}/payments/webhook`, { method: 'POST', body: '{}' });

@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from '@/components/LocaleLink';
 import BrandLogo from '@/components/BrandLogo';
 import { useAuthStore } from '@/store/authStore';
+import { spaceHome } from '@/lib/spaces';
 import GoogleSignIn from '@/components/GoogleSignIn';
 
 import { useT } from '@/lib/i18n/useT';
@@ -32,10 +33,7 @@ function LoginForm() {
 
   const goOn = (user) => {
     if (redirect) router.push(redirect);
-    else if (user.role === 'admin') router.push('/admin');
-    else if (user.role === 'owner') router.push('/owner/dashboard');
-    else if (user.role === 'seller') router.push('/seller/dashboard');
-    else if (user.role === 'investor') router.push('/investor/dashboard');
+    else if (user.role !== 'customer') router.push(spaceHome(user.role));
     else router.push('/');
   };
 

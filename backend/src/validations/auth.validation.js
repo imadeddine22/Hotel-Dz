@@ -34,3 +34,7 @@ export const googleAuthSchema = Joi.object({
   credential: Joi.string().max(4096).required(),
   role: Joi.string().valid('customer', 'owner', 'seller', 'investor').default('customer'),
 });
+
+export const switchSpaceSchema = Joi.object({
+  role: Joi.string().valid('customer', 'owner', 'seller', 'investor').required(),
+});

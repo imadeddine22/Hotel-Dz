@@ -53,7 +53,7 @@ export default function ReelsTeaser() {
 
   if (reels === null) return null; // loading
   const empty = reels.length === 0;
-  const publishHref = OWNER_LISTINGS[user?.role] || '/register?role=owner';
+  const publishHref = OWNER_LISTINGS[user?.role] || (user ? '/owner/my-hotels' : '/register?role=owner');
 
   return (
     <section className="relative overflow-hidden py-12 lg:py-20" style={{ background: COLORS.bg }} aria-labelledby="reels-teaser">

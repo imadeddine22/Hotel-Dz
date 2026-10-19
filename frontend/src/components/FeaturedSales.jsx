@@ -14,7 +14,6 @@ export default function FeaturedSales({ selectedCity }) {
   const [loading, setLoading] = useState(true);
   const user = useAuthStore((s) => s.user);
   const { t, lang } = useT();
-  const isSeller = user?.role === 'seller';
 
   // Newest approved sale listings, filtered by the selected wilaya on the server
   useEffect(() => {
@@ -57,7 +56,7 @@ export default function FeaturedSales({ selectedCity }) {
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Link href={user ? (user.role === 'seller' ? '/seller/my-listings?new=1' : '/seller/dashboard') : '/register?role=seller'} style={{
+          <Link href={user ? '/seller/my-listings?new=1' : '/register?role=seller'} style={{
             display: 'flex', alignItems: 'center', gap: 6, borderRadius: 999,
             background: 'linear-gradient(135deg, #1e293b, #0f172a)',
             padding: '8px 20px', fontSize: 13, fontWeight: 700,

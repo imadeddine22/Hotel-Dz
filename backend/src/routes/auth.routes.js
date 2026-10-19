@@ -10,6 +10,7 @@ import {
   googleAuth,
   updateAvatar,
   removeAvatar,
+  switchSpace,
 } from '../controllers/auth.controller.js';
 import { protect } from '../middlewares/auth.middleware.js';
 import { validate } from '../middlewares/validate.middleware.js';
@@ -22,6 +23,7 @@ import {
   forgotPasswordSchema,
   resetPasswordSchema,
   googleAuthSchema,
+  switchSpaceSchema,
 } from '../validations/auth.validation.js';
 
 const router = Router();
@@ -35,6 +37,7 @@ router.post('/google', loginLimiter, validate(googleAuthSchema), googleAuth);
 router.get('/me', protect, getMe);
 router.put('/avatar', protect, avatarUpload, updateAvatar);
 router.delete('/avatar', protect, removeAvatar);
+router.put('/space', protect, validate(switchSpaceSchema), switchSpace);
 router.put('/update-profile', protect, validate(updateProfileSchema), updateProfile);
 
 export default router;

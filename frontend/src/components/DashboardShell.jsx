@@ -6,10 +6,10 @@ import BrandLogo from '@/components/BrandLogo';
 import { usePathname, useRouter } from 'next/navigation';
 import { LayoutDashboard, Hotel, CalendarCheck, Users, CheckSquare, LogOut, Home, Mail, Globe, Tag, MessageCircle, Send, Bookmark, Landmark } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
-import Avatar from '@/components/Avatar';
+import AccountMenu from '@/components/AccountMenu';
+import { SPACE_ROLES } from '@/lib/spaces';
 
 import { useT } from '@/lib/i18n/useT';
-const ROLE_LABELS = { customer: 'Client', owner: 'Hôtelier', seller: 'Vendeur', investor: 'Investisseur', admin: 'Administrateur' };
 
 const MENUS = {
   owner: [
@@ -49,15 +49,20 @@ export default function DashboardShell({ role, title, children }) {
   const { t } = useT();
   const router = useRouter();
   const pathname = usePathname();
-  const { user, loading, logout } = useAuthStore();
+  const { user, loading, logout, switchSpace } = useAuthStore();
+  // Opening another space's page (e.g. a link to /seller/dashboard) switches the account to that space
+  const otherSpace = Boolean(user) && user.role !== role && user.role !== 'admin';
 
   useEffect(() => {
     if (loading) return;
     if (!user) router.replace('/login?redirect=' + pathname);
-    else if (user.role !== role && user.role !== 'admin') router.replace('/');
-  }, [user, loading, role, router, pathname]);
+    else if (otherSpace) {
+      if (SPACE_ROLES.includes(role)) switchSpace(role).catch(() => router.replace('/'));
+      else router.replace('/');
+    }
+  }, [user, loading, role, router, pathname, otherSpace, switchSpace]);
 
-  if (loading || !user) {
+  if (loading || !user || otherSpace) {
     return <div className="grid min-h-screen place-items-center text-gray-400 bg-[#f8f9fc]">{t('Loading...')}</div>;
   }
 
@@ -114,14 +119,8 @@ export default function DashboardShell({ role, title, children }) {
           {/* Search box and notification bell removed: they were placeholders with no behaviour */}
           <div className="flex items-center gap-6 ml-auto">
 
-            {/* User Profile */}
-            <Link href="/profile" title={t('Mon profil et ma photo')} className="flex items-center gap-3 rounded-full bg-white p-1.5 pe-4 shadow-sm border border-gray-50 hover:shadow-md transition-shadow">
-              <Avatar user={user} className="h-10 w-10 rounded-full text-sm" />
-              <div className="hidden md:block">
-                <p className="text-sm font-bold text-gray-800 leading-tight">{user.fullName}</p>
-                <p className="text-xs font-medium text-gray-400 capitalize leading-tight">{t(ROLE_LABELS[user.role] || user.role)}</p>
-              </div>
-            </Link>
+            {/* Account menu: profile, bookings and the other spaces (host, seller, investor…) */}
+            <AccountMenu />
           </div>
         </header>
 

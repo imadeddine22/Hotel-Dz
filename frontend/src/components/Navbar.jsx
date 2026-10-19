@@ -12,6 +12,9 @@ import { useT } from '@/lib/i18n/useT';
 import { useUrlLang } from '@/components/UrlLang';
 import { localePath, splitLocale } from '@/lib/i18n/locale';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
+import AccountMenu from '@/components/AccountMenu';
+import SpaceSwitcher from '@/components/SpaceSwitcher';
+import { spaceHome } from '@/lib/spaces';
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
@@ -85,8 +88,7 @@ export default function Navbar() {
     else window.location.reload();
   };
 
-  const dashHref =
-    user?.role === 'admin' ? '/admin' : user?.role === 'owner' ? '/owner/dashboard' : user?.role === 'seller' ? '/seller/dashboard' : user?.role === 'investor' ? '/investor/dashboard' : '/my-bookings';
+  const dashHref = spaceHome(user?.role);
 
   const navLinks = [
     { label: t.navHome, href: '/' },
@@ -176,14 +178,18 @@ export default function Navbar() {
             </Link>
           )}
 
-          {/* User Account / Espace */}
-          <Link
-            href={user ? dashHref : '/login'}
-            className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2.5 text-sm font-bold text-gray-700 hover:bg-gray-50 transition"
-          >
-            {user ? <Avatar user={user} className="-ms-2 h-7 w-7 rounded-full text-xs" initialClassName="bg-brand-500 text-white" /> : <User className="h-4 w-4 text-brand-500" />}
-            {user ? t.mySpace : t.login}
-          </Link>
+          {/* User Account: menu with the account's spaces (traveller, host, seller, investor) */}
+          {user ? (
+            <AccountMenu />
+          ) : (
+            <Link
+              href="/login"
+              className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2.5 text-sm font-bold text-gray-700 hover:bg-gray-50 transition"
+            >
+              <User className="h-4 w-4 text-brand-500" />
+              {t.login}
+            </Link>
+          )}
           {user && (
             <button
               type="button"
@@ -312,13 +318,15 @@ export default function Navbar() {
           </Link>
 
           <div className="pt-4 border-t border-gray-100 flex flex-col gap-3">
-            <Link
-              href="/register?role=owner"
-              onClick={() => setOpen(false)}
-              className="w-full rounded-xl bg-brand-500 py-3 text-center text-sm font-bold text-white shadow-sm"
-            >
-              {t.suggestHotel}
-            </Link>
+            {!user && (
+              <Link
+                href="/register?role=owner"
+                onClick={() => setOpen(false)}
+                className="w-full rounded-xl bg-brand-500 py-3 text-center text-sm font-bold text-white shadow-sm"
+              >
+                {t.suggestHotel}
+              </Link>
+            )}
             <Link
               href={user ? dashHref : '/login'}
               onClick={() => setOpen(false)}
@@ -327,6 +335,7 @@ export default function Navbar() {
               {user && <Avatar user={user} className="h-7 w-7 rounded-full text-xs" initialClassName="bg-brand-500 text-white" />}
               {user ? t.mySpace : t.login}
             </Link>
+            {user && <SpaceSwitcher onDone={() => setOpen(false)} />}
             {user && (
               <button
                 type="button"
