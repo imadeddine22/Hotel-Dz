@@ -1,7 +1,7 @@
 import { SITE_URL } from '@/lib/seo';
 
 const PRIVATE = [
-  '/admin', '/owner', '/seller', '/booking',
+  '/admin', '/owner', '/seller', '/investor', '/booking',
   '/my-bookings', '/messages', '/favorites', '/profile', '/login', '/register', '/forgot-password', '/reset-password', '/projects',
 ];
 

@@ -258,7 +258,7 @@ export async function findOrCreateGoogleUser(profile, role = 'customer') {
     email: profile.email,
     // random password: the user can set one later with "forgot password"
     password: crypto.randomBytes(24).toString('hex'),
-    role: ['customer', 'owner', 'seller'].includes(role) ? role : 'customer',
+    role: ['customer', 'owner', 'seller', 'investor'].includes(role) ? role : 'customer',
     googleId: profile.googleId,
     isVerified: true,
     avatar: { url: profile.picture || '', publicId: '' },

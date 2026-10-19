@@ -11,10 +11,11 @@ const ROLE_COLORS = {
   admin: '#8b5cf6',
   owner: '#3b82f6',
   seller: '#10b981',
+  investor: '#00B3D2',
   customer: '#64748b',
 };
 
-const ROLE_LABELS = { admin: 'Admin', owner: 'Hôtelier', seller: 'Vendeur', customer: 'Client' };
+const ROLE_LABELS = { admin: 'Admin', owner: 'Hôtelier', seller: 'Vendeur', investor: 'Investisseur', customer: 'Client' };
 
 export default function AdminUsersPage() {
   const { t } = useT();
@@ -80,6 +81,7 @@ export default function AdminUsersPage() {
               { label: 'Clients', value: 'customer' },
               { label: 'Hôteliers', value: 'owner' },
               { label: 'Vendeurs', value: 'seller' },
+              { label: 'Investisseurs', value: 'investor' },
               { label: 'Admins', value: 'admin' },
             ].map((f) => (
               <button

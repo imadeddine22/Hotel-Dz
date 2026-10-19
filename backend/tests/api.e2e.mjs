@@ -1053,6 +1053,41 @@ describe('Investment projects (land or property looking for an investor)');
   expectStatus('…gone', await req('GET', `/projects/${pid}`), 404);
 }
 
+describe('Investor space');
+{
+  const admin = await login('admin@hotelsdz.dz', 'admin123');
+  const inv = await register('investor');
+  check('anyone can sign up as an investor', inv.status === 201 && inv.user?.role === 'investor', String(inv.status));
+  const cust = await register('customer');
+  expectStatus('customer has no investor space', await req('GET', '/investor/dashboard', { token: cust.token }), 403);
+  expectStatus('visitor has no investor space', await req('GET', '/investor/dashboard'), 401);
+
+  const empty = (await req('GET', '/investor/dashboard', { token: inv.token })).data;
+  check('new investor: no preferences → every published project matches', empty.stats?.matches === 4 && empty.stats.requests === 0 && empty.stats.saved === 0);
+
+  expectStatus('unknown property type in preferences rejected', await req('PUT', '/investor/preferences', { token: inv.token, body: { assetTypes: ['Bateau'] } }), 400);
+  await req('PUT', '/investor/preferences', { token: inv.token, body: { wilayas: ['Alger'], assetTypes: ['Local commercial'], projectTypes: [], maxBudget: 30000000 } });
+  const prefs = (await req('GET', '/investor/dashboard', { token: inv.token })).data;
+  check('"projects for you" follow the preferences', prefs.stats.matches === 1 && prefs.matches[0]?.assetType === 'Local commercial' && prefs.prefs.wilayas[0] === 'Alger');
+
+  const shop = prefs.matches[0];
+  expectStatus('save a published project', await req('POST', `/investor/saved/${shop._id}`, { token: inv.token }), 200);
+  await req('POST', `/investor/saved/${shop._id}`, { token: inv.token }); // twice → still one
+  const saved = (await req('GET', '/investor/saved', { token: inv.token })).data;
+  check('saved list (no duplicates)', saved.projects.length === 1 && saved.ids.length === 1);
+  const pendingSeed = (await req('GET', '/admin/projects', { token: admin })).data.projects.find((p) => p.status === 'pending');
+  if (pendingSeed) expectStatus('cannot save an unpublished project', await req('POST', `/investor/saved/${pendingSeed._id}`, { token: inv.token }), 404);
+  await req('DELETE', `/investor/saved/${shop._id}`, { token: inv.token });
+  check('unsave', (await req('GET', '/investor/saved', { token: inv.token })).data.projects.length === 0);
+
+  await req('POST', `/projects/${shop._id}/interest`, { token: inv.token, body: { name: 'Test investor', phone: '0555000000', message: 'Je suis intéressé par ce local.' } });
+  const sent = (await req('GET', '/investor/requests', { token: inv.token })).data.requests;
+  check('the investor sees the request they sent, with the project', sent.length === 1 && sent[0].project?._id === shop._id && sent[0].seen === false);
+  check('investor can book a stay too (not refused by role)', (await req('POST', '/bookings', { token: inv.token, body: {} })).status !== 403);
+  const stats = (await req('GET', '/admin/stats', { token: admin })).data;
+  check('admin stats count investors', (stats.stats?.investors ?? stats.investors) >= 1);
+}
+
 describe('No online payment');
 {
   const r = await fetch(`${API}/payments/webhook`, { method: 'POST', body: '{}' });

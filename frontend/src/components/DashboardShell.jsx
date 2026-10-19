@@ -4,11 +4,13 @@ import { useEffect } from 'react';
 import Link from '@/components/LocaleLink';
 import BrandLogo from '@/components/BrandLogo';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, Hotel, CalendarCheck, Users, CheckSquare, LogOut, Home, Mail, Globe, Tag, MessageCircle } from 'lucide-react';
+import { LayoutDashboard, Hotel, CalendarCheck, Users, CheckSquare, LogOut, Home, Mail, Globe, Tag, MessageCircle, Send, Bookmark, Landmark } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import Avatar from '@/components/Avatar';
 
 import { useT } from '@/lib/i18n/useT';
+const ROLE_LABELS = { customer: 'Client', owner: 'Hôtelier', seller: 'Vendeur', investor: 'Investisseur', admin: 'Administrateur' };
+
 const MENUS = {
   owner: [
     { href: '/owner/dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
@@ -21,6 +23,13 @@ const MENUS = {
   seller: [
     { href: '/seller/dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
     { href: '/seller/my-listings', label: 'Mes annonces', icon: Tag },
+    { href: '/', label: 'Site public', icon: Globe },
+  ],
+  investor: [
+    { href: '/investor/dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
+    { href: '/investor/requests', label: 'Mes demandes', icon: Send },
+    { href: '/investor/saved', label: 'Projets sauvegardés', icon: Bookmark },
+    { href: '/investir', label: 'Explorer les projets', icon: Landmark },
     { href: '/', label: 'Site public', icon: Globe },
   ],
   admin: [
@@ -110,7 +119,7 @@ export default function DashboardShell({ role, title, children }) {
               <Avatar user={user} className="h-10 w-10 rounded-full text-sm" />
               <div className="hidden md:block">
                 <p className="text-sm font-bold text-gray-800 leading-tight">{user.fullName}</p>
-                <p className="text-xs font-medium text-gray-400 capitalize leading-tight">{t(user.role)}</p>
+                <p className="text-xs font-medium text-gray-400 capitalize leading-tight">{t(ROLE_LABELS[user.role] || user.role)}</p>
               </div>
             </Link>
           </div>

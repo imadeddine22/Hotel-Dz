@@ -27,13 +27,14 @@ export default function RegisterPage() {
   // (Read from window rather than useSearchParams to keep the page statically renderable.)
   useEffect(() => {
     const role = new URLSearchParams(window.location.search).get('role');
-    if (['customer', 'owner', 'seller'].includes(role)) setForm((f) => ({ ...f, role }));
+    if (['customer', 'owner', 'seller', 'investor'].includes(role)) setForm((f) => ({ ...f, role }));
   }, []);
 
   const goOn = (user) => {
     if (user.role === 'admin') router.push('/admin');
     else if (user.role === 'owner') router.push('/owner/dashboard');
     else if (user.role === 'seller') router.push('/seller/dashboard');
+    else if (user.role === 'investor') router.push('/investor/dashboard');
     else router.push('/');
   };
 
@@ -64,11 +65,12 @@ export default function RegisterPage() {
         )}
 
         {/* Role switch */}
-        <div className="mb-5 grid grid-cols-3 gap-2">
+        <div className="mb-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
           {[
             { v: 'customer', label: 'Voyageur', desc: 'Réserver & louer', icon: '🧳' },
             { v: 'owner', label: 'Hôtelier', desc: 'Hôtels & locations', icon: '🏨' },
             { v: 'seller', label: 'Vendeur', desc: 'Vendre un bien', icon: '🏠' },
+            { v: 'investor', label: 'Investisseur', desc: 'Financer des projets', icon: '💼' },
           ].map((r) => (
             <button
               key={r.v}

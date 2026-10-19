@@ -13,8 +13,8 @@ import { protect, authorize } from '../middlewares/auth.middleware.js';
 
 const router = Router();
 
-router.post('/', protect, authorize('customer', 'owner', 'seller'), createBooking);
-router.post('/house', protect, authorize('customer', 'owner', 'seller'), createHouseBooking);
+router.post('/', protect, authorize('customer', 'owner', 'seller', 'investor'), createBooking);
+router.post('/house', protect, authorize('customer', 'owner', 'seller', 'investor'), createHouseBooking);
 router.get('/my', protect, getMyBookings);
 router.get('/owner', protect, authorize('owner', 'admin'), getOwnerBookings);
 router.put('/:id/cancel', protect, cancelBooking);

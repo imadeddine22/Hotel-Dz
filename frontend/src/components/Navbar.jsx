@@ -86,7 +86,7 @@ export default function Navbar() {
   };
 
   const dashHref =
-    user?.role === 'admin' ? '/admin' : user?.role === 'owner' ? '/owner/dashboard' : user?.role === 'seller' ? '/seller/dashboard' : '/my-bookings';
+    user?.role === 'admin' ? '/admin' : user?.role === 'owner' ? '/owner/dashboard' : user?.role === 'seller' ? '/seller/dashboard' : user?.role === 'investor' ? '/investor/dashboard' : '/my-bookings';
 
   const navLinks = [
     { label: t.navHome, href: '/' },

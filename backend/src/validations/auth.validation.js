@@ -5,8 +5,8 @@ export const registerSchema = Joi.object({
   email: Joi.string().email().required(),
   password: Joi.string().min(6).max(128).required(),
   phone: Joi.string().allow('').max(20),
-  // On registration only customer or owner can be chosen (never admin)
-  role: Joi.string().valid('customer', 'owner', 'seller').default('customer'),
+  // On registration admin can never be chosen
+  role: Joi.string().valid('customer', 'owner', 'seller', 'investor').default('customer'),
 });
 
 export const loginSchema = Joi.object({
@@ -32,5 +32,5 @@ export const resetPasswordSchema = Joi.object({
 
 export const googleAuthSchema = Joi.object({
   credential: Joi.string().max(4096).required(),
-  role: Joi.string().valid('customer', 'owner', 'seller').default('customer'),
+  role: Joi.string().valid('customer', 'owner', 'seller', 'investor').default('customer'),
 });

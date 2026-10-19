@@ -21,7 +21,7 @@ const userSchema = new mongoose.Schema(
     phone: { type: String, trim: true },
     role: {
       type: String,
-      enum: ['customer', 'owner', 'seller', 'admin'],
+      enum: ['customer', 'owner', 'seller', 'investor', 'admin'],
       default: 'customer',
     },
     avatar: {
@@ -39,6 +39,14 @@ const userSchema = new mongoose.Schema(
     passwordChangedAt: { type: Date, select: false },
     favoriteHotels: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Hotel' }],
     favoriteHouses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'House' }],
+    // Investors: saved investment projects and what they look for ("projects for you")
+    savedProjects: [{ type: mongoose.Schema.Types.ObjectId, ref: 'InvestmentProject' }],
+    investorPrefs: {
+      wilayas: [String],
+      assetTypes: [String],
+      projectTypes: [String],
+      maxBudget: { type: Number, default: 0 }, // DZD, 0 = no limit
+    },
   },
   { timestamps: true }
 );

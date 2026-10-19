@@ -87,6 +87,15 @@ export default function InvestPage() {
               <Search className="h-5 w-5" aria-hidden="true" /> {t('Voir les projets')}
             </a>
           </div>
+          {!user ? (
+            <Link href="/register?role=investor" className="mt-5 inline-block text-sm font-semibold text-white/85 underline-offset-4 hover:underline">
+              {t('Vous êtes investisseur ? Créez votre espace gratuit')}
+            </Link>
+          ) : user.role === 'investor' ? (
+            <Link href="/investor/dashboard" className="mt-5 inline-block text-sm font-semibold text-white/85 underline-offset-4 hover:underline">
+              {t('Mon espace investisseur')}
+            </Link>
+          ) : null}
         </div>
       </section>
 

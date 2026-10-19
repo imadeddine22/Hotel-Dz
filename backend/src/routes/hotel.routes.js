@@ -35,7 +35,7 @@ router.post(
 
 // Hotel-scoped reviews
 router.get('/:hotelId/reviews', getHotelReviews);
-router.post('/:hotelId/reviews', protect, authorize('customer', 'owner', 'seller'), addReview);
+router.post('/:hotelId/reviews', protect, authorize('customer', 'owner', 'seller', 'investor'), addReview);
 
 router.get('/:id', optionalAuth, getHotel);
 

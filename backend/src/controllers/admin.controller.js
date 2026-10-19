@@ -89,10 +89,11 @@ export const toggleBlockUser = async (req, res, next) => {
 // GET /admin/stats  — enhanced with chart data
 export const getStats = async (req, res, next) => {
   try {
-    const [users, owners, sellers, hotels, pendingHotels, bookings, paidPayments, reviews, houses, pendingHouses, sales, pendingSales] = await Promise.all([
+    const [users, owners, sellers, investors, hotels, pendingHotels, bookings, paidPayments, reviews, houses, pendingHouses, sales, pendingSales] = await Promise.all([
       User.countDocuments(),
       User.countDocuments({ role: 'owner' }),
       User.countDocuments({ role: 'seller' }),
+      User.countDocuments({ role: 'investor' }),
       Hotel.countDocuments({ status: 'approved' }),
       Hotel.countDocuments({ status: 'pending' }),
       Booking.countDocuments(),
@@ -172,6 +173,7 @@ export const getStats = async (req, res, next) => {
         users,
         owners,
         sellers,
+        investors,
         hotels,
         pendingHotels,
         houses,

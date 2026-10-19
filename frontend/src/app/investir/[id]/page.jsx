@@ -8,6 +8,7 @@ import Footer from '@/components/Footer';
 import Link from '@/components/LocaleLink';
 import Avatar from '@/components/Avatar';
 import ShareButton from '@/components/ShareButton';
+import SaveProjectButton from '@/components/SaveProjectButton';
 import LocationMap from '@/components/LocationMap';
 import api, { getImageUrl } from '@/lib/api';
 import { formatDZD } from '@/lib/data';
@@ -94,7 +95,8 @@ export default function ProjectPage() {
             <div className="overflow-hidden rounded-3xl bg-white shadow-card ring-1 ring-black/5">
               <div className="relative aspect-[16/9] bg-slate-100">
                 {images[photo] && <img src={images[photo]} alt={p.title} className="h-full w-full object-cover" />}
-                <div className="absolute end-4 top-4">
+                <div className="absolute end-4 top-4 flex flex-wrap justify-end gap-2">
+                  <SaveProjectButton projectId={p._id} />
                   <ShareButton title={`${p.title} — ${t(p.city)}, ${t(p.wilaya)}`} text={t('Projet à la recherche d’un investisseur sur Meskan : {title}', { title: p.title })} />
                 </div>
               </div>

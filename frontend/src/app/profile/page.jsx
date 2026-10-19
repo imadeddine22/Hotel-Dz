@@ -10,7 +10,7 @@ import api from '@/lib/api';
 import ProfilePhoto from '@/components/ProfilePhoto';
 
 import { useT } from '@/lib/i18n/useT';
-const ROLE_LABELS = { customer: 'Client', owner: 'Hôtelier', seller: 'Vendeur', admin: 'Administrateur' };
+const ROLE_LABELS = { customer: 'Client', owner: 'Hôtelier', seller: 'Vendeur', investor: 'Investisseur', admin: 'Administrateur' };
 
 export default function ProfilePage() {
   const { t } = useT();

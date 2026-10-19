@@ -213,9 +213,14 @@ export const seedDatabase = async () => {
       images: [img(p.photo)], contactPhone: p.owner.phone || '', contactEmail: p.owner.email, status: p.status,
     }));
   }
+  const investor = await User.create({
+    fullName: 'Karim Investissements', email: 'investisseur@hotelsdz.dz', password: 'investor123', phone: '0661234567', role: 'investor', isVerified: true,
+    savedProjects: [projects[1]._id],
+    investorPrefs: { wilayas: ['Alger', 'Tipaza', 'Oran'], assetTypes: [], projectTypes: ['Commercial', 'Hôtel et tourisme'], maxBudget: 500000000 },
+  });
   await InvestorInterest.create({
-    project: projects[0]._id, owner: seller._id, investor: customers[2]._id, name: customers[2].fullName, phone: '0661 23 45 67',
-    email: customers[2].email, amount: 150000000, message: 'Bonjour, je suis promoteur à Alger et votre terrain m’intéresse. Je peux financer une première tranche. Pouvons-nous visiter ?',
+    project: projects[0]._id, owner: seller._id, investor: investor._id, name: investor.fullName, phone: '0661 23 45 67',
+    email: investor.email, amount: 15000000, message: 'Bonjour, je finance des restaurants à Alger et votre local m’intéresse. Pouvons-nous le visiter cette semaine ?',
   });
   await InvestmentProject.updateOne({ _id: projects[0]._id }, { $inc: { interestsCount: 1 } });
   console.log(`💼 Projects: ${PROJECTS.length} (3 published, 1 waiting), 1 investor request`);
@@ -344,7 +349,8 @@ export const seedDatabase = async () => {
   console.log('   Admin   →  admin@hotelsdz.dz  /  admin123');
   console.log('   Hôtelier→  owner@hotelsdz.dz  /  owner123');
   console.log('   Client  →  sara@example.com   /  pass123');
-  console.log('   Vendeur →  vendeur@hotelsdz.dz / seller123\n');
+  console.log('   Vendeur →  vendeur@hotelsdz.dz / seller123');
+  console.log('   Investisseur → investisseur@hotelsdz.dz / investor123\n');
 };
 
 // CLI entry: `npm run seed` connects to the configured DB, seeds, disconnects.

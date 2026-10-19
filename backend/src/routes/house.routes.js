@@ -14,7 +14,7 @@ router.get('/my/list', protect, authorize('owner', 'admin'), getMyHouses);
 
 // House reviews (guests who stayed)
 router.get('/:houseId/reviews', getReviews);
-router.post('/:houseId/reviews', protect, authorize('customer', 'owner', 'seller'), addReview);
+router.post('/:houseId/reviews', protect, authorize('customer', 'owner', 'seller', 'investor'), addReview);
 
 // Detail
 router.get('/:id', optionalAuth, getHouse);
