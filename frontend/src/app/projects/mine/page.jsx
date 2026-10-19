@@ -9,12 +9,12 @@ import Link from '@/components/LocaleLink';
 import api, { getImageUrl } from '@/lib/api';
 import { formatDZD } from '@/lib/data';
 import { useWilayas } from '@/hooks/useWilayas';
-import { PROJECT_TYPES, PARTNERSHIP_TYPES, LAND_DOCUMENTS, PROJECT_COLORS, projectGradient, formatArea } from '@/lib/projects';
+import { ASSET_TYPES, PROJECT_TYPES, PARTNERSHIP_TYPES, LAND_DOCUMENTS, PROJECT_COLORS, projectGradient, formatArea } from '@/lib/projects';
 import { useAuthStore } from '@/store/authStore';
 import { useT } from '@/lib/i18n/useT';
 import { dateLocale } from '@/lib/i18n/format';
 
-const EMPTY = { title: '', description: '', projectType: 'Résidentiel', partnership: 'À discuter', wilaya: '', city: '', address: '', area: '', landDocument: 'Acte notarié', budget: '', ownerShare: '', contactPhone: '', contactEmail: '' };
+const EMPTY = { assetType: 'Terrain', title: '', description: '', projectType: 'Résidentiel', partnership: 'À discuter', wilaya: '', city: '', address: '', area: '', landDocument: 'Acte notarié', budget: '', ownerShare: '', contactPhone: '', contactEmail: '' };
 const STATUS = {
   pending: { label: 'En attente de validation', icon: Clock, cls: 'bg-amber-50 text-amber-700' },
   approved: { label: 'Publié', icon: CheckCircle2, cls: 'bg-emerald-50 text-emerald-700' },
@@ -80,10 +80,10 @@ function MyProjects() {
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl font-black md:text-3xl" style={{ color: PROJECT_COLORS.ink }}>{t('Mes projets')}</h1>
-            <p className="text-sm text-slate-500">{t('Vos terrains proposés aux investisseurs et les demandes reçues.')}</p>
+            <p className="text-sm text-slate-500">{t('Vos biens proposés aux investisseurs et les demandes reçues.')}</p>
           </div>
           <button type="button" onClick={() => setEditing('new')} className="inline-flex items-center gap-2 rounded-full px-6 py-3 font-bold text-white shadow" style={{ background: projectGradient }}>
-            <PlusCircle className="h-5 w-5" aria-hidden="true" /> {t('Proposer mon terrain')}
+            <PlusCircle className="h-5 w-5" aria-hidden="true" /> {t('Proposer mon projet')}
           </button>
         </div>
 
@@ -92,8 +92,8 @@ function MyProjects() {
           <p className="py-16 text-center text-slate-400">{t('Chargement...')}</p>
         ) : projects.length === 0 ? (
           <div className="rounded-3xl border-2 border-dashed border-slate-200 bg-white py-14 text-center">
-            <p className="font-bold" style={{ color: PROJECT_COLORS.ink }}>{t('Vous n’avez pas encore proposé de terrain.')}</p>
-            <p className="mt-1 text-sm text-slate-500">{t('Décrivez votre terrain et le projet que vous imaginez : les investisseurs vous contacteront.')}</p>
+            <p className="font-bold" style={{ color: PROJECT_COLORS.ink }}>{t('Vous n’avez pas encore proposé de projet.')}</p>
+            <p className="mt-1 text-sm text-slate-500">{t('Décrivez votre bien (terrain, local, bâtiment…) et le projet que vous imaginez : les investisseurs vous contacteront.')}</p>
           </div>
         ) : (
           <ul className="space-y-4">
@@ -112,7 +112,7 @@ function MyProjects() {
                       </div>
                       <p className="mt-1 truncate text-lg font-bold" style={{ color: PROJECT_COLORS.ink }}>{p.title}</p>
                       <p className="text-sm text-slate-500">
-                        {t(p.city)}, {t(p.wilaya)} · {formatArea(p.area, lang)} · {t(p.projectType)} · {p.budget ? formatDZD(p.budget) : t('Budget à définir')}
+                        {t(p.city)}, {t(p.wilaya)} · {t(p.assetType || 'Terrain')} · {formatArea(p.area, lang)} · {t(p.projectType)} · {p.budget ? formatDZD(p.budget) : t('Budget à définir')}
                       </p>
                       {p.status === 'rejected' && p.rejectionReason && (
                         <p className="mt-2 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700">
@@ -184,13 +184,13 @@ function MyProjects() {
   );
 }
 
-/** Create / edit a project: land, project idea, partnership, photos. Saving sends it to moderation. */
+/** Create / edit a project: land or property, project idea, partnership, photos. Saving sends it to moderation. */
 function ProjectForm({ project, user, onClose, onSaved }) {
   const { t } = useT();
   const { wilayas } = useWilayas();
   const [form, setForm] = useState(() =>
     project
-      ? Object.fromEntries(Object.keys(EMPTY).map((k) => [k, project[k] ?? '']))
+      ? Object.fromEntries(Object.keys(EMPTY).map((k) => [k, project[k] ?? EMPTY[k]]))
       : { ...EMPTY, contactPhone: user?.phone || '', contactEmail: user?.email || '' }
   );
   const [keep, setKeep] = useState(project?.images || []);
@@ -203,9 +203,9 @@ function ProjectForm({ project, user, onClose, onSaved }) {
     e.preventDefault();
     setError('');
     if (form.title.trim().length < 5) return setError(t('Donnez un titre d’au moins 5 caractères.'));
-    if (!form.wilaya || !form.city.trim()) return setError(t('Indiquez la wilaya et la commune du terrain.'));
-    if (!(Number(form.area) > 0)) return setError(t('Indiquez la surface du terrain.'));
-    if (!project && files.length === 0) return setError(t('Ajoutez au moins une photo du terrain.'));
+    if (!form.wilaya || !form.city.trim()) return setError(t('Indiquez la wilaya et la commune du bien.'));
+    if (!(Number(form.area) > 0)) return setError(t('Indiquez la surface du bien.'));
+    if (!project && files.length === 0) return setError(t('Ajoutez au moins une photo du bien.'));
     const fd = new FormData();
     Object.entries(form).forEach(([k, v]) => fd.append(k, String(v ?? '').trim()));
     if (project) fd.append('keepImages', JSON.stringify(keep.map((i) => i.publicId)));
@@ -237,7 +237,7 @@ function ProjectForm({ project, user, onClose, onSaved }) {
       >
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
-            <h2 id="project-form-title" className="text-xl font-black" style={{ color: PROJECT_COLORS.ink }}>{project ? t('Modifier le projet') : t('Proposer mon terrain')}</h2>
+            <h2 id="project-form-title" className="text-xl font-black" style={{ color: PROJECT_COLORS.ink }}>{project ? t('Modifier le projet') : t('Proposer mon projet')}</h2>
             <p className="text-xs text-slate-500">{t('Publié après validation par l’administration.')}</p>
           </div>
           <button type="button" onClick={onClose} aria-label={t('Fermer')} className="grid h-9 w-9 place-items-center rounded-full hover:bg-slate-100">
@@ -246,9 +246,26 @@ function ProjectForm({ project, user, onClose, onSaved }) {
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
+          <fieldset className="sm:col-span-2">
+            <legend className={label}>{t('Ce que vous proposez')} *</legend>
+            <div className="mt-1.5 flex flex-wrap gap-2">
+              {ASSET_TYPES.map((x) => (
+                <button
+                  key={x}
+                  type="button"
+                  aria-pressed={form.assetType === x}
+                  onClick={() => setForm((f) => ({ ...f, assetType: x }))}
+                  className={`rounded-full px-3.5 py-1.5 text-sm font-semibold transition ${form.assetType === x ? 'text-white shadow' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                  style={form.assetType === x ? { background: projectGradient } : undefined}
+                >
+                  {t(x)}
+                </button>
+              ))}
+            </div>
+          </fieldset>
           <label className={`${label} sm:col-span-2`}>
             {t('Titre')} *
-            <input value={form.title} onChange={set('title')} maxLength={120} placeholder={t('Ex : Terrain en bord de mer pour résidence touristique')} className={`${input} mt-1`} />
+            <input value={form.title} onChange={set('title')} maxLength={120} placeholder={t('Ex : Local de 200 m² cherche associé pour un restaurant')} className={`${input} mt-1`} />
           </label>
           <label className={label}>
             {t('Type de projet')}
@@ -282,11 +299,11 @@ function ProjectForm({ project, user, onClose, onSaved }) {
             <input value={form.address} onChange={set('address')} className={`${input} mt-1`} />
           </label>
           <label className={label}>
-            {t('Surface du terrain (m²)')} *
+            {t('Surface (m²)')} *
             <input value={form.area} onChange={set('area')} inputMode="numeric" dir="ltr" className={`${input} mt-1 rtl:text-right`} />
           </label>
           <label className={label}>
-            {t('Papiers du terrain')}
+            {t('Papiers du bien')}
             <select value={form.landDocument} onChange={set('landDocument')} className={`${input} mt-1`}>
               {LAND_DOCUMENTS.map((x) => <option key={x} value={x}>{t(x)}</option>)}
             </select>
@@ -309,7 +326,7 @@ function ProjectForm({ project, user, onClose, onSaved }) {
           </label>
 
           <div className="sm:col-span-2">
-            <p className={label}>{t('Photos du terrain')} {project ? '' : '*'}</p>
+            <p className={label}>{t('Photos du bien')} {project ? '' : '*'}</p>
             <div className="mt-2 flex flex-wrap gap-2">
               {keep.map((img) => (
                 <div key={img.publicId} className="relative h-20 w-28 overflow-hidden rounded-xl">

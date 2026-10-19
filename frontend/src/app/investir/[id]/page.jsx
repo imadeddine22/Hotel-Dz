@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { MapPin, Maximize2, FileCheck2, Coins, PieChart, Handshake, Building2, Send, CheckCircle2, Phone, MessageCircle, ArrowLeft, Eye, Users } from 'lucide-react';
+import { MapPin, Maximize2, FileCheck2, Coins, PieChart, Handshake, Building2, Home, Send, CheckCircle2, Phone, MessageCircle, ArrowLeft, Eye, Users } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Link from '@/components/LocaleLink';
@@ -65,10 +65,11 @@ export default function ProjectPage() {
   const images = (p.images || []).map((i) => getImageUrl(i.url || i));
   const mine = user && String(p.owner?._id || p.owner) === String(user._id);
   const facts = [
-    { icon: Maximize2, label: 'Surface du terrain', value: formatArea(p.area, lang) },
+    { icon: Home, label: 'Type de bien', value: t(p.assetType || 'Terrain') },
+    { icon: Maximize2, label: 'Surface', value: formatArea(p.area, lang) },
     { icon: Building2, label: 'Type de projet', value: t(p.projectType) },
     { icon: Handshake, label: 'Partenariat proposé', value: t(p.partnership) },
-    { icon: FileCheck2, label: 'Papiers du terrain', value: t(p.landDocument) },
+    { icon: FileCheck2, label: 'Papiers du bien', value: t(p.landDocument) },
     { icon: Coins, label: 'Investissement estimé', value: p.budget ? formatDZD(p.budget) : t('À définir') },
     ...(p.ownerShare != null ? [{ icon: PieChart, label: 'Part gardée par le propriétaire', value: `${p.ownerShare} %` }] : []),
   ];
@@ -143,7 +144,7 @@ export default function ProjectPage() {
 
             {p.coordinates?.lat && (
               <div className="rounded-3xl bg-white p-6 shadow-card ring-1 ring-black/5">
-                <h2 className="mb-3 text-lg font-bold" style={{ color: PROJECT_COLORS.ink }}>{t('Emplacement du terrain')}</h2>
+                <h2 className="mb-3 text-lg font-bold" style={{ color: PROJECT_COLORS.ink }}>{t('Emplacement du bien')}</h2>
                 <LocationMap lat={p.coordinates.lat} lng={p.coordinates.lng} label={p.title} accent="#00B3D2" />
               </div>
             )}
@@ -152,7 +153,7 @@ export default function ProjectPage() {
           {/* Right: owner + interest form */}
           <aside className="space-y-6">
             <div className="rounded-3xl bg-white p-5 shadow-card ring-1 ring-black/5">
-              <p className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-400 rtl:tracking-normal">{t('Propriétaire du terrain')}</p>
+              <p className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-400 rtl:tracking-normal">{t('Propriétaire du bien')}</p>
               <div className="flex items-center gap-3">
                 <Avatar user={p.owner} className="h-12 w-12 rounded-full text-lg" initialClassName="bg-gradient-to-br from-[#0DD5C4] to-[#00B3D2] text-white" />
                 <p className="font-bold" style={{ color: PROJECT_COLORS.ink }}>{p.owner?.fullName}</p>

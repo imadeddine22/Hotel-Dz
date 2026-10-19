@@ -15,10 +15,10 @@ const FILTERS = [
   { key: 'rejected', label: 'Refusés' },
 ];
 const REASONS = [
-  'Photos du terrain manquantes ou floues',
-  'Informations insuffisantes sur le terrain ou le projet',
+  'Photos du bien manquantes ou floues',
+  'Informations insuffisantes sur le bien ou le projet',
   'Ce n’est pas un projet d’investissement (vente simple)',
-  'Papiers du terrain douteux',
+  'Papiers du bien douteux',
   'Contenu inapproprié',
 ];
 
@@ -107,7 +107,7 @@ export default function AdminProjectsPage() {
                 <p className="text-xs text-gray-400">{p.reference} · {new Date(p.updatedAt).toLocaleString(dateLocale())}</p>
                 <p className="font-bold text-ink">{p.title}</p>
                 <p className="text-sm text-gray-500">
-                  {t(p.city)}, {t(p.wilaya)} · {formatArea(p.area, lang)} · {t(p.projectType)} · {t(p.partnership)} · {t(p.landDocument)}
+                  {t(p.city)}, {t(p.wilaya)} · {t(p.assetType || 'Terrain')} · {formatArea(p.area, lang)} · {t(p.projectType)} · {t(p.partnership)} · {t(p.landDocument)}
                 </p>
                 <p className="text-sm font-semibold text-gray-700">{p.budget ? formatDZD(p.budget) : t('Budget à définir')}{p.ownerShare != null ? ` · ${t('Part du propriétaire')} ${p.ownerShare} %` : ''}</p>
                 {p.description && <p className="mt-2 line-clamp-4 whitespace-pre-line text-sm text-gray-600">{p.description}</p>}

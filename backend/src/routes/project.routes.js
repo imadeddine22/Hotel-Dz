@@ -15,14 +15,15 @@ import { upload } from '../middlewares/upload.middleware.js';
 import { validate } from '../middlewares/validate.middleware.js';
 import { interestLimiter } from '../middlewares/rateLimits.middleware.js';
 import { phoneRule } from '../validations/common.validation.js';
-import { PROJECT_TYPES, PARTNERSHIP_TYPES, LAND_DOCUMENTS } from '../models/InvestmentProject.js';
+import { ASSET_TYPES, PROJECT_TYPES, PARTNERSHIP_TYPES, LAND_DOCUMENTS } from '../models/InvestmentProject.js';
 
 const router = Router();
 
-// Land + project, sent as multipart form data (numbers arrive as strings: Joi converts them)
+// Property + project, sent as multipart form data (numbers arrive as strings: Joi converts them)
 const fields = {
   title: Joi.string().trim().min(5).max(120),
   description: Joi.string().trim().allow('').max(5000),
+  assetType: Joi.string().valid(...ASSET_TYPES),
   projectType: Joi.string().valid(...PROJECT_TYPES),
   partnership: Joi.string().valid(...PARTNERSHIP_TYPES),
   country: Joi.string().trim().max(2),

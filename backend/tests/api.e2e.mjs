@@ -995,28 +995,31 @@ describe('Listing reels (videos)');
   await req('DELETE', `/reels/house/${myHouse._id}`, { token: admin });
 }
 
-describe('Investment projects (land looking for an investor)');
+describe('Investment projects (land or property looking for an investor)');
 {
   const admin = await login('admin@hotelsdz.dz', 'admin123');
   const list = await req('GET', '/projects');
-  check('public list: published projects only', list.status === 200 && list.data.total === 3 && list.data.projects.every((p) => p.status === 'approved' && p.owner?.fullName && !p.owner.email));
+  check('public list: published projects only', list.status === 200 && list.data.total === 4 && list.data.projects.every((p) => p.status === 'approved' && p.owner?.fullName && !p.owner.email));
   check('filter by project type', (await req('GET', '/projects?projectType=Agricole')).data.projects.every((p) => p.projectType === 'Agricole'));
   check('filter by wilaya', (await req('GET', '/projects?wilaya=Tipaza')).data.projects.length === 1);
   check('search', (await req('GET', '/projects?q=serres')).data.projects.length === 1);
-  check('unknown filter values ignored', (await req('GET', '/projects?projectType=Boat&partnership=x')).data.total === 3);
+  check('unknown filter values ignored', (await req('GET', '/projects?projectType=Boat&partnership=x&assetType=Yacht')).data.total === 4);
+  const shops = (await req('GET', '/projects?assetType=' + encodeURIComponent('Local commercial'))).data;
+  check('filter by property type (not only land)', shops.total === 1 && shops.projects[0].assetType === 'Local commercial');
 
   const pendingSeed = (await req('GET', '/admin/projects', { token: admin })).data.projects[0];
   expectStatus('pending project hidden from visitors', await req('GET', `/projects/${pendingSeed._id}`), 404);
 
   // A land owner (any registered user) posts a project
   const landOwner = await register('customer');
-  const base = { title: `Terrain test ${uid}`, description: 'Projet de résidence', projectType: 'Résidentiel', partnership: 'Construction contre logements', wilaya: 'Oran', city: 'Oran', area: 1500, landDocument: 'Acte notarié', budget: 90000000, ownerShare: 35 };
+  const base = { title: `Terrain test ${uid}`, description: 'Projet de résidence', assetType: 'Terrain', projectType: 'Résidentiel', partnership: 'Construction contre logements', wilaya: 'Oran', city: 'Oran', area: 1500, landDocument: 'Acte notarié', budget: 90000000, ownerShare: 35 };
   const created = await req('POST', '/projects', { token: landOwner.token, form: { ...base, images: [PNG] } });
   check('any registered user can post a project → waits for approval', created.status === 201 && created.data.project?.status === 'pending' && /^PRJ-/.test(created.data.project.reference), `${created.status} ${created.data.message || ''}`);
   const pid = created.data.project?._id;
   expectStatus('visitor cannot post', await req('POST', '/projects', { form: base }), 401);
   expectStatus('area is required', await req('POST', '/projects', { token: landOwner.token, form: { ...base, area: '' } }), 400);
   expectStatus('unknown project type rejected', await req('POST', '/projects', { token: landOwner.token, form: { ...base, projectType: 'Casino' } }), 400);
+  expectStatus('unknown property type rejected', await req('POST', '/projects', { token: landOwner.token, form: { ...base, assetType: 'Bateau' } }), 400);
   expectStatus('owner sees their pending project', await req('GET', `/projects/${pid}`, { token: landOwner.token }), 200);
   check('not public before approval', !(await req('GET', '/projects?limit=50')).data.projects.some((p) => p._id === pid));
   check('"my projects" lists it', (await req('GET', '/projects/mine', { token: landOwner.token })).data.projects.some((p) => p._id === pid));

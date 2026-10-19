@@ -8,14 +8,14 @@ import Link from '@/components/LocaleLink';
 import ProjectCard from '@/components/ProjectCard';
 import api from '@/lib/api';
 import { useWilayas } from '@/hooks/useWilayas';
-import { PROJECT_TYPES, PARTNERSHIP_TYPES, PROJECT_COLORS, projectGradient } from '@/lib/projects';
+import { ASSET_TYPES, PROJECT_TYPES, PARTNERSHIP_TYPES, PROJECT_COLORS, projectGradient } from '@/lib/projects';
 import { useT } from '@/lib/i18n/useT';
 import { useInitialData } from '@/components/InitialData';
 import { useAuthStore } from '@/store/authStore';
 
-const EMPTY = { q: '', wilaya: '', projectType: '', partnership: '' };
+const EMPTY = { q: '', wilaya: '', assetType: '', projectType: '', partnership: '' };
 
-/** Land owners who don't want to sell look for an investor for the project they have in mind. */
+/** Owners of land or property who don't want to sell look for an investor / partner for the project they have in mind. */
 export default function InvestPage() {
   const { t } = useT();
   const initial = useInitialData();
@@ -75,13 +75,13 @@ export default function InvestPage() {
           <span className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1.5 text-sm font-semibold backdrop-blur">
             <Landmark className="h-4 w-4" aria-hidden="true" /> {t('Projets et investissement')}
           </span>
-          <h1 className="text-3xl font-black leading-tight md:text-5xl">{t('Votre terrain, leur investissement, un projet ensemble')}</h1>
+          <h1 className="text-3xl font-black leading-tight md:text-5xl">{t('Votre bien, leur investissement, un projet ensemble')}</h1>
           <p className="mx-auto mt-4 max-w-2xl text-base text-white/80 md:text-lg">
-            {t('Vous avez un terrain mais vous ne voulez pas le vendre ? Proposez le projet que vous imaginez et trouvez un investisseur. Investisseurs : découvrez des terrains prêts pour vos projets partout en Algérie.')}
+            {t('Vous avez un terrain, un local, un bâtiment ou un autre bien que vous ne voulez pas vendre ? Proposez le projet que vous imaginez et trouvez un investisseur ou un associé. Investisseurs : découvrez des biens prêts pour vos projets partout en Algérie.')}
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Link href={proposeHref} className="inline-flex items-center gap-2 rounded-full px-7 py-3.5 font-bold text-white shadow-lg transition hover:scale-105" style={{ background: projectGradient }}>
-              <PlusCircle className="h-5 w-5" aria-hidden="true" /> {t('Proposer mon terrain')}
+              <PlusCircle className="h-5 w-5" aria-hidden="true" /> {t('Proposer mon projet')}
             </Link>
             <a href="#projets" className="inline-flex items-center gap-2 rounded-full bg-white px-7 py-3.5 font-bold transition hover:bg-slate-100" style={{ color: PROJECT_COLORS.ink }}>
               <Search className="h-5 w-5" aria-hidden="true" /> {t('Voir les projets')}
@@ -93,9 +93,9 @@ export default function InvestPage() {
       {/* How it works */}
       <section className="mx-auto -mt-8 grid max-w-6xl gap-4 px-4 sm:grid-cols-3">
         {[
-          { icon: Landmark, title: 'Le propriétaire publie', text: 'Terrain, surface, papiers, et le projet qu’il imagine (résidence, hôtel, agriculture…).' },
+          { icon: Landmark, title: 'Le propriétaire publie', text: 'Terrain, local, bâtiment… sa surface, ses papiers et le projet qu’il imagine (commerce, résidence, hôtel, agriculture…).' },
           { icon: MessagesSquare, title: 'L’investisseur se manifeste', text: 'Il envoie sa demande avec le montant envisagé ; le propriétaire la reçoit dans son espace.' },
-          { icon: Handshake, title: 'Ils s’associent', text: 'Parts du projet, logements contre terrain, location longue durée… selon leur accord.' },
+          { icon: Handshake, title: 'Ils s’associent', text: 'Parts du projet, exploitation en commun, logements contre terrain, location longue durée… selon leur accord.' },
         ].map(({ icon: Icon, title, text }, i) => (
           <div key={title} className="relative rounded-2xl bg-white p-5 shadow-card ring-1 ring-black/5">
             <span className="absolute end-4 top-4 text-3xl font-black text-slate-100">{i + 1}</span>
@@ -110,7 +110,7 @@ export default function InvestPage() {
 
       {/* Filters + list */}
       <section id="projets" className="mx-auto max-w-7xl scroll-mt-24 px-4 py-12 sm:px-6">
-        <form onSubmit={apply} className="mb-6 grid gap-3 rounded-2xl bg-white p-4 shadow-card ring-1 ring-black/5 sm:grid-cols-2 lg:grid-cols-5">
+        <form onSubmit={apply} className="mb-6 grid gap-3 rounded-2xl bg-white p-4 shadow-card ring-1 ring-black/5 sm:grid-cols-2 lg:grid-cols-6">
           <label className="relative lg:col-span-2">
             <span className="sr-only">{t('Rechercher')}</span>
             <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
@@ -120,6 +120,12 @@ export default function InvestPage() {
             <option value="">{t('Toutes les wilayas')}</option>
             {wilayas.map((w) => (
               <option key={w} value={w}>{t(w)}</option>
+            ))}
+          </select>
+          <select value={form.assetType} onChange={(e) => setForm({ ...form, assetType: e.target.value })} className={select} aria-label={t('Type de bien')}>
+            <option value="">{t('Tous les biens')}</option>
+            {ASSET_TYPES.map((x) => (
+              <option key={x} value={x}>{t(x)}</option>
             ))}
           </select>
           <select value={form.projectType} onChange={(e) => setForm({ ...form, projectType: e.target.value })} className={select} aria-label={t('Type de projet')}>
@@ -134,7 +140,7 @@ export default function InvestPage() {
               <option key={x} value={x}>{t(x)}</option>
             ))}
           </select>
-          <div className="flex flex-wrap items-center justify-between gap-2 sm:col-span-2 lg:col-span-5">
+          <div className="flex flex-wrap items-center justify-between gap-2 sm:col-span-2 lg:col-span-6">
             <p className="text-sm text-slate-500">{t('{n} projet(s)', { n: total })}</p>
             <div className="flex flex-wrap gap-2">
               <select value={sort} onChange={(e) => { setSort(e.target.value); setPage(1); }} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm" aria-label={t('Trier')}>
@@ -158,7 +164,7 @@ export default function InvestPage() {
           <div className="rounded-2xl border-2 border-dashed border-slate-200 bg-white py-14 text-center">
             <p className="font-bold" style={{ color: PROJECT_COLORS.ink }}>{t('Aucun projet ne correspond à votre recherche.')}</p>
             <Link href={proposeHref} className="mt-4 inline-flex items-center gap-2 rounded-full px-6 py-2.5 text-sm font-bold text-white" style={{ background: projectGradient }}>
-              <PlusCircle className="h-4 w-4" aria-hidden="true" /> {t('Proposer mon terrain')}
+              <PlusCircle className="h-4 w-4" aria-hidden="true" /> {t('Proposer mon projet')}
             </Link>
           </div>
         ) : (

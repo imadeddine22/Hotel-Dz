@@ -6,9 +6,9 @@ import { localized } from '@/lib/i18n/localizeData';
 export function generateMetadata() {
   return pageMeta({
     path: '/investir',
-    title: 'Investir en Algérie : terrains et projets à la recherche d’investisseurs',
+    title: 'Investir en Algérie : terrains, locaux et projets à la recherche d’investisseurs',
     description:
-      'Propriétaires de terrains et investisseurs se rencontrent : résidences, hôtels, agriculture, commerces… Proposez votre terrain ou trouvez un projet dans les 69 wilayas.',
+      'Propriétaires de terrains, locaux ou bâtiments et investisseurs se rencontrent : commerces, résidences, hôtels, agriculture… Proposez votre projet ou trouvez un associé dans les 69 wilayas.',
   });
 }
 

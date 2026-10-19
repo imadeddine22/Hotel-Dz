@@ -7,7 +7,7 @@ import { formatDZD } from '@/lib/data';
 import { formatArea, PROJECT_COLORS } from '@/lib/projects';
 import { useT } from '@/lib/i18n/useT';
 
-/** Card of an investment project (land + project idea) in the /investir list. */
+/** Card of an investment project (land or property + project idea) in the /investir list. */
 export default function ProjectCard({ project: p }) {
   const { t, lang } = useT();
   const cover = getImageUrl(p.images?.[0]?.url || p.images?.[0]);
@@ -16,7 +16,7 @@ export default function ProjectCard({ project: p }) {
       <div className="relative aspect-[16/10] overflow-hidden bg-slate-100">
         {cover && <img src={cover} alt="" loading="lazy" className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />}
         <span className="absolute start-3 top-3 rounded-full bg-white/95 px-3 py-1 text-xs font-bold shadow" style={{ color: PROJECT_COLORS.ink }}>
-          {t(p.projectType)}
+          {t(p.assetType || 'Terrain')} · {t(p.projectType)}
         </span>
         <span className="absolute bottom-3 start-3 inline-flex items-center gap-1 rounded-full bg-black/55 px-2.5 py-1 text-xs font-semibold text-white backdrop-blur">
           <Maximize2 className="h-3.5 w-3.5" aria-hidden="true" /> {formatArea(p.area, lang)}

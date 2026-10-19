@@ -5,7 +5,7 @@ export const MESSAGES = {
   'Project deleted': { fr: "Projet supprimé.", ar: "تم حذف المشروع." },
   'This is your own project': { fr: "C’est votre propre projet.", ar: "هذا مشروعك أنت." },
   'Your request has been sent to the owner': { fr: "Votre demande a été envoyée au propriétaire.", ar: "تم إرسال طلبك إلى المالك." },
-  'Land area is required': { fr: "La surface du terrain est obligatoire.", ar: "مساحة الأرض إجبارية." },
+  'Area is required': { fr: "La surface est obligatoire.", ar: "المساحة إجبارية." },
   'Video dimensions are required': { fr: "Dimensions de la vidéo manquantes.", ar: "أبعاد الفيديو مطلوبة." },
   'Reels must be vertical videos (9:16 format)': { fr: "Les reels doivent être des vidéos verticales (format 9:16).", ar: "يجب أن تكون الريلز فيديوهات عمودية (صيغة 9:16)." },
   'Video resolution too low (480×854 minimum)': { fr: "Qualité de la vidéo trop faible (480×854 minimum).", ar: "جودة الفيديو ضعيفة (480×854 كحد أدنى)." },

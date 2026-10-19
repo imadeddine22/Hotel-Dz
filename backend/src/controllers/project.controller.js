@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import InvestmentProject, { PROJECT_TYPES, PARTNERSHIP_TYPES } from '../models/InvestmentProject.js';
+import InvestmentProject, { ASSET_TYPES, PROJECT_TYPES, PARTNERSHIP_TYPES } from '../models/InvestmentProject.js';
 import InvestorInterest from '../models/InvestorInterest.js';
 import { uploadMany, destroyImage } from '../utils/cloudinaryUpload.js';
 import { parseCoordinates } from '../utils/parseCoordinates.js';
@@ -10,18 +10,19 @@ import { sendEmail } from '../utils/sendEmail.js';
 import { escapeHtml } from '../utils/escapeHtml.js';
 
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000';
-// Fields the land owner may set. Status, views, reference and counters are server-controlled.
-const EDITABLE = ['title', 'description', 'projectType', 'partnership', 'country', 'wilaya', 'city', 'address', 'area', 'landDocument', 'budget', 'ownerShare', 'contactPhone', 'contactEmail'];
+// Fields the property owner may set. Status, views, reference and counters are server-controlled.
+const EDITABLE = ['title', 'description', 'assetType', 'projectType', 'partnership', 'country', 'wilaya', 'city', 'address', 'area', 'landDocument', 'budget', 'ownerShare', 'contactPhone', 'contactEmail'];
 const pick = (body, keys) => Object.fromEntries(keys.filter((k) => body[k] !== undefined && body[k] !== '').map((k) => [k, body[k]]));
 const isOwner = (req, p) => String(p.owner?._id || p.owner) === String(req.user?._id);
 const notify = (to, subject, html) => to && sendEmail({ to, subject, html }).catch((e) => console.error('Email failed:', e.message));
 
-// GET /projects?wilaya=&projectType=&partnership=&minArea=&maxArea=&q=&sort=newest|area|budget&page=
+// GET /projects?wilaya=&assetType=&projectType=&partnership=&minArea=&maxArea=&q=&sort=newest|area|budget&page=
 export const getProjects = async (req, res, next) => {
   try {
     const filter = { status: 'approved' };
-    const { wilaya, projectType, partnership, q, sort } = req.query;
+    const { wilaya, assetType, projectType, partnership, q, sort } = req.query;
     if (typeof wilaya === 'string' && wilaya) filter.wilaya = wilayaRegex(wilaya);
+    if (ASSET_TYPES.includes(assetType)) filter.assetType = assetType;
     if (PROJECT_TYPES.includes(projectType)) filter.projectType = projectType;
     if (PARTNERSHIP_TYPES.includes(partnership)) filter.partnership = partnership;
     const minArea = num(req.query.minArea);
@@ -58,7 +59,7 @@ export const getProject = async (req, res, next) => {
   }
 };
 
-// GET /projects/mine — the land owner's projects with their unread interest requests
+// GET /projects/mine — the owner's projects with their unread interest requests
 export const getMyProjects = async (req, res, next) => {
   try {
     const projects = await InvestmentProject.find({ owner: req.user._id }).sort({ createdAt: -1 }).lean();

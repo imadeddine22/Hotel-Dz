@@ -1,7 +1,8 @@
-// Investment projects (land looking for an investor): same lists as the InvestmentProject model.
+// Investment projects (land or property looking for an investor): same lists as the InvestmentProject model.
+export const ASSET_TYPES = ['Terrain', 'Local commercial', 'Bâtiment / immeuble', 'Maison / villa', 'Hangar / entrepôt', 'Ferme', 'Hôtel / établissement existant', 'Autre bien'];
 export const PROJECT_TYPES = ['Résidentiel', 'Hôtel et tourisme', 'Commercial', 'Bureaux', 'Industriel', 'Agricole', 'Santé et éducation', 'Mixte', 'Autre'];
-export const PARTNERSHIP_TYPES = ['Partenariat (parts du projet)', 'Construction contre logements', 'Location longue durée', 'Financement contre bénéfices', 'À discuter'];
-export const LAND_DOCUMENTS = ['Acte notarié', 'Livret foncier', 'Acte administratif', 'En cours de régularisation'];
+export const PARTNERSHIP_TYPES = ['Partenariat (parts du projet)', 'Construction contre logements', 'Location longue durée', 'Financement contre bénéfices', 'Exploitation en commun', 'À discuter'];
+export const LAND_DOCUMENTS = ['Acte notarié', 'Livret foncier', 'Acte administratif', 'En cours de régularisation', 'Autre'];
 
 // Colours of the brand banner (teal gradient + navy)
 export const PROJECT_COLORS = { ink: '#152A41', from: '#0DD5C4', to: '#00B3D2' };

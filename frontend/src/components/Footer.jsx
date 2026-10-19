@@ -18,7 +18,7 @@ const COLUMNS = [
       ['/houses', 'Maisons à louer'],
       ['/sales', 'Biens à vendre'],
       ['/destinations', 'Destinations'],
-      ['/investir', 'Investir : terrains et projets'],
+      ['/investir', 'Projets et investissement'],
     ],
   },
   {

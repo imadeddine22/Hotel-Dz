@@ -19,10 +19,10 @@ export async function generateMetadata({ params }) {
   const { t } = getT();
   const meta = pageMeta({
     path: `/investir/${p._id}`,
-    title: t('{title} — terrain à {city} cherche investisseur', { title: p.title, city: t(p.city) }),
+    title: t('{title} — {asset} à {city} cherche investisseur', { title: p.title, asset: t(p.assetType || 'Terrain').toLowerCase(), city: t(p.city) }),
     description:
       truncate(p.description, 155) ||
-      t('Terrain de {area} m² à {city} ({wilaya}) pour un projet {type}. Partenariat : {partnership}.', { area: p.area, city: t(p.city), wilaya: t(p.wilaya), type: t(p.projectType), partnership: t(p.partnership) }),
+      t('{asset} de {area} m² à {city} ({wilaya}) pour un projet {type}. Partenariat : {partnership}.', { asset: t(p.assetType || 'Terrain'), area: p.area, city: t(p.city), wilaya: t(p.wilaya), type: t(p.projectType), partnership: t(p.partnership) }),
     robots: p.status === 'approved' ? undefined : { index: false, follow: false },
   });
   return { ...meta, openGraph: { ...meta.openGraph, images: (p.images || []).slice(0, 1).map(absoluteImage), type: 'website' } };

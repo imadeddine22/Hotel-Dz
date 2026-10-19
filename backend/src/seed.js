@@ -192,8 +192,10 @@ export const seedDatabase = async () => {
   }
   console.log(`🏷️  Sales: ${SALES.length} (seller vendeur@hotelsdz.dz / seller123)`);
 
-  // --- Investment projects: land owners looking for an investor (not selling) ---
+  // --- Investment projects: property owners looking for an investor / partner (not selling) ---
   const PROJECTS = [
+    { owner: seller, assetType: 'Local commercial', title: 'Local de 250 m² cherche partenaire pour un restaurant', projectType: 'Commercial', partnership: 'Exploitation en commun', wilaya: 'Alger', city: 'Bab Ezzouar', area: 250, landDocument: 'Acte notarié', budget: 25000000, ownerShare: 50, photo: '1517248135467-4c7edcad34c4', status: 'approved',
+      description: "Local commercial au rez-de-chaussée, grande vitrine sur un boulevard passant, près de l'université. J'apporte le local, je cherche un associé qui finance l'aménagement et gère le restaurant ; bénéfices partagés à 50/50." },
     { owner: seller, title: 'Terrain en bord de mer pour résidence touristique', projectType: 'Hôtel et tourisme', partnership: 'Partenariat (parts du projet)', wilaya: 'Tipaza', city: 'Cherchell', area: 12000, landDocument: 'Livret foncier', budget: 450000000, ownerShare: 40, photo: '1501785888041-af3ef285b470', status: 'approved',
       description: "Terrain plat de 1,2 ha à 300 m de la plage, accès par route goudronnée. Je cherche un investisseur pour construire un complexe touristique (bungalows + restaurant). J'apporte le terrain, l'investisseur finance la construction ; partage des bénéfices selon les parts." },
     { owner: customers[0], title: 'Lot en centre-ville pour immeuble de logements', projectType: 'Résidentiel', partnership: 'Construction contre logements', wilaya: 'Sétif', city: 'Sétif', area: 900, landDocument: 'Acte notarié', budget: 180000000, photo: '1500382017468-9049fed747ef', status: 'approved',
@@ -206,7 +208,7 @@ export const seedDatabase = async () => {
   const projects = [];
   for (const p of PROJECTS) {
     projects.push(await InvestmentProject.create({
-      owner: p.owner._id, title: p.title, description: p.description, projectType: p.projectType, partnership: p.partnership,
+      owner: p.owner._id, assetType: p.assetType || 'Terrain', title: p.title, description: p.description, projectType: p.projectType, partnership: p.partnership,
       wilaya: p.wilaya, city: p.city, area: p.area, landDocument: p.landDocument, budget: p.budget, ownerShare: p.ownerShare,
       images: [img(p.photo)], contactPhone: p.owner.phone || '', contactEmail: p.owner.email, status: p.status,
     }));
