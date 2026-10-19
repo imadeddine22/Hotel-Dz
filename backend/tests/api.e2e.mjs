@@ -1123,6 +1123,23 @@ describe('One account, every space (switch freely)');
   check('back to traveller', (await req('PUT', '/auth/space', { token: me.token, body: { role: 'customer' } })).data.user?.role === 'customer');
 }
 
+describe('"How did you hear about us?" (welcome notification)');
+{
+  const admin = await login('admin@hotelsdz.dz', 'admin123');
+  const before = (await req('GET', '/admin/referrals', { token: admin })).data;
+  check('admin sees answers per source (every source listed)', before.sources?.length === 8 && before.total >= 29);
+  expectStatus('a visitor answers', await req('POST', '/referrals', { body: { source: 'TikTok', lang: 'ar', page: '/ar' } }), 201);
+  expectStatus('"other" with details', await req('POST', '/referrals', { body: { source: 'Autre', other: 'Radio Algérie', lang: 'fr' } }), 201);
+  expectStatus('unknown source rejected', await req('POST', '/referrals', { body: { source: 'Pigeon' } }), 400);
+  expectStatus('source required', await req('POST', '/referrals', { body: {} }), 400);
+  const after = (await req('GET', '/admin/referrals', { token: admin })).data;
+  check('answers reach the admin', after.total === before.total + 2 && after.sources.find((s) => s.source === 'TikTok').count === before.sources.find((s) => s.source === 'TikTok').count + 1);
+  check('latest answers with the "other" details', after.latest?.[0]?.other === 'Radio Algérie' || after.latest?.[1]?.other === 'Radio Algérie');
+  check('period filter', (await req('GET', '/admin/referrals?days=7', { token: admin })).data.total <= after.total);
+  const cust = await register('customer');
+  expectStatus('only the admin reads the answers', await req('GET', '/admin/referrals', { token: cust.token }), 403);
+}
+
 describe('No online payment');
 {
   const r = await fetch(`${API}/payments/webhook`, { method: 'POST', body: '{}' });

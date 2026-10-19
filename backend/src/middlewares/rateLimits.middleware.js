@@ -26,3 +26,6 @@ export const contactLimiter = rateLimit({ ...base, windowMs: 60 * 60 * 1000, max
 
 /** Investor "I'm interested" requests per IP (spam towards land owners). */
 export const interestLimiter = rateLimit({ ...base, windowMs: 60 * 60 * 1000, max: 20 });
+
+/** "How did you hear about us?" answers per IP. */
+export const referralLimiter = rateLimit({ ...base, windowMs: 60 * 60 * 1000, max: 10 });

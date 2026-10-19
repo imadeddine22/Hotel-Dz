@@ -1,6 +1,7 @@
 import localFont from 'next/font/local';
 import './globals.css';
 import AuthInit from '@/components/AuthInit';
+import WelcomeNotice from '@/components/WelcomeNotice';
 
 // Fredoka (variable, 300–700) shipped with the app from @fontsource-variable/fredoka, so neither
 // the build nor visitors depend on Google Fonts. The latin file covers French accents (é, ï, â…).
@@ -96,6 +97,7 @@ export default function RootLayout({ children }) {
         </a>
         <JsonLd data={siteLd} />
         <AuthInit />
+        <WelcomeNotice />
         <div id="main-content" tabIndex={-1} className="outline-none">
           {children}
         </div>

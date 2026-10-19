@@ -20,6 +20,7 @@ import Conversation from './models/Conversation.js';
 import HouseForSale from './models/HouseForSale.js';
 import InvestmentProject from './models/InvestmentProject.js';
 import InvestorInterest from './models/InvestorInterest.js';
+import Referral from './models/Referral.js';
 import { ENABLED_COUNTRIES } from './utils/countries.js';
 
 const img = (id) => ({
@@ -70,7 +71,7 @@ export const seedDatabase = async () => {
   await Promise.all([
     User.deleteMany({}), Hotel.deleteMany({}), House.deleteMany({}), Room.deleteMany({}),
     Booking.deleteMany({}), Review.deleteMany({}), Message.deleteMany({}), Testimonial.deleteMany({}), Conversation.deleteMany({}), HouseForSale.deleteMany({}),
-    InvestmentProject.deleteMany({}), InvestorInterest.deleteMany({}),
+    InvestmentProject.deleteMany({}), InvestorInterest.deleteMany({}), Referral.deleteMany({}),
   ]);
 
   // --- Users ---
@@ -224,6 +225,14 @@ export const seedDatabase = async () => {
   });
   await InvestmentProject.updateOne({ _id: projects[0]._id }, { $inc: { interestsCount: 1 } });
   console.log(`💼 Projects: ${PROJECTS.length} (3 published, 1 waiting), 1 investor request`);
+
+  // --- 'How did you hear about us?' answers (welcome notification) ---
+  const REFERRALS = [['Facebook', 9], ['Instagram', 6], ['TikTok', 5], ['Google', 4], ['Ami ou famille', 3], ['YouTube', 1], ['Autre', 1]];
+  await Referral.insertMany(REFERRALS.flatMap(([source, n]) => Array.from({ length: n }, (_, i) => ({
+    source, other: source === 'Autre' ? 'Salon de l’immobilier à Alger' : '', lang: i % 2 ? 'ar' : 'fr', page: '/',
+    createdAt: daysFromNow(-(i * 3 + 1)),
+  }))));
+  console.log('📣 Referrals: 29 answers');
 
   // --- Contact messages ---
   await Message.create(MESSAGES);

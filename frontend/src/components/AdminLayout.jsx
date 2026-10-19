@@ -25,6 +25,7 @@ import {
   Megaphone,
   Clapperboard,
   Landmark,
+  Radio,
 } from 'lucide-react';
 import api from '@/lib/api';
 import Avatar from '@/components/Avatar';
@@ -44,6 +45,7 @@ const ADMIN_MENU = [
   { href: '/admin/users', label: 'Utilisateurs', icon: Users },
   { href: '/admin/messages', label: 'Messages', icon: Mail },
   { href: '/admin/testimonials', label: 'Avis clients', icon: MessageSquareQuote },
+  { href: '/admin/referrals', label: 'Comment ils nous ont connus', icon: Radio },
   { href: '/admin/bookings', label: 'Réservations', icon: CalendarCheck },
   { href: '/admin/pricing', label: 'Tarification', icon: Settings },
 ];

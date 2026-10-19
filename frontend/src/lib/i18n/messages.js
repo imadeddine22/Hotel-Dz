@@ -1,6 +1,7 @@
 // Translations of the API's error/success messages (sent in English, sometimes French).
 // Exact messages are dictionary entries; messages with numbers or statuses go through PATTERNS.
 export const MESSAGES = {
+  'Thank you for your answer': { fr: "Merci pour votre réponse.", ar: "شكرًا على إجابتك." },
   'Project not found': { fr: "Projet introuvable.", ar: "المشروع غير موجود." },
   'Project deleted': { fr: "Projet supprimé.", ar: "تم حذف المشروع." },
   'This is your own project': { fr: "C’est votre propre projet.", ar: "هذا مشروعك أنت." },
