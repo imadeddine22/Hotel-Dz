@@ -8,7 +8,9 @@ import { useT } from '@/lib/i18n/useT';
 // The photo side is the designer's artwork (public/brand/home-banner.webp, 1357×510): only its left
 // part is shown (up to x = 845, before the artwork's own text), the rest is rebuilt below as live,
 // translatable text. Colours sampled from the artwork.
-const ART = { width: 1357, height: 510, top: 8, bottom: 495, cut: 845 };
+// left: columns 0–5 are the mock-up's light frame and an anti-aliased edge
+const ART = { width: 1357, height: 510, left: 6, top: 8, bottom: 495, cut: 845 };
+const SHOWN_W = ART.cut - ART.left; // 839 px of photo; the 512 px text panel is rebuilt in code
 // 487: the artwork's content only — rows 0–7 are its grey frame, rows 496+ the mock-up's drop shadow
 const SHOWN_H = ART.bottom - ART.top;
 const COLORS = { panel: '#F6FAFD', ink: '#152A41', teal: '#0CB2AE', button: '#01C2C2', icon: '#0A8F96', label: '#396465' };
@@ -30,9 +32,10 @@ export default function HomeBanner() {
         src="/brand/home-banner.webp"
         alt=""
         loading="lazy"
-        className="absolute left-0 max-w-none select-none"
+        className="absolute max-w-none select-none"
         style={{
-          width: `${(ART.width / ART.cut) * 100}%`,
+          width: `${(ART.width / SHOWN_W) * 100}%`,
+          left: `${(-ART.left / SHOWN_W) * 100}%`,
           height: `${(ART.height / SHOWN_H) * 100}%`,
           top: `${(-ART.top / SHOWN_H) * 100}%`,
         }}
@@ -51,10 +54,10 @@ export default function HomeBanner() {
     >
       <div className="lg:relative">
         {/* Photo: full width on phones, left 62 % on large screens */}
-        <div className="aspect-[845/487] w-full lg:absolute lg:inset-y-0 lg:left-0 lg:aspect-auto lg:w-[62.27%]">{photo}</div>
+        <div className="aspect-[839/487] w-full lg:absolute lg:inset-y-0 lg:left-0 lg:aspect-auto lg:w-[62.1%]">{photo}</div>
 
         {/* Live text panel (translated) */}
-        <div className="relative flex flex-col items-center gap-4 px-5 py-8 text-center lg:ml-[62.27%] lg:aspect-[512/487] lg:justify-center lg:gap-3 lg:px-6 lg:py-6 xl:gap-5">
+        <div className="relative flex flex-col items-center gap-4 px-5 py-8 text-center lg:ml-[62.1%] lg:aspect-[512/487] lg:justify-center lg:gap-3 lg:px-6 lg:py-6 xl:gap-5">
           <BrandLogo className="h-12 xl:h-16" textClassName="text-4xl xl:text-5xl !text-[#152A41]" alt="" />
 
           <h2 className="font-extrabold leading-tight">
