@@ -11,6 +11,7 @@ import Link from '@/components/LocaleLink';
 import api, { getImageUrl } from '@/lib/api';
 import { formatDZD } from '@/lib/data';
 import { useWilayas } from '@/hooks/useWilayas';
+import { useCommunes } from '@/hooks/useCommunes';
 import { ASSET_TYPES, PROJECT_TYPES, PARTNERSHIP_TYPES, LAND_DOCUMENTS, PROJECT_COLORS, projectGradient, formatArea, assetLabel } from '@/lib/projects';
 import { useAuthStore } from '@/store/authStore';
 import { useT } from '@/lib/i18n/useT';
@@ -210,7 +211,7 @@ function DashboardFrame({ children }) {
 
 /** Create / edit a project: land or property, project idea, partnership, photos. Saving sends it to moderation. */
 function ProjectForm({ project, user, onClose, onSaved }) {
-  const { t } = useT();
+  const { t, lang } = useT();
   const { wilayas } = useWilayas();
   const [form, setForm] = useState(() =>
     project
@@ -226,6 +227,8 @@ function ProjectForm({ project, user, onClose, onSaved }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
+  // Communes of the chosen wilaya (official list); a wilaya without a list falls back to free text
+  const communes = useCommunes(form.wilaya);
 
   const submit = async (e) => {
     e.preventDefault();
@@ -326,14 +329,25 @@ function ProjectForm({ project, user, onClose, onSaved }) {
           </label>
           <label className={label}>
             {t('Wilaya')} *
-            <select value={form.wilaya} onChange={set('wilaya')} className={`${input} mt-1`}>
+            <select value={form.wilaya} onChange={(e) => setForm((f) => ({ ...f, wilaya: e.target.value, city: '' }))} className={`${input} mt-1`}>
               <option value="">{t('Choisir…')}</option>
               {wilayas.map((w) => <option key={w} value={w}>{t(w)}</option>)}
             </select>
           </label>
           <label className={label}>
             {t('Commune')} *
-            <input value={form.city} onChange={set('city')} className={`${input} mt-1`} />
+            {communes.length ? (
+              <select value={form.city} onChange={set('city')} className={`${input} mt-1`}>
+                <option value="">{t('Choisir…')}</option>
+                {/* a commune saved before the list existed stays selectable */}
+                {form.city && !communes.some((c) => c.name === form.city) && <option value={form.city}>{form.city}</option>}
+                {communes.map((c) => (
+                  <option key={c.name} value={c.name}>{lang === 'ar' && c.arabic ? c.arabic : c.name}</option>
+                ))}
+              </select>
+            ) : (
+              <input value={form.city} onChange={set('city')} disabled={!form.wilaya} placeholder={form.wilaya ? '' : t('Choisissez d’abord la wilaya')} className={`${input} mt-1 disabled:bg-slate-50`} />
+            )}
           </label>
           <label className={`${label} sm:col-span-2`}>
             {t('Adresse ou lieu-dit')}
