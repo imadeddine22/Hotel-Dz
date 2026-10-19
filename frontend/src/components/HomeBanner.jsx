@@ -5,7 +5,8 @@ import Link from '@/components/LocaleLink';
 import BrandLogo from '@/components/BrandLogo';
 import { useT } from '@/lib/i18n/useT';
 
-// Colours sampled from the designer's banner artwork (the photos were removed at the owner's request).
+// Colours sampled from the designer's banner artwork. Left: the "house for sale" illustration
+// (public/brand/home-sale-illustration.jpg); right: live, translated text.
 const COLORS = { panel: '#F6FAFD', ink: '#152A41', teal: '#0CB2AE', button: '#01C2C2', icon: '#0A8F96', label: '#396465' };
 
 const CATEGORIES = [
@@ -15,9 +16,9 @@ const CATEGORIES = [
   { href: '/houses', label: 'Maisons à vendre et à louer', icon: House },
 ];
 
-/** Home page banner: brand, headline, categories and "start now" (→ properties for sale). */
+/** Home page banner: "house for sale" illustration + brand, headline, categories and "start now" (→ properties for sale). */
 export default function HomeBanner() {
-  const { t } = useT();
+  const { t, lang } = useT();
 
   return (
     <section
@@ -25,8 +26,15 @@ export default function HomeBanner() {
       className="mt-12 overflow-hidden rounded-3xl shadow-lg ring-1 ring-black/5"
       style={{ background: COLORS.panel }}
     >
+      {/* dir=ltr: illustration on the left and text on the right in every language; the text gets the page direction back */}
+      <div dir="ltr" className="lg:grid lg:grid-cols-[5fr_6fr] lg:items-center">
+      {/* multiply: the illustration's white background takes the panel's colour; the mask fades its off-white edges */}
+      <div className="flex items-center justify-center px-6 pt-8 lg:p-8" aria-hidden="true">
+        <img src="/brand/home-sale-illustration.jpg" alt="" loading="lazy" draggable={false} className="max-h-60 w-auto select-none object-contain mix-blend-multiply [mask-image:radial-gradient(ellipse_at_center,#000_62%,transparent_78%)] lg:max-h-[22rem]" />
+      </div>
+
       {/* Live text panel (translated) */}
-      <div className="relative flex flex-col items-center gap-4 px-5 py-10 text-center lg:gap-5 lg:py-12">
+      <div dir={lang === 'ar' ? 'rtl' : 'ltr'} className="relative flex flex-col items-center gap-4 px-5 py-10 text-center lg:gap-5 lg:py-12">
         <BrandLogo className="h-12 xl:h-16" textClassName="text-4xl xl:text-5xl !text-[#152A41]" alt="" />
 
         <h2 className="font-extrabold leading-tight">
@@ -59,6 +67,7 @@ export default function HomeBanner() {
           <span>{t('Commencez votre recherche')}</span>
           <ArrowRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
         </Link>
+      </div>
       </div>
     </section>
   );
