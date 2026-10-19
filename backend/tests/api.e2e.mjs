@@ -995,6 +995,61 @@ describe('Listing reels (videos)');
   await req('DELETE', `/reels/house/${myHouse._id}`, { token: admin });
 }
 
+describe('Investment projects (land looking for an investor)');
+{
+  const admin = await login('admin@hotelsdz.dz', 'admin123');
+  const list = await req('GET', '/projects');
+  check('public list: published projects only', list.status === 200 && list.data.total === 3 && list.data.projects.every((p) => p.status === 'approved' && p.owner?.fullName && !p.owner.email));
+  check('filter by project type', (await req('GET', '/projects?projectType=Agricole')).data.projects.every((p) => p.projectType === 'Agricole'));
+  check('filter by wilaya', (await req('GET', '/projects?wilaya=Tipaza')).data.projects.length === 1);
+  check('search', (await req('GET', '/projects?q=serres')).data.projects.length === 1);
+  check('unknown filter values ignored', (await req('GET', '/projects?projectType=Boat&partnership=x')).data.total === 3);
+
+  const pendingSeed = (await req('GET', '/admin/projects', { token: admin })).data.projects[0];
+  expectStatus('pending project hidden from visitors', await req('GET', `/projects/${pendingSeed._id}`), 404);
+
+  // A land owner (any registered user) posts a project
+  const landOwner = await register('customer');
+  const base = { title: `Terrain test ${uid}`, description: 'Projet de résidence', projectType: 'Résidentiel', partnership: 'Construction contre logements', wilaya: 'Oran', city: 'Oran', area: 1500, landDocument: 'Acte notarié', budget: 90000000, ownerShare: 35 };
+  const created = await req('POST', '/projects', { token: landOwner.token, form: { ...base, images: [PNG] } });
+  check('any registered user can post a project → waits for approval', created.status === 201 && created.data.project?.status === 'pending' && /^PRJ-/.test(created.data.project.reference), `${created.status} ${created.data.message || ''}`);
+  const pid = created.data.project?._id;
+  expectStatus('visitor cannot post', await req('POST', '/projects', { form: base }), 401);
+  expectStatus('area is required', await req('POST', '/projects', { token: landOwner.token, form: { ...base, area: '' } }), 400);
+  expectStatus('unknown project type rejected', await req('POST', '/projects', { token: landOwner.token, form: { ...base, projectType: 'Casino' } }), 400);
+  expectStatus('owner sees their pending project', await req('GET', `/projects/${pid}`, { token: landOwner.token }), 200);
+  check('not public before approval', !(await req('GET', '/projects?limit=50')).data.projects.some((p) => p._id === pid));
+  check('"my projects" lists it', (await req('GET', '/projects/mine', { token: landOwner.token })).data.projects.some((p) => p._id === pid));
+
+  const stranger = await register('customer');
+  expectStatus('someone else cannot edit it', await req('PUT', `/projects/${pid}`, { token: stranger.token, body: { title: 'Piraté' } }), 403);
+  expectStatus('customer cannot moderate', await req('PUT', `/admin/projects/${pid}/approve`, { token: landOwner.token }), 403);
+  expectStatus('reject needs a reason', await req('PUT', `/admin/projects/${pid}/reject`, { token: admin, body: {} }), 400);
+  await req('PUT', `/admin/projects/${pid}/reject`, { token: admin, body: { reason: 'Photos du terrain manquantes' } });
+  check('owner sees the rejection reason', (await req('GET', '/projects/mine', { token: landOwner.token })).data.projects.find((p) => p._id === pid)?.rejectionReason === 'Photos du terrain manquantes');
+  const edited = await req('PUT', `/projects/${pid}`, { token: landOwner.token, body: { title: `Terrain test corrigé ${uid}` } });
+  check('editing sends it back to review, reason cleared', edited.data.project?.status === 'pending' && edited.data.project.rejectionReason === '');
+  expectStatus('admin approves', await req('PUT', `/admin/projects/${pid}/approve`, { token: admin }), 200);
+  check('now public', (await req('GET', '/projects?limit=50')).data.projects.some((p) => p._id === pid));
+
+  // Investors' requests
+  const interest = { name: 'Investisseur Test', phone: '0555 98 76 54', email: 'invest@test.dz', amount: 50000000, message: 'Projet intéressant, je souhaite en discuter.' };
+  expectStatus('investor (visitor) sends an interest request', await req('POST', `/projects/${pid}/interest`, { body: interest }), 201);
+  expectStatus('…phone number required', await req('POST', `/projects/${pid}/interest`, { body: { ...interest, phone: '' } }), 400);
+  expectStatus('…message too short', await req('POST', `/projects/${pid}/interest`, { body: { ...interest, message: 'Salut' } }), 400);
+  expectStatus('owner cannot answer their own project', await req('POST', `/projects/${pid}/interest`, { token: landOwner.token, body: interest }), 400);
+  expectStatus('no request on an unpublished project', await req('POST', `/projects/${pendingSeed._id}/interest`, { body: interest }), 404);
+  check('unread request counted in "my projects"', (await req('GET', '/projects/mine', { token: landOwner.token })).data.projects.find((p) => p._id === pid)?.unreadInterests === 1);
+  const received = await req('GET', `/projects/${pid}/interests`, { token: landOwner.token });
+  check('owner reads the request (name, phone, amount, message)', received.data.interests?.[0]?.phone === '0555 98 76 54' && received.data.interests[0].amount === 50000000);
+  check('…then it is marked read', (await req('GET', '/projects/mine', { token: landOwner.token })).data.projects.find((p) => p._id === pid)?.unreadInterests === 0);
+  expectStatus('others cannot read the requests', await req('GET', `/projects/${pid}/interests`, { token: stranger.token }), 403);
+  check('interest counter on the project', (await req('GET', `/projects/${pid}`)).data.project?.interestsCount === 1);
+
+  expectStatus('owner deletes the project', await req('DELETE', `/projects/${pid}`, { token: landOwner.token }), 200);
+  expectStatus('…gone', await req('GET', `/projects/${pid}`), 404);
+}
+
 describe('No online payment');
 {
   const r = await fetch(`${API}/payments/webhook`, { method: 'POST', body: '{}' });

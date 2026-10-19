@@ -23,3 +23,6 @@ export const resetLimiter = rateLimit({ ...base, windowMs: 15 * 60 * 1000, max: 
 
 /** Public contact form per IP (spam). */
 export const contactLimiter = rateLimit({ ...base, windowMs: 60 * 60 * 1000, max: 10 });
+
+/** Investor "I'm interested" requests per IP (spam towards land owners). */
+export const interestLimiter = rateLimit({ ...base, windowMs: 60 * 60 * 1000, max: 20 });

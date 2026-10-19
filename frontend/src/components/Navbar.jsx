@@ -95,7 +95,8 @@ export default function Navbar() {
     { label: t.navSales || 'Ventes', href: '/sales' },
     { label: 'Reels', href: '/reels' },
     { label: t.navDestinations, href: '/destinations' },
-    { label: t.navPricing, href: '/pricing' },
+    // land owners & investors (pricing stays in the footer, the menu is full at 1280 px)
+    { label: 'Investir', href: '/investir' },
     // the contact form goes straight to the site owner (Admin → Messages)
     { label: 'Contact', href: '/contact' },
   ];

@@ -2,7 +2,7 @@ import { SITE_URL } from '@/lib/seo';
 
 const PRIVATE = [
   '/admin', '/owner', '/seller', '/booking',
-  '/my-bookings', '/messages', '/favorites', '/profile', '/login', '/register', '/forgot-password', '/reset-password',
+  '/my-bookings', '/messages', '/favorites', '/profile', '/login', '/register', '/forgot-password', '/reset-password', '/projects',
 ];
 
 export default function robots() {

@@ -18,6 +18,8 @@ import Message from './models/Message.js';
 import Testimonial from './models/Testimonial.js';
 import Conversation from './models/Conversation.js';
 import HouseForSale from './models/HouseForSale.js';
+import InvestmentProject from './models/InvestmentProject.js';
+import InvestorInterest from './models/InvestorInterest.js';
 import { ENABLED_COUNTRIES } from './utils/countries.js';
 
 const img = (id) => ({
@@ -68,6 +70,7 @@ export const seedDatabase = async () => {
   await Promise.all([
     User.deleteMany({}), Hotel.deleteMany({}), House.deleteMany({}), Room.deleteMany({}),
     Booking.deleteMany({}), Review.deleteMany({}), Message.deleteMany({}), Testimonial.deleteMany({}), Conversation.deleteMany({}), HouseForSale.deleteMany({}),
+    InvestmentProject.deleteMany({}), InvestorInterest.deleteMany({}),
   ]);
 
   // --- Users ---
@@ -188,6 +191,32 @@ export const seedDatabase = async () => {
     await HouseForSale.collection.updateOne({ _id: listing._id }, { $set: { createdAt: created, updatedAt: created } });
   }
   console.log(`🏷️  Sales: ${SALES.length} (seller vendeur@hotelsdz.dz / seller123)`);
+
+  // --- Investment projects: land owners looking for an investor (not selling) ---
+  const PROJECTS = [
+    { owner: seller, title: 'Terrain en bord de mer pour résidence touristique', projectType: 'Hôtel et tourisme', partnership: 'Partenariat (parts du projet)', wilaya: 'Tipaza', city: 'Cherchell', area: 12000, landDocument: 'Livret foncier', budget: 450000000, ownerShare: 40, photo: '1501785888041-af3ef285b470', status: 'approved',
+      description: "Terrain plat de 1,2 ha à 300 m de la plage, accès par route goudronnée. Je cherche un investisseur pour construire un complexe touristique (bungalows + restaurant). J'apporte le terrain, l'investisseur finance la construction ; partage des bénéfices selon les parts." },
+    { owner: customers[0], title: 'Lot en centre-ville pour immeuble de logements', projectType: 'Résidentiel', partnership: 'Construction contre logements', wilaya: 'Sétif', city: 'Sétif', area: 900, landDocument: 'Acte notarié', budget: 180000000, photo: '1500382017468-9049fed747ef', status: 'approved',
+      description: "Terrain de 900 m² en zone urbaine, permis de construire R+6 possible. Proposition classique : le promoteur construit, je garde une partie des appartements, il vend le reste." },
+    { owner: seller, title: 'Terre agricole irriguée pour serres et élevage', projectType: 'Agricole', partnership: 'Location longue durée', wilaya: 'Biskra', city: 'Tolga', area: 50000, landDocument: 'Acte administratif', budget: 60000000, photo: '1500076656116-558758c991c1', status: 'approved',
+      description: 'Cinq hectares avec forage et électricité. Idéal pour des serres de primeurs ou un élevage. Location longue durée (20 ans) ou partenariat sur la production.' },
+    { owner: customers[1], title: 'Terrain en montagne pour gîte et activités', projectType: 'Hôtel et tourisme', partnership: 'À discuter', wilaya: 'Tizi Ouzou', city: 'Azazga', area: 3000, landDocument: 'En cours de régularisation', budget: 0, photo: '1464822759023-fed622ff2c3b', status: 'pending',
+      description: 'Terrain avec vue sur la forêt, pour un gîte écologique et des randonnées.' },
+  ];
+  const projects = [];
+  for (const p of PROJECTS) {
+    projects.push(await InvestmentProject.create({
+      owner: p.owner._id, title: p.title, description: p.description, projectType: p.projectType, partnership: p.partnership,
+      wilaya: p.wilaya, city: p.city, area: p.area, landDocument: p.landDocument, budget: p.budget, ownerShare: p.ownerShare,
+      images: [img(p.photo)], contactPhone: p.owner.phone || '', contactEmail: p.owner.email, status: p.status,
+    }));
+  }
+  await InvestorInterest.create({
+    project: projects[0]._id, owner: seller._id, investor: customers[2]._id, name: customers[2].fullName, phone: '0661 23 45 67',
+    email: customers[2].email, amount: 150000000, message: 'Bonjour, je suis promoteur à Alger et votre terrain m’intéresse. Je peux financer une première tranche. Pouvons-nous visiter ?',
+  });
+  await InvestmentProject.updateOne({ _id: projects[0]._id }, { $inc: { interestsCount: 1 } });
+  console.log(`💼 Projects: ${PROJECTS.length} (3 published, 1 waiting), 1 investor request`);
 
   // --- Contact messages ---
   await Message.create(MESSAGES);

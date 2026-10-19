@@ -27,6 +27,7 @@ import {
 import { addWilaya } from '../controllers/wilaya.controller.js';
 import { getHotelDemand, setFeaturedHotels } from '../controllers/featured.controller.js';
 import { getReelQueue, approveReel, rejectReel } from '../controllers/reel.controller.js';
+import { getProjectQueue, approveProject, rejectProject } from '../controllers/project.controller.js';
 import { protect, authorize } from '../middlewares/auth.middleware.js';
 import { upload } from '../middlewares/upload.middleware.js';
 
@@ -47,6 +48,10 @@ router.get('/hotels/demand', getHotelDemand);
 router.get('/reels', getReelQueue);
 router.put('/reels/:kind/:id/approve', approveReel);
 router.put('/reels/:kind/:id/reject', rejectReel);
+// Investment projects: moderation (deletion: DELETE /projects/:id)
+router.get('/projects', getProjectQueue);
+router.put('/projects/:id/approve', approveProject);
+router.put('/projects/:id/reject', rejectProject);
 router.put('/hotels/featured', setFeaturedHotels);
 router.post('/hotels', upload.array('images', 10), createHotelByAdmin);
 router.put('/hotels/:id', upload.array('images', 10), updateHotelByAdmin);
